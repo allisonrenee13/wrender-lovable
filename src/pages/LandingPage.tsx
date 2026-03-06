@@ -211,7 +211,7 @@ export default function LandingPage() {
     },
     place: {
       heading: "Place your story on the map.",
-      body: "Drop locations and plot events directly onto your sketch. See exactly where everything happens and whether your story's geography actually works. Main events and minor moments, all placed where they belong.",
+      body: "Drop locations and plot events directly onto your sketch. See exactly where everything happens and whether your story's geography actually works. Main events and minor moments, all placed where they belong. The level of detail is up to you.",
       tags: ["Plot event pins", "Main and minor events", "Story timeline", "Location detail"],
       illustration: <PlaceIllustration />,
     },
