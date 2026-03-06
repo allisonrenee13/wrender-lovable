@@ -112,13 +112,13 @@ export function SeeneryLogo({ variant = "sidebar", className = "", animate = fal
           className="font-serif text-2xl font-semibold tracking-tight text-foreground"
           style={{ opacity: phase >= 5 ? 1 : 0, transition: "opacity 0.3s ease" }}
         >
-        Figment
+        Wrender
         </span>
         <span
           className="text-xs text-muted-foreground"
           style={{ opacity: phase >= 5 ? 1 : 0, transition: "opacity 0.3s ease" }}
         >
-          See your story's world.
+          Render your world. Write your story.
         </span>
       </div>
     );
@@ -132,7 +132,7 @@ export function SeeneryLogo({ variant = "sidebar", className = "", animate = fal
         className="font-serif text-lg font-semibold tracking-tight text-foreground"
         style={{ opacity: phase >= 5 ? 1 : 0, transition: "opacity 0.3s ease" }}
       >
-        Figment
+        Wrender
       </span>
     </div>
   );
