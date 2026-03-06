@@ -170,7 +170,7 @@ const AddPlacesPanel = ({
           {expanded === "describe" && (
             <div className="px-4 pb-4 space-y-3">
               <p className="text-xs text-muted-foreground">
-                Describe a place and Seenery will find the right spot for it
+                Describe a place and Wrender will find the right spot for it
               </p>
               <Input
                 id="describe-place-input"
