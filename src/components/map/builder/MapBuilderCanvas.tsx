@@ -307,17 +307,31 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
 
         case "eraser": {
           canvas.defaultCursor = "pointer";
-          canvas.getObjects().forEach((obj) => {
-            if (!obj.excludeFromExport && !(obj instanceof FabricImage)) {
-              obj.selectable = true;
-              obj.evented = true;
-            }
-          });
+          canvas.selection = false;
+
+          const makeEvented = () => {
+            canvas.getObjects().forEach((obj) => {
+              if (!obj.excludeFromExport && !(obj instanceof FabricImage)) {
+                obj.selectable = false;
+                obj.evented = true;
+                obj.hoverCursor = "pointer";
+              }
+            });
+          };
+          makeEvented();
+
           canvas.on("mouse:down", (e) => {
-            if (e.target && !e.target.excludeFromExport && !(e.target instanceof FabricImage)) {
-              canvas.remove(e.target);
+            const target = e.target || canvas.findTarget(e.e);
+            if (
+              target &&
+              !target.excludeFromExport &&
+              !(target instanceof FabricImage)
+            ) {
+              canvas.remove(target);
+              canvas.discardActiveObject();
               canvas.renderAll();
               saveState();
+              makeEvented();
             }
           });
           break;
@@ -420,21 +434,26 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
           canvas.on("mouse:down", () => {
             sculptingRef.current = true;
           });
+
           canvas.on("mouse:move", (e) => {
             if (!sculptingRef.current) return;
             const pointer = canvas.getScenePoint(e.e);
+            const toReplace: Array<{ old: Path; newPath: Path }> = [];
 
             canvas.getObjects().forEach((obj) => {
               if (!(obj instanceof Path) || obj.excludeFromExport) return;
               const pathData = (obj as any).path as any[];
               if (!pathData) return;
 
+              let modified = false;
               for (let i = 1; i < pathData.length - 1; i++) {
                 const seg = pathData[i];
                 const px = seg[1];
                 const py = seg[2];
                 if (px === undefined || py === undefined) continue;
-                const dist = Math.sqrt((px - pointer.x) ** 2 + (py - pointer.y) ** 2);
+                const dist = Math.sqrt(
+                  (px - pointer.x) ** 2 + (py - pointer.y) ** 2
+                );
                 if (dist < smoothRadius) {
                   const prev = pathData[i - 1];
                   const next = pathData[i + 1];
@@ -445,27 +464,39 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
                   const influence = (1 - dist / smoothRadius) * 0.3;
                   seg[1] = px + ((prevX + nextX) / 2 - px) * influence;
                   seg[2] = py + ((prevY + nextY) / 2 - py) * influence;
+                  modified = true;
                 }
               }
-              const newPathStr = pathData.map((seg: any[]) => seg.join(" ")).join(" ");
-              const newPath = new Path(newPathStr, {
-                fill: "transparent",
-                stroke: obj.stroke,
-                strokeWidth: obj.strokeWidth,
-                strokeLineCap: "round",
-                strokeLineJoin: "round",
-                strokeDashArray: obj.strokeDashArray as number[] | undefined,
-                opacity: obj.opacity,
-                selectable: false,
-                evented: false,
-              });
-              if ((obj as any)._isFeature) (newPath as any)._isFeature = true;
-              if ((obj as any)._isRiver) (newPath as any)._isRiver = true;
-              canvas.remove(obj);
+
+              if (modified) {
+                const newPathStr = pathData
+                  .map((seg: any[]) => seg.join(" "))
+                  .join(" ");
+                const rebuilt = new Path(newPathStr, {
+                  fill: "transparent",
+                  stroke: obj.stroke,
+                  strokeWidth: obj.strokeWidth,
+                  strokeLineCap: "round",
+                  strokeLineJoin: "round",
+                  strokeDashArray: obj.strokeDashArray as number[] | undefined,
+                  opacity: obj.opacity,
+                  selectable: false,
+                  evented: false,
+                });
+                if ((obj as any)._isFeature) (rebuilt as any)._isFeature = true;
+                if ((obj as any)._isRiver) (rebuilt as any)._isRiver = true;
+                toReplace.push({ old: obj, newPath: rebuilt });
+              }
+            });
+
+            toReplace.forEach(({ old, newPath }) => {
+              canvas.remove(old);
               canvas.add(newPath);
             });
-            canvas.renderAll();
+
+            if (toReplace.length > 0) canvas.renderAll();
           });
+
           canvas.on("mouse:up", () => {
             if (sculptingRef.current) {
               sculptingRef.current = false;
