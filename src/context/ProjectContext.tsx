@@ -5,6 +5,7 @@ import { toast } from "@/hooks/use-toast";
 interface ProjectContextType {
   currentProject: Project | null;
   setCurrentProjectId: (id: string) => void;
+  updateProjectField: (field: string, value: string) => void;
   allProjects: Project[];
   createProject: (data: { title: string; genre: string; setting: string; wordCount: string }) => string;
   updateProjectTitle: (title: string) => void;
@@ -78,6 +79,10 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
 
   const updateProjectTitle = useCallback((title: string) => {
     updateCurrentProject((p) => ({ ...p, title }));
+  }, [updateCurrentProject]);
+
+  const updateProjectField = useCallback((field: string, value: string) => {
+    updateCurrentProject((p) => ({ ...p, [field]: value }));
   }, [updateCurrentProject]);
 
   const confirmMap = useCallback(() => {
@@ -258,6 +263,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         setCurrentProjectId: setProjectId,
         allProjects,
         createProject,
+        updateProjectField,
         confirmMap,
         updateProjectTitle,
         addPin,
