@@ -31,6 +31,19 @@ const StyleStep = ({ stylePrefs, onStylePrefsChange, canvasState, onContinue, on
               strokeLinecap="round"
             />
           ))}
+          {canvasState.paths.length === 0 && (
+            <text
+              x="300"
+              y="310"
+              textAnchor="middle"
+              fontFamily="DM Sans, sans-serif"
+              fontSize="13"
+              fill={colors.stroke}
+              opacity="0.3"
+            >
+              Your map shape will appear here
+            </text>
+          )}
         </svg>
       </div>
 
