@@ -2,7 +2,7 @@ import { Home, Map, Clock, MapPin, Users, Settings, RefreshCw } from "lucide-rea
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useProject } from "@/context/ProjectContext";
-import figmentLogo from "@/assets/figment-logo.png";
+import { SeeneryLogo } from "@/components/SeeneryLogo";
 
 import {
   Sidebar,
@@ -30,9 +30,8 @@ export function AppSidebar() {
 
   return (
     <Sidebar className="border-r border-border">
-      <div className="px-5 py-5 flex items-center gap-3">
-        <img src={figmentLogo} alt="Figment" className="w-8 h-8" />
-        <span className="font-serif text-lg font-semibold tracking-tight text-foreground">Figment</span>
+      <div className="px-5 py-5">
+        <SeeneryLogo variant="sidebar" animate />
       </div>
 
       <SidebarContent className="px-2">
@@ -83,7 +82,7 @@ export function AppSidebar() {
           <RefreshCw className="h-3 w-3" />
           <span>Sync with Dabble</span>
         </button>
-        <p className="text-[11px] text-muted-foreground/50 px-2 italic font-serif">See your story.</p>
+        <p className="text-[11px] text-muted-foreground/50 px-2 italic font-serif">See your story's world.</p>
       </SidebarFooter>
     </Sidebar>
   );
