@@ -1,26 +1,29 @@
 import { useState } from "react";
 import { useProject } from "@/context/ProjectContext";
-import { MapPin, Users, Map, Plus, X } from "lucide-react";
+import { MapPin, Users, Map, Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { SeeneryLogo } from "@/components/SeeneryLogo";
+
+const GENRES = ["Literary Fiction", "Thriller", "Fantasy", "Sci-Fi", "Romance", "Historical Fiction", "Horror", "Other"];
 
 const Index = () => {
-  const { currentProject, allProjects, setCurrentProjectId, createProject, updateProjectTitle } = useProject();
+  const { currentProject, allProjects, setCurrentProjectId, createProject, updateProjectTitle, updateProjectField } = useProject();
   const [showNewProject, setShowNewProject] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
+  const [editingGenre, setEditingGenre] = useState(false);
+  const [editingSetting, setEditingSetting] = useState(false);
   const [newTitle, setNewTitle] = useState("");
-  const [form, setForm] = useState({ title: "", genre: "Literary Fiction", setting: "", wordCount: "" });
+  const [newSetting, setNewSetting] = useState("");
+  const [form, setForm] = useState({ title: "", genre: "Literary Fiction", setting: "" });
 
   const handleCreateProject = () => {
     if (!form.title.trim()) return;
-    createProject(form);
-    setForm({ title: "", genre: "Literary Fiction", setting: "", wordCount: "" });
+    createProject({ ...form, wordCount: "" });
+    setForm({ title: "", genre: "Literary Fiction", setting: "" });
     setShowNewProject(false);
   };
 
-  // Empty state — no projects yet
   if (!currentProject) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-10">
@@ -42,14 +45,7 @@ const Index = () => {
             New Project
           </Button>
         </div>
-
-        <NewProjectModal
-          open={showNewProject}
-          onOpenChange={setShowNewProject}
-          form={form}
-          setForm={setForm}
-          onSubmit={handleCreateProject}
-        />
+        <NewProjectModal open={showNewProject} onOpenChange={setShowNewProject} form={form} setForm={setForm} onSubmit={handleCreateProject} />
       </div>
     );
   }
@@ -99,17 +95,55 @@ const Index = () => {
         </h1>
       )}
 
-      {/* Project Card */}
+      {/* Project Card — editable genre & setting */}
       <div className="border border-border rounded-lg p-5 mb-8 bg-card">
         <div className="flex flex-wrap items-center gap-3 text-sm">
-          <span className="bg-secondary/20 text-secondary-foreground px-2.5 py-0.5 rounded font-medium text-xs">
-            {currentProject.genre}
-          </span>
-          <span className="text-muted-foreground">{currentProject.setting}</span>
+          {/* Genre */}
+          {editingGenre ? (
+            <select
+              autoFocus
+              value={currentProject.genre}
+              onChange={(e) => { updateProjectField("genre", e.target.value); setEditingGenre(false); }}
+              onBlur={() => setEditingGenre(false)}
+              className="h-7 rounded border border-input bg-background px-2 text-xs font-medium"
+            >
+              {GENRES.map((g) => (
+                <option key={g}>{g}</option>
+              ))}
+            </select>
+          ) : (
+            <button
+              onClick={() => setEditingGenre(true)}
+              className="group flex items-center gap-1 bg-secondary/20 text-secondary-foreground px-2.5 py-0.5 rounded font-medium text-xs hover:bg-secondary/30 transition-colors"
+            >
+              {currentProject.genre}
+              <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity" />
+            </button>
+          )}
+
+          {/* Setting */}
+          {editingSetting ? (
+            <input
+              autoFocus
+              value={newSetting}
+              onChange={(e) => setNewSetting(e.target.value)}
+              onBlur={() => { updateProjectField("setting", newSetting); setEditingSetting(false); }}
+              onKeyDown={(e) => { if (e.key === "Enter") { updateProjectField("setting", newSetting); setEditingSetting(false); } }}
+              placeholder="Add a setting..."
+              className="h-7 rounded border border-input bg-background px-2 text-xs min-w-[200px]"
+            />
+          ) : (
+            <button
+              onClick={() => { setNewSetting(currentProject.setting); setEditingSetting(true); }}
+              className="group flex items-center gap-1 text-muted-foreground hover:text-foreground text-xs transition-colors"
+            >
+              {currentProject.setting || "Add setting..."}
+              <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity" />
+            </button>
+          )}
+
           <span className="text-muted-foreground">·</span>
-          <span className="text-muted-foreground">{currentProject.wordCount} words</span>
-          <span className="text-muted-foreground">·</span>
-          <span className="text-muted-foreground">Last edited {currentProject.lastEdited}</span>
+          <span className="text-muted-foreground text-xs">Last edited {currentProject.lastEdited}</span>
         </div>
       </div>
 
@@ -120,28 +154,17 @@ const Index = () => {
         <StatCard icon={<Map className="h-5 w-5 text-muted-foreground" />} label="Locations" value={currentProject.locations.length} />
       </div>
 
-
-      <NewProjectModal
-        open={showNewProject}
-        onOpenChange={setShowNewProject}
-        form={form}
-        setForm={setForm}
-        onSubmit={handleCreateProject}
-      />
+      <NewProjectModal open={showNewProject} onOpenChange={setShowNewProject} form={form} setForm={setForm} onSubmit={handleCreateProject} />
     </div>
   );
 };
 
 function NewProjectModal({
-  open,
-  onOpenChange,
-  form,
-  setForm,
-  onSubmit,
+  open, onOpenChange, form, setForm, onSubmit,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  form: { title: string; genre: string; setting: string; wordCount: string };
+  form: { title: string; genre: string; setting: string };
   setForm: (f: typeof form) => void;
   onSubmit: () => void;
 }) {
@@ -168,7 +191,7 @@ function NewProjectModal({
               onChange={(e) => setForm({ ...form, genre: e.target.value })}
               className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
             >
-              {["Literary Fiction", "Thriller", "Fantasy", "Sci-Fi", "Romance", "Historical Fiction", "Horror", "Other"].map((g) => (
+              {GENRES.map((g) => (
                 <option key={g}>{g}</option>
               ))}
             </select>
@@ -179,15 +202,6 @@ function NewProjectModal({
               value={form.setting}
               onChange={(e) => setForm({ ...form, setting: e.target.value })}
               placeholder="e.g. A small island off the coast of Florida"
-            />
-          </div>
-          <div>
-            <label className="text-xs text-muted-foreground uppercase tracking-wider mb-1 block">Word Count</label>
-            <Input
-              type="number"
-              value={form.wordCount}
-              onChange={(e) => setForm({ ...form, wordCount: e.target.value })}
-              placeholder="0"
             />
           </div>
           <Button
