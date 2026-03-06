@@ -3,6 +3,7 @@ import UploadStep from "./upload-flow/UploadStep";
 import DescribeStep from "./upload-flow/DescribeStep";
 import GeneratingStep from "./upload-flow/GeneratingStep";
 import MapCanvasStep from "./upload-flow/MapCanvasStep";
+import { islaSerranoLocations, type IslaSerranoLocation } from "@/data/isla-serrano";
 
 type FlowStep = "upload" | "describe" | "generating" | "canvas";
 
@@ -14,6 +15,8 @@ interface UploadAdaptModeProps {
 const UploadAdaptMode = ({ selectedLocationId = null, onSelectLocation }: UploadAdaptModeProps) => {
   const [step, setStep] = useState<FlowStep>("upload");
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [description, setDescription] = useState("");
+  const [locations, setLocations] = useState<IslaSerranoLocation[]>(islaSerranoLocations);
 
   const handleSelectLocation = useCallback(
     (id: string | null) => onSelectLocation?.(id),
@@ -21,6 +24,12 @@ const UploadAdaptMode = ({ selectedLocationId = null, onSelectLocation }: Upload
   );
 
   const handleGenerateComplete = useCallback(() => setStep("canvas"), []);
+
+  const handleRegenerate = useCallback(() => setStep("generating"), []);
+
+  const handleAddLocation = useCallback((loc: IslaSerranoLocation) => {
+    setLocations(prev => [...prev, loc]);
+  }, []);
 
   if (step === "upload") {
     return (
@@ -36,14 +45,17 @@ const UploadAdaptMode = ({ selectedLocationId = null, onSelectLocation }: Upload
     return (
       <DescribeStep
         onBack={() => setStep("upload")}
-        onGenerate={() => setStep("generating")}
+        onGenerate={(desc) => {
+          setDescription(desc);
+          setStep("generating");
+        }}
         uploadedImage={uploadedImage}
       />
     );
   }
 
   if (step === "generating") {
-    return <GeneratingStep onComplete={handleGenerateComplete} />;
+    return <GeneratingStep description={description} onComplete={handleGenerateComplete} />;
   }
 
   return (
@@ -51,6 +63,9 @@ const UploadAdaptMode = ({ selectedLocationId = null, onSelectLocation }: Upload
       selectedLocationId={selectedLocationId}
       onSelectLocation={handleSelectLocation}
       uploadedImage={uploadedImage}
+      locations={locations}
+      onAddLocation={handleAddLocation}
+      onRegenerate={handleRegenerate}
     />
   );
 };

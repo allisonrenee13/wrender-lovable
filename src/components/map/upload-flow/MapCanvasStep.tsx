@@ -4,18 +4,46 @@ import { Button } from "@/components/ui/button";
 import IslaSerranoMap from "@/components/map/IslaSerranoMap";
 import AddPlacesPanel from "./AddPlacesPanel";
 import LocationDetailDrawer from "./LocationDetailDrawer";
+import { type IslaSerranoLocation } from "@/data/isla-serrano";
 
 interface MapCanvasStepProps {
   selectedLocationId: string | null;
   onSelectLocation: (id: string | null) => void;
   uploadedImage?: string | null;
+  locations: IslaSerranoLocation[];
+  onAddLocation: (loc: IslaSerranoLocation) => void;
+  onRegenerate: () => void;
 }
 
-const MapCanvasStep = ({ selectedLocationId, onSelectLocation, uploadedImage }: MapCanvasStepProps) => {
+const MapCanvasStep = ({
+  selectedLocationId,
+  onSelectLocation,
+  uploadedImage,
+  locations,
+  onAddLocation,
+  onRegenerate,
+}: MapCanvasStepProps) => {
   const [view, setView] = useState<"map" | "satellite">("map");
   const [pinDropMode, setPinDropMode] = useState(false);
   const [title, setTitle] = useState("Isla Serrano");
   const [editingTitle, setEditingTitle] = useState(false);
+
+  const handleMapClick = (x: number, y: number) => {
+    if (!pinDropMode) return;
+    // This will be called from the map component
+    const newLoc: IslaSerranoLocation = {
+      id: `custom-${Date.now()}`,
+      name: "New Location",
+      type: "landmark",
+      description: "Click to edit details",
+      x,
+      y,
+      labelAnchor: x > 300 ? "right" : "left",
+    };
+    onAddLocation(newLoc);
+    onSelectLocation(newLoc.id);
+    setPinDropMode(false);
+  };
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
@@ -63,7 +91,7 @@ const MapCanvasStep = ({ selectedLocationId, onSelectLocation, uploadedImage }: 
 
         {/* Actions */}
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="text-xs">
+          <Button variant="outline" size="sm" className="text-xs" onClick={onRegenerate}>
             <RefreshCw className="h-3 w-3 mr-1" />
             Regenerate
           </Button>
@@ -71,7 +99,11 @@ const MapCanvasStep = ({ selectedLocationId, onSelectLocation, uploadedImage }: 
             <Download className="h-3 w-3 mr-1" />
             Export
           </Button>
-          <Button size="sm" className="text-xs bg-primary text-primary-foreground">
+          <Button
+            size="sm"
+            className="text-xs bg-primary text-primary-foreground"
+            onClick={() => setPinDropMode(true)}
+          >
             <Plus className="h-3 w-3 mr-1" />
             Add Place
           </Button>
@@ -86,6 +118,8 @@ const MapCanvasStep = ({ selectedLocationId, onSelectLocation, uploadedImage }: 
           onSelectLocation={onSelectLocation}
           pinDropMode={pinDropMode}
           onTogglePinDrop={() => setPinDropMode(!pinDropMode)}
+          locations={locations}
+          onAddLocation={onAddLocation}
         />
 
         {/* Centre: Map */}
@@ -94,6 +128,9 @@ const MapCanvasStep = ({ selectedLocationId, onSelectLocation, uploadedImage }: 
             <IslaSerranoMap
               selectedLocationId={selectedLocationId}
               onSelectLocation={onSelectLocation}
+              locations={locations}
+              pinDropMode={pinDropMode}
+              onMapClick={handleMapClick}
             />
           ) : (
             <div className="w-full flex justify-center py-6">

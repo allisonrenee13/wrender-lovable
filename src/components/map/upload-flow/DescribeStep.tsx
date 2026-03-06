@@ -4,7 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 
 interface DescribeStepProps {
-  onGenerate: () => void;
+  onGenerate: (description: string) => void;
   onBack: () => void;
   uploadedImage: string | null;
 }
@@ -90,7 +90,7 @@ const DescribeStep = ({ onGenerate, onBack, uploadedImage }: DescribeStepProps) 
             ← Back
           </button>
           <Button
-            onClick={onGenerate}
+            onClick={() => onGenerate(description)}
             className="bg-primary text-secondary font-medium"
           >
             Generate My Map →
