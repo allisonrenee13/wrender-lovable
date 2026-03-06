@@ -3,11 +3,13 @@ import mapTheGiver from "@/assets/map-the-giver.jpg";
 import mapAcotar from "@/assets/map-acotar.jpg";
 
 export type PinType = "plot" | "character" | "location";
+export type EventTier = "main" | "minor";
 
 export interface Pin {
   id: string;
   title: string;
   type: PinType;
+  tier: EventTier;
   chapter: number;
   location: string;
   note: string;
@@ -40,6 +42,7 @@ export interface Location {
 export interface TimelineEvent {
   id: string;
   title: string;
+  tier: EventTier;
   chapter: number;
   character: string;
   characterInitial: string;
@@ -72,11 +75,14 @@ export const projects: Project[] = [
     lastEdited: "March 4, 2026",
     mapImage: mapPaperPalace,
     pins: [
-      { id: "pp1", title: "The Woods — What Happened", type: "plot", chapter: 3, location: "The Woods", note: "Elle's darkest memory", x: 65, y: 30 },
-      { id: "pp2", title: "Elle's Decision", type: "plot", chapter: 1, location: "The Pond", note: "The central dilemma of the novel", x: 45, y: 45 },
-      { id: "pp3", title: "The Paper Palace", type: "location", chapter: 1, location: "The House", note: "The heart of everything — every summer returns here", x: 25, y: 55 },
-      { id: "pp4", title: "Jonas Returns", type: "character", chapter: 2, location: "The Pond", note: "Childhood love reappears after decades", x: 50, y: 50 },
-      { id: "pp5", title: "The Boathouse", type: "location", chapter: 8, location: "Boathouse", note: "Hidden meetings, old secrets", x: 70, y: 70 },
+      { id: "pp1", title: "The Woods — What Happened", type: "plot", tier: "main", chapter: 3, location: "The Woods", note: "Elle's darkest memory", x: 65, y: 30 },
+      { id: "pp2", title: "Elle's Decision", type: "plot", tier: "main", chapter: 1, location: "The Pond", note: "The central dilemma of the novel", x: 45, y: 45 },
+      { id: "pp3", title: "The Paper Palace", type: "location", tier: "main", chapter: 1, location: "The House", note: "The heart of everything — every summer returns here", x: 25, y: 55 },
+      { id: "pp4", title: "Jonas Returns", type: "character", tier: "main", chapter: 2, location: "The Pond", note: "Childhood love reappears after decades", x: 50, y: 50 },
+      { id: "pp5", title: "The Boathouse", type: "location", tier: "main", chapter: 8, location: "Boathouse", note: "Hidden meetings, old secrets", x: 70, y: 70 },
+      { id: "pp6", title: "Wallace pours a drink", type: "plot", tier: "minor", chapter: 2, location: "The House", note: "Sets the tone of the household", x: 28, y: 52 },
+      { id: "pp7", title: "Kids swim at the pond", type: "plot", tier: "minor", chapter: 4, location: "The Pond", note: "Innocence contrasting with secrets", x: 48, y: 48 },
+      { id: "pp8", title: "Anna arrives by car", type: "character", tier: "minor", chapter: 3, location: "The House", note: "Elle's sister makes her entrance", x: 22, y: 58 },
     ],
     characters: [
       { id: "c1", name: "Elle Bishop", initial: "E", role: "Protagonist", age: "50", firstAppears: 1, traits: ["Torn", "Passionate", "Haunted"], notes: "The narrator. Caught between two loves.", photo: null },
@@ -93,10 +99,13 @@ export const projects: Project[] = [
       { id: "l5", name: "The Old Cape Road", description: "Winding road connecting all the landmarks of summer", type: "Road", firstAppears: 1, eventCount: 0, photo: null },
     ],
     timeline: [
-      { id: "t1", title: "Elle's Decision", chapter: 1, character: "Elle", characterInitial: "E", pinType: "plot", location: "The Pond" },
-      { id: "t2", title: "Jonas Returns", chapter: 2, character: "Jonas", characterInitial: "J", pinType: "character", location: "The Pond" },
-      { id: "t3", title: "The Woods — What Happened", chapter: 3, character: "Elle", characterInitial: "E", pinType: "plot", location: "The Woods" },
-      { id: "t4", title: "The Boathouse", chapter: 8, character: "Elle", characterInitial: "E", pinType: "location", location: "Boathouse" },
+      { id: "t1", title: "Elle's Decision", tier: "main", chapter: 1, character: "Elle", characterInitial: "E", pinType: "plot", location: "The Pond" },
+      { id: "t2", title: "Jonas Returns", tier: "main", chapter: 2, character: "Jonas", characterInitial: "J", pinType: "character", location: "The Pond" },
+      { id: "t2b", title: "Wallace pours a drink", tier: "minor", chapter: 2, character: "Wallace", characterInitial: "W", pinType: "plot", location: "The House" },
+      { id: "t3", title: "The Woods — What Happened", tier: "main", chapter: 3, character: "Elle", characterInitial: "E", pinType: "plot", location: "The Woods" },
+      { id: "t3b", title: "Anna arrives by car", tier: "minor", chapter: 3, character: "Anna", characterInitial: "A", pinType: "character", location: "The House" },
+      { id: "t4", title: "Kids swim at the pond", tier: "minor", chapter: 4, character: "Elle", characterInitial: "E", pinType: "plot", location: "The Pond" },
+      { id: "t5", title: "The Boathouse", tier: "main", chapter: 8, character: "Elle", characterInitial: "E", pinType: "location", location: "Boathouse" },
     ],
     recentActivity: [
       "Added pin: The Lighthouse — Chapter 4",
@@ -114,12 +123,15 @@ export const projects: Project[] = [
     lastEdited: "March 2, 2026",
     mapImage: mapTheGiver,
     pins: [
-      { id: "g1", title: "Ceremony of Twelve — Jonas Selected", type: "plot", chapter: 7, location: "The Auditorium", note: "Jonas is assigned his life role", x: 50, y: 50 },
-      { id: "g2", title: "First Memory Received — Sledding", type: "plot", chapter: 10, location: "The Annex", note: "The Giver transmits the first memory", x: 85, y: 60 },
-      { id: "g3", title: "Gabriel Scheduled for Release", type: "plot", chapter: 20, location: "Family Unit", note: "The baby's fate is sealed", x: 35, y: 40 },
-      { id: "g4", title: "The Escape Begins", type: "plot", chapter: 21, location: "The River", note: "Jonas flees with Gabriel", x: 20, y: 80 },
-      { id: "g5", title: "The Boundary of Elsewhere", type: "location", chapter: 23, location: "The River's Edge", note: "The edge of the known world", x: 10, y: 85 },
-      { id: "g6", title: "The Giver's Annex", type: "character", chapter: 10, location: "The Annex", note: "Where all memories are held", x: 80, y: 55 },
+      { id: "g1", title: "Ceremony of Twelve — Jonas Selected", type: "plot", tier: "main", chapter: 7, location: "The Auditorium", note: "Jonas is assigned his life role", x: 50, y: 50 },
+      { id: "g2", title: "First Memory Received — Sledding", type: "plot", tier: "main", chapter: 10, location: "The Annex", note: "The Giver transmits the first memory", x: 85, y: 60 },
+      { id: "g3", title: "Gabriel Scheduled for Release", type: "plot", tier: "main", chapter: 20, location: "Family Unit", note: "The baby's fate is sealed", x: 35, y: 40 },
+      { id: "g4", title: "The Escape Begins", type: "plot", tier: "main", chapter: 21, location: "The River", note: "Jonas flees with Gabriel", x: 20, y: 80 },
+      { id: "g5", title: "The Boundary of Elsewhere", type: "location", tier: "main", chapter: 23, location: "The River's Edge", note: "The edge of the known world", x: 10, y: 85 },
+      { id: "g6", title: "The Giver's Annex", type: "character", tier: "main", chapter: 10, location: "The Annex", note: "Where all memories are held", x: 80, y: 55 },
+      { id: "g7", title: "Jonas takes his morning pill", type: "plot", tier: "minor", chapter: 5, location: "Family Unit", note: "The stirrings suppression routine", x: 38, y: 42 },
+      { id: "g8", title: "Asher is late again", type: "character", tier: "minor", chapter: 1, location: "The Auditorium", note: "Comedic character introduction", x: 52, y: 48 },
+      { id: "g9", title: "Father brings Gabriel home", type: "character", tier: "minor", chapter: 3, location: "Family Unit", note: "First sign of attachment", x: 33, y: 38 },
     ],
     characters: [
       { id: "c1", name: "Jonas", initial: "J", role: "Protagonist", age: "12", firstAppears: 1, traits: ["Curious", "Brave", "Compassionate"], notes: "The Receiver of Memory.", photo: null },
@@ -138,11 +150,14 @@ export const projects: Project[] = [
       { id: "l6", name: "Elsewhere", description: "Beyond the boundary — the unknown", type: "Landmark", firstAppears: 23, eventCount: 1, photo: null },
     ],
     timeline: [
-      { id: "t1", title: "Ceremony of Twelve", chapter: 7, character: "Jonas", characterInitial: "J", pinType: "plot", location: "The Auditorium" },
-      { id: "t2", title: "First Memory Received", chapter: 10, character: "The Giver", characterInitial: "G", pinType: "plot", location: "The Annex" },
-      { id: "t3", title: "Gabriel's Fate", chapter: 20, character: "Gabriel", characterInitial: "B", pinType: "plot", location: "Family Unit" },
-      { id: "t4", title: "The Escape Begins", chapter: 21, character: "Jonas", characterInitial: "J", pinType: "plot", location: "The River" },
-      { id: "t5", title: "Elsewhere", chapter: 23, character: "Jonas", characterInitial: "J", pinType: "location", location: "The River's Edge" },
+      { id: "t0", title: "Asher is late again", tier: "minor", chapter: 1, character: "Asher", characterInitial: "A", pinType: "character", location: "The Auditorium" },
+      { id: "t0b", title: "Father brings Gabriel home", tier: "minor", chapter: 3, character: "Jonas's Father", characterInitial: "D", pinType: "character", location: "Family Unit" },
+      { id: "t0c", title: "Jonas takes his morning pill", tier: "minor", chapter: 5, character: "Jonas", characterInitial: "J", pinType: "plot", location: "Family Unit" },
+      { id: "t1", title: "Ceremony of Twelve", tier: "main", chapter: 7, character: "Jonas", characterInitial: "J", pinType: "plot", location: "The Auditorium" },
+      { id: "t2", title: "First Memory Received", tier: "main", chapter: 10, character: "The Giver", characterInitial: "G", pinType: "plot", location: "The Annex" },
+      { id: "t3", title: "Gabriel's Fate", tier: "main", chapter: 20, character: "Gabriel", characterInitial: "B", pinType: "plot", location: "Family Unit" },
+      { id: "t4", title: "The Escape Begins", tier: "main", chapter: 21, character: "Jonas", characterInitial: "J", pinType: "plot", location: "The River" },
+      { id: "t5", title: "Elsewhere", tier: "main", chapter: 23, character: "Jonas", characterInitial: "J", pinType: "location", location: "The River's Edge" },
     ],
     recentActivity: [
       "Added pin: The Escape Begins — Chapter 21",
@@ -160,13 +175,16 @@ export const projects: Project[] = [
     lastEdited: "March 5, 2026",
     mapImage: mapAcotar,
     pins: [
-      { id: "a1", title: "Feyre Kills the Wolf", type: "plot", chapter: 1, location: "Forest of Wolves", note: "The act that changes everything", x: 15, y: 45 },
-      { id: "a2", title: "Taken to Prythian", type: "plot", chapter: 4, location: "The Wall", note: "Feyre crosses into the faerie realm", x: 40, y: 50 },
-      { id: "a3", title: "The Spring Court Manor", type: "location", chapter: 6, location: "Spring Court", note: "Central location — lush, enchanted, dangerous", x: 65, y: 55 },
-      { id: "a4", title: "Rhysand First Appears", type: "character", chapter: 15, location: "Spring Court", note: "A glimpse of the Night Court's High Lord", x: 60, y: 45 },
-      { id: "a5", title: "The Three Trials Begin", type: "plot", chapter: 28, location: "Under the Mountain", note: "Feyre faces Amarantha's challenges", x: 50, y: 15 },
-      { id: "a6", title: "Amarantha's Riddle", type: "plot", chapter: 35, location: "Under the Mountain", note: "The final test", x: 55, y: 20 },
-      { id: "a7", title: "The Wall", type: "location", chapter: 4, location: "The Wall", note: "The boundary between worlds", x: 38, y: 55 },
+      { id: "a1", title: "Feyre Kills the Wolf", type: "plot", tier: "main", chapter: 1, location: "Forest of Wolves", note: "The act that changes everything", x: 15, y: 45 },
+      { id: "a2", title: "Taken to Prythian", type: "plot", tier: "main", chapter: 4, location: "The Wall", note: "Feyre crosses into the faerie realm", x: 40, y: 50 },
+      { id: "a3", title: "The Spring Court Manor", type: "location", tier: "main", chapter: 6, location: "Spring Court", note: "Central location — lush, enchanted, dangerous", x: 65, y: 55 },
+      { id: "a4", title: "Rhysand First Appears", type: "character", tier: "main", chapter: 15, location: "Spring Court", note: "A glimpse of the Night Court's High Lord", x: 60, y: 45 },
+      { id: "a5", title: "The Three Trials Begin", type: "plot", tier: "main", chapter: 28, location: "Under the Mountain", note: "Feyre faces Amarantha's challenges", x: 50, y: 15 },
+      { id: "a6", title: "Amarantha's Riddle", type: "plot", tier: "main", chapter: 35, location: "Under the Mountain", note: "The final test", x: 55, y: 20 },
+      { id: "a7", title: "The Wall", type: "location", tier: "main", chapter: 4, location: "The Wall", note: "The boundary between worlds", x: 38, y: 55 },
+      { id: "a8", title: "Feyre paints in her room", type: "plot", tier: "minor", chapter: 7, location: "Spring Court", note: "Finding beauty in captivity", x: 62, y: 52 },
+      { id: "a9", title: "Lucien shows Feyre the gardens", type: "character", tier: "minor", chapter: 8, location: "Spring Court", note: "Building an unlikely friendship", x: 68, y: 58 },
+      { id: "a10", title: "Nesta refuses to eat", type: "character", tier: "minor", chapter: 2, location: "Forest of Wolves", note: "Feyre's family dynamics", x: 18, y: 48 },
     ],
     characters: [
       { id: "c1", name: "Feyre Archeron", initial: "F", role: "Protagonist", age: "19", firstAppears: 1, traits: ["Fierce", "Creative", "Resilient"], notes: "The huntress who becomes more.", photo: null },
@@ -186,12 +204,15 @@ export const projects: Project[] = [
       { id: "l7", name: "The River Road", description: "Path winding through the faerie lands", type: "Road", firstAppears: 4, eventCount: 0, photo: null },
     ],
     timeline: [
-      { id: "t1", title: "Feyre Kills the Wolf", chapter: 1, character: "Feyre", characterInitial: "F", pinType: "plot", location: "Forest of Wolves" },
-      { id: "t2", title: "Taken to Prythian", chapter: 4, character: "Feyre", characterInitial: "F", pinType: "plot", location: "The Wall" },
-      { id: "t3", title: "The Spring Court", chapter: 6, character: "Tamlin", characterInitial: "T", pinType: "location", location: "Spring Court" },
-      { id: "t4", title: "Rhysand Appears", chapter: 15, character: "Rhysand", characterInitial: "R", pinType: "character", location: "Spring Court" },
-      { id: "t5", title: "The Three Trials", chapter: 28, character: "Feyre", characterInitial: "F", pinType: "plot", location: "Under the Mountain" },
-      { id: "t6", title: "Amarantha's Riddle", chapter: 35, character: "Feyre", characterInitial: "F", pinType: "plot", location: "Under the Mountain" },
+      { id: "t1", title: "Feyre Kills the Wolf", tier: "main", chapter: 1, character: "Feyre", characterInitial: "F", pinType: "plot", location: "Forest of Wolves" },
+      { id: "t1b", title: "Nesta refuses to eat", tier: "minor", chapter: 2, character: "Nesta", characterInitial: "N", pinType: "character", location: "Forest of Wolves" },
+      { id: "t2", title: "Taken to Prythian", tier: "main", chapter: 4, character: "Feyre", characterInitial: "F", pinType: "plot", location: "The Wall" },
+      { id: "t3", title: "The Spring Court", tier: "main", chapter: 6, character: "Tamlin", characterInitial: "T", pinType: "location", location: "Spring Court" },
+      { id: "t3b", title: "Feyre paints in her room", tier: "minor", chapter: 7, character: "Feyre", characterInitial: "F", pinType: "plot", location: "Spring Court" },
+      { id: "t3c", title: "Lucien shows Feyre the gardens", tier: "minor", chapter: 8, character: "Lucien", characterInitial: "L", pinType: "character", location: "Spring Court" },
+      { id: "t4", title: "Rhysand Appears", tier: "main", chapter: 15, character: "Rhysand", characterInitial: "R", pinType: "character", location: "Spring Court" },
+      { id: "t5", title: "The Three Trials", tier: "main", chapter: 28, character: "Feyre", characterInitial: "F", pinType: "plot", location: "Under the Mountain" },
+      { id: "t6", title: "Amarantha's Riddle", tier: "main", chapter: 35, character: "Feyre", characterInitial: "F", pinType: "plot", location: "Under the Mountain" },
     ],
     recentActivity: [
       "Added pin: Amarantha's Riddle — Chapter 35",

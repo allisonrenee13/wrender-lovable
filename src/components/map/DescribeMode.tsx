@@ -6,6 +6,7 @@ import IslaSerranoMap from "./IslaSerranoMap";
 import CapeCodeMap from "./CapeCodeMap";
 import CommunityMap from "./CommunityMap";
 import PrythianMap from "./PrythianMap";
+import MapEventOverlay from "./MapEventOverlay";
 
 interface DescribeModeProps {
   selectedLocationId: string | null;
@@ -23,15 +24,24 @@ const DescribeMode = ({ selectedLocationId, onSelectLocation }: DescribeModeProp
   const defaultPrompt = projectPrompts[currentProject.id] || `Describe your world or location and Figment will sketch it...`;
   const [prompt, setPrompt] = useState(defaultPrompt);
   const [generated, setGenerated] = useState(true);
+  const [showMain, setShowMain] = useState(true);
+  const [showMinor, setShowMinor] = useState(false);
+
+  // Filter pins by visibility
+  const visiblePins = currentProject.pins.filter((p) => {
+    if (p.tier === "main" && showMain) return true;
+    if (p.tier === "minor" && showMinor) return true;
+    return false;
+  });
 
   const renderMap = () => {
     switch (currentProject.id) {
       case "paper-palace":
-        return <CapeCodeMap selectedLocationId={selectedLocationId} onSelectLocation={onSelectLocation} pins={currentProject.pins} />;
+        return <CapeCodeMap selectedLocationId={selectedLocationId} onSelectLocation={onSelectLocation} pins={visiblePins} />;
       case "the-giver":
-        return <CommunityMap selectedLocationId={selectedLocationId} onSelectLocation={onSelectLocation} pins={currentProject.pins} />;
+        return <CommunityMap selectedLocationId={selectedLocationId} onSelectLocation={onSelectLocation} pins={visiblePins} />;
       case "acotar":
-        return <PrythianMap selectedLocationId={selectedLocationId} onSelectLocation={onSelectLocation} pins={currentProject.pins} />;
+        return <PrythianMap selectedLocationId={selectedLocationId} onSelectLocation={onSelectLocation} pins={visiblePins} />;
       default:
         return <IslaSerranoMap selectedLocationId={selectedLocationId} onSelectLocation={onSelectLocation} />;
     }
@@ -54,7 +64,17 @@ const DescribeMode = ({ selectedLocationId, onSelectLocation }: DescribeModeProp
         </Button>
       </div>
 
-      {generated && renderMap()}
+      {generated && (
+        <div className="relative">
+          {renderMap()}
+          <MapEventOverlay
+            showMain={showMain}
+            showMinor={showMinor}
+            onToggleMain={() => setShowMain(!showMain)}
+            onToggleMinor={() => setShowMinor(!showMinor)}
+          />
+        </div>
+      )}
     </div>
   );
 };
