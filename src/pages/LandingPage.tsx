@@ -269,18 +269,9 @@ export default function LandingPage() {
         <p className="text-muted-foreground text-base md:text-lg max-w-[560px] mb-2 leading-relaxed">
           Your visual companion while you write. Render your story's setting as a clean line drawing, see what is in your head, plan where everything happens, and write with clarity.
         </p>
-        <p className="text-muted-foreground text-base md:text-lg max-w-[560px] mb-8 leading-relaxed font-medium">
+        <p className="text-muted-foreground text-base md:text-lg max-w-[560px] mb-4 leading-relaxed font-medium">
           Render your world. Write your story.
         </p>
-        <div className="flex flex-col sm:flex-row items-center gap-3 mb-3">
-          <Button className="bg-primary text-secondary font-medium rounded-full px-8 h-11 text-base">
-            Start free
-          </Button>
-          <button onClick={() => scrollTo("how-it-works")} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
-            See how it works <ChevronDown className="h-3.5 w-3.5" />
-          </button>
-        </div>
-        <p className="text-xs text-muted-foreground/60">14-day free trial. No credit card required.</p>
       </section>
 
 
