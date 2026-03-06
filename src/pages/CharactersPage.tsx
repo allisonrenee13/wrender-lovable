@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useProject } from "@/context/ProjectContext";
-import { Plus, X, User, Image } from "lucide-react";
+import { Plus, X, User, Image, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -39,6 +39,24 @@ const CharactersPage = () => {
 
   return (
     <div className="p-6 md:p-10">
+      {/* Character Movement Mapping banner */}
+      <div className="mb-6 rounded-lg bg-primary/5 border border-primary/15 px-5 py-4 flex items-start gap-3">
+        <Sparkles className="h-5 w-5 text-secondary mt-0.5 flex-shrink-0" />
+        <div>
+          <h3 className="text-sm font-semibold text-foreground mb-1">
+            Character Movement Mapping — coming soon
+          </h3>
+          <p className="text-xs text-muted-foreground leading-relaxed mb-2">
+            Place your characters on the map scene by scene and track their whereabouts throughout your story.
+            See exactly where everyone is at any moment — and whether their movements make narrative sense.
+          </p>
+          <p className="text-[11px] text-muted-foreground/70 italic leading-relaxed">
+            Imagine mapping the moment your characters split up at the yacht club — who goes to the beach club,
+            who heads to the hotel, and whether the geography of your story actually works.
+          </p>
+        </div>
+      </div>
+
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-xl font-serif font-semibold">{currentProject.title} — Characters</h1>
         <Button onClick={() => setShowAddModal(true)} className="bg-primary text-primary-foreground text-xs">
