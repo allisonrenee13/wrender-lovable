@@ -118,6 +118,9 @@ const MarkupModal = ({ open, onClose, images, onSave, initialSelectedId }: Marku
   const [history, setHistory] = useState<MarkupElement[][]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [notesOpen, setNotesOpen] = useState(true);
+  const [viewMode, setViewMode] = useState<"single" | "side-by-side">("single");
+  const [secondSelectedId, setSecondSelectedId] = useState<string>("");
+  const [activeCanvasId, setActiveCanvasId] = useState<string>("");
 
   useEffect(() => {
     if (open) {
@@ -132,7 +135,10 @@ const MarkupModal = ({ open, onClose, images, onSave, initialSelectedId }: Marku
         return img;
       });
       setLocalImages(withDemos);
-      setSelectedId(initialSelectedId || withDemos[0]?.id || "");
+      const primary = initialSelectedId || withDemos[0]?.id || "";
+      setSelectedId(primary);
+      setActiveCanvasId(primary);
+      setSecondSelectedId(withDemos.length > 1 ? withDemos.find(i => i.id !== primary)?.id || "" : "");
       setHistory([]);
       setHistoryIndex(-1);
     }
@@ -141,8 +147,32 @@ const MarkupModal = ({ open, onClose, images, onSave, initialSelectedId }: Marku
   if (!open) return null;
 
   const selectedImage = localImages.find((img) => img.id === selectedId);
+  const secondSelectedImage = localImages.find((img) => img.id === secondSelectedId);
   const markupCount = localImages.reduce((sum, img) => sum + img.markups.length, 0);
   const markedUpCount = localImages.filter((img) => img.markups.length > 0).length;
+
+  const handleImageClick = (imgId: string) => {
+    if (viewMode === "single") {
+      setSelectedId(imgId);
+      setActiveCanvasId(imgId);
+    } else {
+      // In side-by-side: click to replace the non-active panel, or select if already shown
+      if (imgId === selectedId || imgId === secondSelectedId) {
+        setActiveCanvasId(imgId);
+      } else {
+        // Replace the non-active side
+        if (activeCanvasId === selectedId) {
+          setSecondSelectedId(imgId);
+          setActiveCanvasId(imgId);
+        } else {
+          setSelectedId(imgId);
+          setActiveCanvasId(imgId);
+        }
+      }
+    }
+  };
+
+  const activeImage = localImages.find((img) => img.id === activeCanvasId);
 
   const updateImageMarkups = (imageId: string, markups: MarkupElement[]) => {
     setLocalImages((prev) =>
@@ -217,38 +247,78 @@ const MarkupModal = ({ open, onClose, images, onSave, initialSelectedId }: Marku
           </button>
         </div>
 
-        {/* Image Carousel */}
+        {/* Image Carousel + View Toggle */}
         <div className="px-6 py-3 border-b border-border">
-          <div className="flex items-center gap-4">
-            {localImages.map((img) => (
-              <button
-                key={img.id}
-                onClick={() => setSelectedId(img.id)}
-                className="flex flex-col items-center gap-1.5 group"
-              >
-                <div
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              {localImages.map((img) => {
+                const isShown = viewMode === "side-by-side"
+                  ? img.id === selectedId || img.id === secondSelectedId
+                  : img.id === selectedId;
+                const isActive = img.id === activeCanvasId;
+                return (
+                  <button
+                    key={img.id}
+                    onClick={() => handleImageClick(img.id)}
+                    className="flex flex-col items-center gap-1.5 group"
+                  >
+                    <div
+                      className={cn(
+                        "relative w-20 h-20 rounded-lg overflow-hidden border-2 transition-all",
+                        isActive
+                          ? "border-primary opacity-100"
+                          : isShown
+                            ? "border-primary/50 opacity-90"
+                            : "border-transparent opacity-60 hover:opacity-80"
+                      )}
+                    >
+                      <img src={img.src} alt={img.label} className="w-full h-full object-cover" />
+                      {isShown && (
+                        <div className={cn(
+                          "absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center",
+                          isActive ? "bg-primary" : "bg-primary/60"
+                        )}>
+                          <Check className="h-3 w-3 text-primary-foreground" />
+                        </div>
+                      )}
+                      {img.hasMarkup && !isShown && (
+                        <div className="absolute top-1 right-1 w-3 h-3 rounded-full bg-green-500" />
+                      )}
+                    </div>
+                    <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
+                      {img.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            {/* View Toggle */}
+            {localImages.length > 1 && (
+              <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+                <button
+                  onClick={() => setViewMode("single")}
                   className={cn(
-                    "relative w-20 h-20 rounded-lg overflow-hidden border-2 transition-all",
-                    selectedId === img.id
-                      ? "border-primary opacity-100"
-                      : "border-transparent opacity-60 hover:opacity-80"
+                    "px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
+                    viewMode === "single"
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  <img src={img.src} alt={img.label} className="w-full h-full object-cover" />
-                  {selectedId === img.id && (
-                    <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                      <Check className="h-3 w-3 text-primary-foreground" />
-                    </div>
+                  Single
+                </button>
+                <button
+                  onClick={() => setViewMode("side-by-side")}
+                  className={cn(
+                    "px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
+                    viewMode === "side-by-side"
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
                   )}
-                  {img.hasMarkup && selectedId !== img.id && (
-                    <div className="absolute top-1 right-1 w-3 h-3 rounded-full bg-green-500" />
-                  )}
-                </div>
-                <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
-                  {img.label}
-                </span>
-              </button>
-            ))}
+                >
+                  Side by Side
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -271,17 +341,67 @@ const MarkupModal = ({ open, onClose, images, onSave, initialSelectedId }: Marku
           </div>
 
           {/* Canvas */}
-          <div className="flex-1 mx-6 mb-2 rounded-lg overflow-hidden">
-            {selectedImage && (
-              <MarkupCanvas
-                imageSrc={selectedImage.src}
-                markups={selectedImage.markups}
-                activeTool={activeTool}
-                activeColor={activeColor}
-                strokeWeight={strokeWeight}
-                onAddMarkup={handleAddMarkup}
-                onRemoveMarkup={handleRemoveMarkup}
-              />
+          <div className={cn("flex-1 mx-6 mb-2 rounded-lg overflow-hidden", viewMode === "side-by-side" && "flex gap-2")}>
+            {viewMode === "single" ? (
+              selectedImage && (
+                <MarkupCanvas
+                  imageSrc={selectedImage.src}
+                  markups={selectedImage.markups}
+                  activeTool={activeTool}
+                  activeColor={activeColor}
+                  strokeWeight={strokeWeight}
+                  onAddMarkup={handleAddMarkup}
+                  onRemoveMarkup={handleRemoveMarkup}
+                />
+              )
+            ) : (
+              <>
+                {selectedImage && (
+                  <div
+                    className={cn(
+                      "flex-1 rounded-lg overflow-hidden border-2 transition-colors cursor-pointer",
+                      activeCanvasId === selectedId ? "border-primary" : "border-transparent"
+                    )}
+                    onClick={() => setActiveCanvasId(selectedId)}
+                  >
+                    <MarkupCanvas
+                      imageSrc={selectedImage.src}
+                      markups={selectedImage.markups}
+                      activeTool={activeCanvasId === selectedId ? activeTool : "pan"}
+                      activeColor={activeColor}
+                      strokeWeight={strokeWeight}
+                      onAddMarkup={(m) => { setActiveCanvasId(selectedId); handleAddMarkup(m); }}
+                      onRemoveMarkup={handleRemoveMarkup}
+                    />
+                  </div>
+                )}
+                {secondSelectedImage && (
+                  <div
+                    className={cn(
+                      "flex-1 rounded-lg overflow-hidden border-2 transition-colors cursor-pointer",
+                      activeCanvasId === secondSelectedId ? "border-primary" : "border-transparent"
+                    )}
+                    onClick={() => setActiveCanvasId(secondSelectedId)}
+                  >
+                    <MarkupCanvas
+                      imageSrc={secondSelectedImage.src}
+                      markups={secondSelectedImage.markups}
+                      activeTool={activeCanvasId === secondSelectedId ? activeTool : "pan"}
+                      activeColor={activeColor}
+                      strokeWeight={strokeWeight}
+                      onAddMarkup={(m) => {
+                        setActiveCanvasId(secondSelectedId);
+                        const newMarkups = [...secondSelectedImage.markups, m];
+                        updateImageMarkups(secondSelectedId, newMarkups);
+                      }}
+                      onRemoveMarkup={(id) => {
+                        const newMarkups = secondSelectedImage.markups.filter((mk) => mk.id !== id);
+                        updateImageMarkups(secondSelectedId, newMarkups);
+                      }}
+                    />
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
