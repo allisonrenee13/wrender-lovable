@@ -59,75 +59,78 @@ const PrythianSketch = () => (
 /* ───── Feature Tab Illustrations ───── */
 const RenderIllustration = () => (
   <svg viewBox="0 0 400 260" className="w-full h-full" fill="none">
-    {/* Island being rendered - partially dotted, partially solid */}
-    <path d="M80 130 Q90 80 130 60 Q170 45 210 50 Q250 42 290 70 Q320 90 330 125 Q335 148 322 160 Q300 175 270 178 Q240 185 200 180 Q160 185 130 175 Q100 165 85 150Z" stroke="currentColor" strokeWidth="1.2" fill="none" />
+    {/* Peninsula outline - Cape-like hook shape */}
+    <path d="M90 180 Q95 160 110 145 Q130 125 160 115 Q190 108 220 112 Q250 108 270 100 Q290 92 300 80 Q310 68 312 55 Q314 45 308 38 Q300 32 290 35 Q280 40 275 50 Q270 62 268 75 Q265 85 258 90" stroke="currentColor" strokeWidth="1.2" fill="none" />
+    <path d="M90 180 Q100 190 120 195 Q145 198 170 194 Q200 188 225 185 Q250 182 260 178 Q268 170 265 155 Q262 140 258 130 Q255 115 258 90" stroke="currentColor" strokeWidth="1.2" fill="none" />
     {/* Rendering effect - dotted partial overlay */}
-    <path d="M80 130 Q90 80 130 60 Q155 50 180 48" stroke="currentColor" strokeWidth="1" strokeDasharray="4 3" fill="none" opacity="0.3" />
+    <path d="M90 180 Q95 160 110 145 Q130 125 150 118" stroke="currentColor" strokeWidth="1" strokeDasharray="4 3" fill="none" opacity="0.3" />
     {/* Interior details appearing */}
-    <path d="M130 110 Q160 100 190 108 Q220 100 250 112" stroke="currentColor" strokeWidth="0.5" strokeDasharray="3 2" opacity="0.25" />
-    <path d="M160 75 L160 140" stroke="currentColor" strokeWidth="0.3" strokeDasharray="2 2" opacity="0.15" />
-    <path d="M240 65 L240 150" stroke="currentColor" strokeWidth="0.3" strokeDasharray="2 2" opacity="0.15" />
-    <rect x="150" y="95" width="16" height="12" rx="0.5" stroke="currentColor" strokeWidth="0.5" fill="none" opacity="0.35" />
-    <rect x="230" y="88" width="18" height="14" rx="0.5" stroke="currentColor" strokeWidth="0.5" fill="none" opacity="0.35" />
-    <circle cx="170" cy="105" r="3.5" className="fill-secondary" />
-    <circle cx="250" cy="95" r="3.5" className="fill-secondary" />
+    <path d="M140 140 Q170 132 200 138 Q230 132 250 120" stroke="currentColor" strokeWidth="0.5" strokeDasharray="3 2" opacity="0.25" />
+    <path d="M180 125 L195 170" stroke="currentColor" strokeWidth="0.3" strokeDasharray="2 2" opacity="0.15" />
+    <path d="M240 105 L245 155" stroke="currentColor" strokeWidth="0.3" strokeDasharray="2 2" opacity="0.15" />
+    <rect x="165" y="135" width="16" height="12" rx="0.5" stroke="currentColor" strokeWidth="0.5" fill="none" opacity="0.35" />
+    <rect x="230" y="120" width="18" height="14" rx="0.5" stroke="currentColor" strokeWidth="0.5" fill="none" opacity="0.35" />
+    <circle cx="185" cy="145" r="3.5" className="fill-secondary" />
+    <circle cx="248" cy="128" r="3.5" className="fill-secondary" />
     {/* Compass */}
     <line x1="350" y1="40" x2="350" y2="65" stroke="currentColor" strokeWidth="0.5" opacity="0.2" />
     <line x1="340" y1="52" x2="360" y2="52" stroke="currentColor" strokeWidth="0.4" opacity="0.15" />
     <text x="350" y="37" textAnchor="middle" fill="currentColor" fontSize="8" fontFamily="serif" opacity="0.25">N</text>
     {/* Water lines */}
-    <line x1="50" y1="200" x2="370" y2="200" stroke="currentColor" strokeWidth="0.3" opacity="0.06" />
-    <line x1="60" y1="215" x2="360" y2="215" stroke="currentColor" strokeWidth="0.3" opacity="0.04" />
+    <line x1="50" y1="220" x2="370" y2="220" stroke="currentColor" strokeWidth="0.3" opacity="0.06" />
+    <line x1="60" y1="235" x2="360" y2="235" stroke="currentColor" strokeWidth="0.3" opacity="0.04" />
   </svg>
 );
 
 const PlaceIllustration = () => (
   <svg viewBox="0 0 400 260" className="w-full h-full" fill="none">
-    {/* Island outline */}
-    <path d="M80 120 Q90 75 130 58 Q170 42 210 48 Q250 40 290 65 Q320 85 330 118 Q335 142 320 155 Q295 170 265 172 Q235 178 200 174 Q160 178 130 168 Q100 158 85 142Z" stroke="currentColor" strokeWidth="1" fill="none" />
+    {/* Peninsula outline - Cape-like hook shape */}
+    <path d="M90 180 Q95 160 110 145 Q130 125 160 115 Q190 108 220 112 Q250 108 270 100 Q290 92 300 80 Q310 68 312 55 Q314 45 308 38 Q300 32 290 35 Q280 40 275 50 Q270 62 268 75 Q265 85 258 90" stroke="currentColor" strokeWidth="1" fill="none" />
+    <path d="M90 180 Q100 190 120 195 Q145 198 170 194 Q200 188 225 185 Q250 182 260 178 Q268 170 265 155 Q262 140 258 130 Q255 115 258 90" stroke="currentColor" strokeWidth="1" fill="none" />
     {/* Roads */}
-    <path d="M120 100 Q160 92 200 96 Q240 92 280 102" stroke="currentColor" strokeWidth="0.4" strokeDasharray="3 2" opacity="0.2" />
+    <path d="M130 155 Q170 145 210 150 Q240 140 260 125" stroke="currentColor" strokeWidth="0.4" strokeDasharray="3 2" opacity="0.2" />
     {/* Plot event pins with labels */}
-    <circle cx="150" cy="95" r="4" className="fill-secondary" />
-    <text x="150" y="84" textAnchor="middle" fill="currentColor" fontSize="7" fontFamily="serif" opacity="0.5">Ch. 3: The arrival</text>
-    <circle cx="230" cy="88" r="4" className="fill-secondary" />
-    <text x="230" y="77" textAnchor="middle" fill="currentColor" fontSize="7" fontFamily="serif" opacity="0.5">Ch. 7: The discovery</text>
-    <circle cx="280" cy="110" r="3.5" className="fill-primary" />
-    <text x="295" y="107" fill="currentColor" fontSize="6" opacity="0.4">Ch. 12: Confrontation</text>
-    <circle cx="180" cy="130" r="3.5" className="fill-primary" />
-    <text x="180" y="145" textAnchor="middle" fill="currentColor" fontSize="6" opacity="0.4">Ch. 15: Escape</text>
+    <circle cx="155" cy="140" r="4" className="fill-secondary" />
+    <text x="155" y="130" textAnchor="middle" fill="currentColor" fontSize="7" fontFamily="serif" opacity="0.5">Ch. 3: The arrival</text>
+    <circle cx="235" cy="130" r="4" className="fill-secondary" />
+    <text x="235" y="120" textAnchor="middle" fill="currentColor" fontSize="7" fontFamily="serif" opacity="0.5">Ch. 7: The discovery</text>
+    <circle cx="270" cy="100" r="3.5" className="fill-primary" />
+    <text x="285" y="97" fill="currentColor" fontSize="6" opacity="0.4">Ch. 12: Confrontation</text>
+    <circle cx="190" cy="170" r="3.5" className="fill-primary" />
+    <text x="190" y="183" textAnchor="middle" fill="currentColor" fontSize="6" opacity="0.4">Ch. 15: Escape</text>
     {/* Timeline bar at bottom */}
-    <line x1="60" y1="210" x2="340" y2="210" stroke="currentColor" strokeWidth="0.6" opacity="0.2" />
-    <circle cx="100" cy="210" r="2.5" className="fill-secondary" opacity="0.6" />
-    <circle cx="170" cy="210" r="2.5" className="fill-secondary" opacity="0.6" />
-    <circle cx="240" cy="210" r="2.5" className="fill-primary" opacity="0.5" />
-    <circle cx="310" cy="210" r="2.5" className="fill-primary" opacity="0.5" />
-    <text x="100" y="225" textAnchor="middle" fill="currentColor" fontSize="5" opacity="0.3">Ch.3</text>
-    <text x="170" y="225" textAnchor="middle" fill="currentColor" fontSize="5" opacity="0.3">Ch.7</text>
-    <text x="240" y="225" textAnchor="middle" fill="currentColor" fontSize="5" opacity="0.3">Ch.12</text>
-    <text x="310" y="225" textAnchor="middle" fill="currentColor" fontSize="5" opacity="0.3">Ch.15</text>
+    <line x1="60" y1="225" x2="340" y2="225" stroke="currentColor" strokeWidth="0.6" opacity="0.2" />
+    <circle cx="100" cy="225" r="2.5" className="fill-secondary" opacity="0.6" />
+    <circle cx="170" cy="225" r="2.5" className="fill-secondary" opacity="0.6" />
+    <circle cx="240" cy="225" r="2.5" className="fill-primary" opacity="0.5" />
+    <circle cx="310" cy="225" r="2.5" className="fill-primary" opacity="0.5" />
+    <text x="100" y="238" textAnchor="middle" fill="currentColor" fontSize="5" opacity="0.3">Ch.3</text>
+    <text x="170" y="238" textAnchor="middle" fill="currentColor" fontSize="5" opacity="0.3">Ch.7</text>
+    <text x="240" y="238" textAnchor="middle" fill="currentColor" fontSize="5" opacity="0.3">Ch.12</text>
+    <text x="310" y="238" textAnchor="middle" fill="currentColor" fontSize="5" opacity="0.3">Ch.15</text>
   </svg>
 );
 
 const TrackIllustration = () => (
   <svg viewBox="0 0 400 260" className="w-full h-full" fill="none">
-    {/* Island outline */}
-    <path d="M80 120 Q90 75 130 58 Q170 42 210 48 Q250 40 290 65 Q320 85 330 118 Q335 142 320 155 Q295 170 265 172 Q235 178 200 174 Q160 178 130 168 Q100 158 85 142Z" stroke="currentColor" strokeWidth="1" fill="none" />
+    {/* Peninsula outline - Cape-like hook shape */}
+    <path d="M90 180 Q95 160 110 145 Q130 125 160 115 Q190 108 220 112 Q250 108 270 100 Q290 92 300 80 Q310 68 312 55 Q314 45 308 38 Q300 32 290 35 Q280 40 275 50 Q270 62 268 75 Q265 85 258 90" stroke="currentColor" strokeWidth="1" fill="none" />
+    <path d="M90 180 Q100 190 120 195 Q145 198 170 194 Q200 188 225 185 Q250 182 260 178 Q268 170 265 155 Q262 140 258 130 Q255 115 258 90" stroke="currentColor" strokeWidth="1" fill="none" />
     {/* Character A path */}
-    <path d="M120 130 Q140 110 160 100 Q180 90 200 95 Q220 88 250 100" stroke="hsl(var(--secondary))" strokeWidth="1" strokeDasharray="4 3" fill="none" opacity="0.6" />
-    <circle cx="120" cy="130" r="4" className="fill-secondary" />
-    <circle cx="250" cy="100" r="4" className="fill-secondary" />
-    <text x="120" y="145" textAnchor="middle" fill="currentColor" fontSize="6" opacity="0.5">Elena (start)</text>
-    <text x="250" y="115" textAnchor="middle" fill="currentColor" fontSize="6" opacity="0.5">Elena (end)</text>
+    <path d="M130 165 Q150 150 175 142 Q200 135 220 140 Q240 135 255 120" stroke="hsl(var(--secondary))" strokeWidth="1" strokeDasharray="4 3" fill="none" opacity="0.6" />
+    <circle cx="130" cy="165" r="4" className="fill-secondary" />
+    <circle cx="255" cy="120" r="4" className="fill-secondary" />
+    <text x="130" y="180" textAnchor="middle" fill="currentColor" fontSize="6" opacity="0.5">Elena (start)</text>
+    <text x="255" y="112" textAnchor="middle" fill="currentColor" fontSize="6" opacity="0.5">Elena (end)</text>
     {/* Character B path */}
-    <path d="M160 80 Q180 100 200 120 Q220 135 260 140" stroke="hsl(var(--primary))" strokeWidth="1" strokeDasharray="4 3" fill="none" opacity="0.5" />
-    <circle cx="160" cy="80" r="3.5" className="fill-primary" />
-    <circle cx="260" cy="140" r="3.5" className="fill-primary" />
-    <text x="160" y="73" textAnchor="middle" fill="currentColor" fontSize="6" opacity="0.45">Marco</text>
-    <text x="275" y="138" fill="currentColor" fontSize="6" opacity="0.45">Marco</text>
+    <path d="M175 120 Q195 140 215 155 Q235 165 260 165" stroke="hsl(var(--primary))" strokeWidth="1" strokeDasharray="4 3" fill="none" opacity="0.5" />
+    <circle cx="175" cy="120" r="3.5" className="fill-primary" />
+    <circle cx="260" cy="165" r="3.5" className="fill-primary" />
+    <text x="175" y="113" textAnchor="middle" fill="currentColor" fontSize="6" opacity="0.45">Marco</text>
+    <text x="275" y="163" fill="currentColor" fontSize="6" opacity="0.45">Marco</text>
     {/* Buildings */}
-    <rect x="148" y="92" width="10" height="8" rx="0.3" stroke="currentColor" strokeWidth="0.4" fill="none" opacity="0.3" />
-    <rect x="240" y="92" width="12" height="8" rx="0.3" stroke="currentColor" strokeWidth="0.4" fill="none" opacity="0.3" />
+    <rect x="163" y="135" width="10" height="8" rx="0.3" stroke="currentColor" strokeWidth="0.4" fill="none" opacity="0.3" />
+    <rect x="242" y="132" width="12" height="8" rx="0.3" stroke="currentColor" strokeWidth="0.4" fill="none" opacity="0.3" />
   </svg>
 );
 
@@ -286,34 +289,38 @@ export default function LandingPage() {
                 {/* Water */}
                 <line x1="0" y1="250" x2="700" y2="250" stroke="currentColor" strokeWidth="0.3" opacity="0.05" />
                 <line x1="0" y1="270" x2="700" y2="270" stroke="currentColor" strokeWidth="0.3" opacity="0.03" />
-                {/* Island */}
+                {/* Peninsula - Cape-like hook shape */}
                 <path
-                  d="M160 175 Q170 120 215 100 Q255 82 305 78 Q350 70 395 76 Q440 68 485 95 Q520 112 535 155 Q540 178 525 195 Q498 210 460 215 Q420 225 380 218 Q335 228 290 218 Q245 215 210 200 Q178 190 165 180Z"
+                  d="M150 230 Q160 200 185 180 Q215 155 260 140 Q310 128 360 135 Q410 128 445 115 Q480 100 500 80 Q518 60 522 42 Q524 28 515 20 Q505 14 492 18 Q480 25 474 38 Q468 55 465 72 Q462 85 455 92"
+                  stroke="currentColor" strokeWidth="1.2" fill="none"
+                />
+                <path
+                  d="M150 230 Q165 245 195 252 Q230 258 270 250 Q315 242 360 238 Q405 234 430 228 Q448 218 444 198 Q440 178 435 165 Q430 148 435 125 Q442 108 455 92"
                   stroke="currentColor" strokeWidth="1.2" fill="none"
                 />
                 {/* Coastline details */}
-                <path d="M215 165 Q240 155 265 162" stroke="currentColor" strokeWidth="0.4" opacity="0.2" />
-                <path d="M400 168 Q425 158 460 170" stroke="currentColor" strokeWidth="0.4" opacity="0.2" />
+                <path d="M230 200 Q260 190 290 198" stroke="currentColor" strokeWidth="0.4" opacity="0.2" />
+                <path d="M380 195 Q405 185 430 195" stroke="currentColor" strokeWidth="0.4" opacity="0.2" />
                 {/* Roads */}
-                <path d="M230 140 Q300 132 370 136 Q440 132 490 145" stroke="currentColor" strokeWidth="0.4" strokeDasharray="4 3" opacity="0.18" />
-                <path d="M300 100 L300 190" stroke="currentColor" strokeWidth="0.3" strokeDasharray="3 3" opacity="0.12" />
-                <path d="M410 90 L410 195" stroke="currentColor" strokeWidth="0.3" strokeDasharray="3 3" opacity="0.12" />
+                <path d="M210 185 Q290 175 370 180 Q420 172 450 140" stroke="currentColor" strokeWidth="0.4" strokeDasharray="4 3" opacity="0.18" />
+                <path d="M310 155 L320 235" stroke="currentColor" strokeWidth="0.3" strokeDasharray="3 3" opacity="0.12" />
+                <path d="M400 130 L410 225" stroke="currentColor" strokeWidth="0.3" strokeDasharray="3 3" opacity="0.12" />
                 {/* Buildings */}
-                <rect x="270" y="125" width="14" height="10" rx="0.5" stroke="currentColor" strokeWidth="0.4" fill="none" opacity="0.3" />
-                <rect x="395" y="115" width="16" height="12" rx="0.5" stroke="currentColor" strokeWidth="0.4" fill="none" opacity="0.3" />
-                <rect x="445" y="150" width="12" height="9" rx="0.5" stroke="currentColor" strokeWidth="0.4" fill="none" opacity="0.25" />
-                <rect x="230" y="155" width="10" height="8" rx="0.5" stroke="currentColor" strokeWidth="0.4" fill="none" opacity="0.25" />
+                <rect x="285" y="170" width="14" height="10" rx="0.5" stroke="currentColor" strokeWidth="0.4" fill="none" opacity="0.3" />
+                <rect x="390" y="150" width="16" height="12" rx="0.5" stroke="currentColor" strokeWidth="0.4" fill="none" opacity="0.3" />
+                <rect x="430" y="185" width="12" height="9" rx="0.5" stroke="currentColor" strokeWidth="0.4" fill="none" opacity="0.25" />
+                <rect x="215" y="195" width="10" height="8" rx="0.5" stroke="currentColor" strokeWidth="0.4" fill="none" opacity="0.25" />
                 {/* Pins */}
-                <circle cx="300" cy="135" r="5.5" className="fill-secondary" />
-                <text x="300" y="118" textAnchor="middle" fill="currentColor" fontSize="8" fontFamily="Playfair Display, serif" opacity="0.55">Lighthouse</text>
-                <circle cx="410" cy="118" r="5.5" className="fill-secondary" />
-                <text x="410" y="105" textAnchor="middle" fill="currentColor" fontSize="8" fontFamily="Playfair Display, serif" opacity="0.55">Hotel</text>
-                <circle cx="460" cy="155" r="4" className="fill-primary" />
-                <text x="478" y="152" fill="currentColor" fontSize="7" opacity="0.4">Police Station</text>
-                <circle cx="240" cy="160" r="4" className="fill-primary" />
-                <text x="240" y="152" textAnchor="middle" fill="currentColor" fontSize="7" opacity="0.4">Ferry Dock</text>
-                <circle cx="350" cy="100" r="4" className="fill-primary" />
-                <text x="350" y="92" textAnchor="middle" fill="currentColor" fontSize="7" opacity="0.4">Town Square</text>
+                <circle cx="310" cy="175" r="5.5" className="fill-secondary" />
+                <text x="310" y="162" textAnchor="middle" fill="currentColor" fontSize="8" fontFamily="Playfair Display, serif" opacity="0.55">Lighthouse</text>
+                <circle cx="405" cy="155" r="5.5" className="fill-secondary" />
+                <text x="405" y="142" textAnchor="middle" fill="currentColor" fontSize="8" fontFamily="Playfair Display, serif" opacity="0.55">Hotel</text>
+                <circle cx="440" cy="192" r="4" className="fill-primary" />
+                <text x="458" y="189" fill="currentColor" fontSize="7" opacity="0.4">Police Station</text>
+                <circle cx="225" cy="200" r="4" className="fill-primary" />
+                <text x="225" y="192" textAnchor="middle" fill="currentColor" fontSize="7" opacity="0.4">Ferry Dock</text>
+                <circle cx="360" cy="145" r="4" className="fill-primary" />
+                <text x="360" y="137" textAnchor="middle" fill="currentColor" fontSize="7" opacity="0.4">Town Square</text>
                 {/* Compass */}
                 <line x1="620" y1="50" x2="620" y2="78" stroke="currentColor" strokeWidth="0.5" opacity="0.2" />
                 <line x1="608" y1="64" x2="632" y2="64" stroke="currentColor" strokeWidth="0.4" opacity="0.15" />
