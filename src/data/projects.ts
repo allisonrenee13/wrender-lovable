@@ -15,6 +15,7 @@ export interface Pin {
   note: string;
   x: number;
   y: number;
+  placed?: boolean;
 }
 
 export interface Character {
@@ -58,6 +59,7 @@ export interface Project {
   wordCount: string;
   lastEdited: string;
   mapImage: string;
+  mapConfirmed: boolean;
   pins: Pin[];
   characters: Character[];
   locations: Location[];
@@ -74,6 +76,7 @@ export const projects: Project[] = [
     wordCount: "89,234",
     lastEdited: "March 4, 2026",
     mapImage: mapPaperPalace,
+    mapConfirmed: true,
     pins: [
       { id: "pp1", title: "The Woods — What Happened", type: "plot", tier: "main", chapter: 3, location: "The Woods", note: "Elle's darkest memory", x: 65, y: 30 },
       { id: "pp2", title: "Elle's Decision", type: "plot", tier: "main", chapter: 1, location: "The Pond", note: "The central dilemma of the novel", x: 45, y: 45 },
@@ -122,6 +125,7 @@ export const projects: Project[] = [
     wordCount: "43,617",
     lastEdited: "March 2, 2026",
     mapImage: mapTheGiver,
+    mapConfirmed: true,
     pins: [
       { id: "g1", title: "Ceremony of Twelve — Jonas Selected", type: "plot", tier: "main", chapter: 7, location: "The Auditorium", note: "Jonas is assigned his life role", x: 50, y: 50 },
       { id: "g2", title: "First Memory Received — Sledding", type: "plot", tier: "main", chapter: 10, location: "The Annex", note: "The Giver transmits the first memory", x: 85, y: 60 },
@@ -174,6 +178,7 @@ export const projects: Project[] = [
     wordCount: "113,442",
     lastEdited: "March 5, 2026",
     mapImage: mapAcotar,
+    mapConfirmed: true,
     pins: [
       { id: "a1", title: "Feyre Kills the Wolf", type: "plot", tier: "main", chapter: 1, location: "Forest of Wolves", note: "The act that changes everything", x: 15, y: 45 },
       { id: "a2", title: "Taken to Prythian", type: "plot", tier: "main", chapter: 4, location: "The Wall", note: "Feyre crosses into the faerie realm", x: 40, y: 50 },

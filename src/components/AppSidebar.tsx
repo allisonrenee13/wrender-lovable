@@ -1,6 +1,7 @@
 import { Home, Map, Clock, MapPin, Users, Settings, RefreshCw } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
+import { useProject } from "@/context/ProjectContext";
 import figmentLogo from "@/assets/figment-logo.png";
 
 import {
@@ -17,13 +18,14 @@ import {
 const navItems = [
   { title: "Home", url: "/", icon: Home },
   { title: "Map", url: "/map", icon: Map },
-  { title: "Locations", url: "/locations", icon: MapPin },
   { title: "Timeline", url: "/timeline", icon: Clock },
+  { title: "Locations", url: "/locations", icon: MapPin },
   { title: "Characters", url: "/characters", icon: Users },
 ];
 
 export function AppSidebar() {
   const location = useLocation();
+  const { currentProject } = useProject();
 
   return (
     <Sidebar className="border-r border-border">
@@ -53,6 +55,9 @@ export function AppSidebar() {
                       >
                         <item.icon className="h-4 w-4" />
                         <span>{item.title}</span>
+                        {item.url === "/map" && !currentProject.mapConfirmed && (
+                          <span className="w-2 h-2 rounded-full bg-secondary ml-auto flex-shrink-0" />
+                        )}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

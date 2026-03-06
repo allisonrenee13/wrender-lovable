@@ -53,8 +53,12 @@ const createDemoImages = (projectId: string): MarkupImage[] => {
   return [];
 };
 
-const UnifiedMapBuilder = () => {
-  const { currentProject } = useProject();
+interface UnifiedMapBuilderProps {
+  onConfirm?: () => void;
+}
+
+const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
+  const { currentProject, confirmMap } = useProject();
   const descRef = useRef<HTMLTextAreaElement>(null);
 
   const defaultDesc = demoDescriptions[currentProject.id] || "";
@@ -332,17 +336,22 @@ const UnifiedMapBuilder = () => {
 
             {/* Action buttons */}
             <div className="flex flex-col items-center gap-3 pt-4 pb-2">
-              <div className="flex items-center gap-4">
-                <Button className="bg-primary text-primary-foreground font-semibold px-8 h-10">
-                  Use This Map
-                </Button>
-                <button
-                  onClick={handleKeepRefining}
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
-                >
-                  Keep Refining
-                </button>
-              </div>
+              {/* Confirm button — full width, navy */}
+              <Button
+                onClick={() => {
+                  confirmMap();
+                  onConfirm?.();
+                }}
+                className="w-full max-w-md bg-primary text-primary-foreground font-semibold h-12 text-sm"
+              >
+                Confirm This Map
+              </Button>
+              <button
+                onClick={handleKeepRefining}
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
+              >
+                Keep Refining
+              </button>
 
               {versions.length > 1 && (
                 <div className="flex items-center gap-2 mt-2">

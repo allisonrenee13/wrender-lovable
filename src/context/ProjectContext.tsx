@@ -8,6 +8,7 @@ interface ProjectContextType {
   allProjects: Project[];
   createProject: (data: { title: string; genre: string; setting: string; wordCount: string }) => string;
   updateProjectTitle: (title: string) => void;
+  confirmMap: () => void;
   addPin: (pin: Omit<Pin, "id">) => void;
   removePin: (id: string) => void;
   updatePin: (id: string, updates: Partial<Pin>) => void;
@@ -55,6 +56,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       wordCount: data.wordCount || "0",
       lastEdited: new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
       mapImage: "",
+      mapConfirmed: false,
       pins: [],
       characters: [],
       locations: [],
@@ -70,6 +72,12 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const updateProjectTitle = useCallback((title: string) => {
     updateCurrentProject((p) => ({ ...p, title }));
   }, [updateCurrentProject]);
+
+  const confirmMap = useCallback(() => {
+    updateCurrentProject((p) => ({ ...p, mapConfirmed: true }));
+    logActivity("Map confirmed");
+    toast({ title: "Map confirmed", description: "Your map is now in View Mode" });
+  }, [updateCurrentProject, logActivity]);
 
   const addPin = useCallback((pin: Omit<Pin, "id">) => {
     const id = genId();
@@ -160,6 +168,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         setCurrentProjectId: setProjectId,
         allProjects,
         createProject,
+        confirmMap,
         updateProjectTitle,
         addPin,
         removePin,
