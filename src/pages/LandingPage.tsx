@@ -191,20 +191,15 @@ export default function LandingPage() {
         }`}
       >
         <SeeneryLogo variant="sidebar" />
-
-        {/* Desktop links */}
         <div className="hidden sm:flex items-center gap-4">
           <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Sign In</a>
           <Button className="bg-primary text-primary-foreground text-sm rounded-full px-5 h-9">Start Free</Button>
         </div>
-
-        {/* Mobile hamburger */}
         <button className="sm:hidden p-1" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
           {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </nav>
 
-      {/* Mobile menu dropdown */}
       {mobileMenuOpen && (
         <div className="sm:hidden fixed inset-x-0 top-[60px] z-40 bg-background border-b border-border px-6 py-4 flex flex-col gap-3">
           <a href="#" className="text-sm text-muted-foreground">Sign In</a>
@@ -218,17 +213,16 @@ export default function LandingPage() {
           See your story's world.
         </h1>
 
-        {/* Italic origin line with gold dividers */}
         <div className="flex flex-col items-center gap-3 mb-6">
           <div className="w-10 h-px bg-secondary" />
           <p className="font-serif italic text-foreground/50 text-sm md:text-base">
-            From figment of imagination — to something you can actually see.
+            From the world in your head — to something you can actually see.
           </p>
           <div className="w-10 h-px bg-secondary" />
         </div>
 
         <p className="text-muted-foreground text-base md:text-lg max-w-xl mb-8 leading-relaxed">
-          Figment is the visual companion writers use while writing. Sketch your story's setting as a clean line drawing — see what's in your head, plan where everything happens, and write with clarity.
+          Wrender is the visual companion writers use while writing. Sketch your story's setting as a clean line drawing — see what's in your head, plan where everything happens, and write with clarity.
         </p>
         <div className="flex flex-col sm:flex-row items-center gap-3 mb-4">
           <Button className="bg-primary text-secondary font-medium rounded-full px-8 h-11 text-base">
@@ -246,27 +240,21 @@ export default function LandingPage() {
             <span className="w-2.5 h-2.5 rounded-full bg-destructive/40" />
             <span className="w-2.5 h-2.5 rounded-full bg-secondary/40" />
             <span className="w-2.5 h-2.5 rounded-full bg-green-400/40" />
-            <span className="ml-3 text-[10px] text-muted-foreground">Figment — Isla Serrano</span>
+            <span className="ml-3 text-[10px] text-muted-foreground">Wrender — Isla Serrano</span>
           </div>
           <div className="h-64 md:h-96 bg-[hsl(40,20%,97%)] flex items-center justify-center relative overflow-hidden">
             <svg viewBox="0 0 600 300" className="w-full h-full" fill="none">
-              {/* Water lines */}
               <line x1="0" y1="200" x2="600" y2="200" stroke="currentColor" strokeWidth="0.3" opacity="0.08" />
               <line x1="0" y1="220" x2="600" y2="220" stroke="currentColor" strokeWidth="0.3" opacity="0.06" />
               <line x1="0" y1="240" x2="600" y2="240" stroke="currentColor" strokeWidth="0.3" opacity="0.04" />
-              {/* Island — precise line sketch */}
               <path
                 d="M150 160 Q165 110 210 95 Q260 78 310 82 Q360 72 410 100 Q450 120 465 155 Q458 178 430 188 Q390 202 340 196 Q290 208 240 196 Q195 192 168 180 Q148 174 150 160Z"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                fill="none"
+                stroke="currentColor" strokeWidth="1.5" fill="none"
               />
-              {/* Grid lines on island */}
               <line x1="200" y1="100" x2="200" y2="190" stroke="currentColor" strokeWidth="0.3" opacity="0.08" />
               <line x1="260" y1="85" x2="260" y2="200" stroke="currentColor" strokeWidth="0.3" opacity="0.08" />
               <line x1="340" y1="80" x2="340" y2="195" stroke="currentColor" strokeWidth="0.3" opacity="0.08" />
               <line x1="400" y1="95" x2="400" y2="185" stroke="currentColor" strokeWidth="0.3" opacity="0.08" />
-              {/* Pins */}
               <circle cx="250" cy="130" r="5" className="fill-secondary" />
               <text x="250" y="120" textAnchor="middle" fill="currentColor" fontSize="8" fontFamily="Playfair Display, serif" opacity="0.7">Lighthouse</text>
               <circle cx="350" cy="110" r="5" className="fill-secondary" />
@@ -275,7 +263,6 @@ export default function LandingPage() {
               <text x="400" y="138" textAnchor="middle" fill="currentColor" fontSize="7" opacity="0.5">Police Station</text>
               <circle cx="200" cy="155" r="4" className="fill-primary" />
               <text x="200" y="148" textAnchor="middle" fill="currentColor" fontSize="7" opacity="0.5">Ferry Dock</text>
-              {/* Compass */}
               <text x="540" y="60" textAnchor="middle" fill="currentColor" fontSize="10" fontFamily="Playfair Display, serif" opacity="0.25">N</text>
               <line x1="540" y1="62" x2="540" y2="80" stroke="currentColor" strokeWidth="0.5" opacity="0.2" />
             </svg>
@@ -283,38 +270,31 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ══ Section 2 — From Figment to Reality ══ */}
+      {/* ══ Section 2 — From Imagination to Reality ══ */}
       <section className="py-20 px-6 md:px-12">
         <div className="max-w-4xl mx-auto text-center mb-14">
-          <span className="text-xs font-medium text-secondary uppercase tracking-widest mb-3 block">The idea behind Figment</span>
+          <span className="text-xs font-medium text-secondary uppercase tracking-widest mb-3 block">The idea behind Wrender</span>
           <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground leading-tight mb-2">You imagined it.</h2>
           <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground leading-tight mb-6">Now you can see it.</h2>
           <p className="text-muted-foreground max-w-xl mx-auto leading-relaxed">
-            A figment is something that exists only in the mind — vivid, detailed, fully formed, but invisible to everyone else. Figment takes the world you've been carrying in your head and turns it into something you can see, plan, and build on.
+            Your story's world is vivid, detailed, fully formed — but invisible to everyone else. Wrender takes the world you've been carrying in your head and turns it into something you can see, plan, and build on.
           </p>
         </div>
 
-        {/* Figment → Reality visual */}
         <div className="max-w-3xl mx-auto flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10">
-          {/* Left — dotted / imagined */}
           <div className="flex flex-col items-center">
             <svg width="160" height="120" viewBox="0 0 160 120" fill="none" className="mb-3">
               <path
                 d="M30 65 Q35 40 55 33 Q75 26 95 30 Q115 25 130 45 Q140 55 138 68 Q130 78 110 82 Q85 88 65 82 Q42 78 32 72 Q28 70 30 65Z"
-                stroke="currentColor"
-                strokeWidth="1"
-                strokeDasharray="3 3"
-                fill="none"
-                opacity="0.4"
+                stroke="currentColor" strokeWidth="1" strokeDasharray="3 3" fill="none" opacity="0.4"
               />
               <circle cx="80" cy="52" r="2" stroke="currentColor" strokeWidth="0.8" strokeDasharray="2 2" fill="none" opacity="0.3" />
             </svg>
-            <p className="text-xs italic text-muted-foreground">The figment</p>
+            <p className="text-xs italic text-muted-foreground">Your world</p>
           </div>
 
-          {/* Arrow */}
           <div className="flex flex-col items-center gap-1">
-            <span className="text-[10px] text-muted-foreground/50">Figment</span>
+            <span className="text-[10px] text-muted-foreground/50">Wrender</span>
             <svg width="60" height="20" viewBox="0 0 60 20" fill="none" className="md:block hidden">
               <line x1="0" y1="10" x2="50" y2="10" stroke="hsl(var(--secondary))" strokeWidth="1.5" />
               <path d="M46 5 L55 10 L46 15" stroke="hsl(var(--secondary))" strokeWidth="1.5" fill="none" />
@@ -325,17 +305,13 @@ export default function LandingPage() {
             </svg>
           </div>
 
-          {/* Right — solid / real */}
           <div className="flex flex-col items-center">
             <svg width="160" height="120" viewBox="0 0 160 120" fill="none" className="mb-3">
               <path
                 d="M30 65 Q35 40 55 33 Q75 26 95 30 Q115 25 130 45 Q140 55 138 68 Q130 78 110 82 Q85 88 65 82 Q42 78 32 72 Q28 70 30 65Z"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                fill="none"
+                stroke="currentColor" strokeWidth="1.5" fill="none"
               />
               <circle cx="80" cy="52" r="2.5" className="fill-primary" />
-              {/* Detail lines */}
               <line x1="50" y1="55" x2="70" y2="50" stroke="currentColor" strokeWidth="0.5" opacity="0.3" />
               <line x1="90" y1="48" x2="115" y2="52" stroke="currentColor" strokeWidth="0.5" opacity="0.3" />
               <path d="M60 65 Q70 60 80 63" stroke="currentColor" strokeWidth="0.4" opacity="0.2" />
@@ -348,26 +324,18 @@ export default function LandingPage() {
       {/* ══ Section 3 — Writing Companion ══ */}
       <section className="py-20 px-6 md:px-12 bg-[hsl(40,20%,97%)]">
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-          {/* Left text */}
           <div>
             <span className="text-xs font-medium text-secondary uppercase tracking-widest mb-3 block">Built for while you write</span>
             <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-6 leading-tight">
               Sometimes seeing what's in your head helps you write what comes next.
             </h2>
             <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
-              <p>
-                You're mid-chapter. Your characters are at the yacht club and split up — but you can't quite picture where everyone goes. You know the lighthouse is north and the hotel is south, but is the timing right? Does the geography work?
-              </p>
-              <p>
-                Figment sits alongside your writing. Open it when you need to think visually — see your setting as a clean line sketch, place your events on the map, and figure out what happens next before you write it.
-              </p>
-              <p className="font-medium text-foreground">
-                Not after you finish your book. While you're writing it.
-              </p>
+              <p>You're mid-chapter. Your characters are at the yacht club and split up — but you can't quite picture where everyone goes. You know the lighthouse is north and the hotel is south, but is the timing right? Does the geography work?</p>
+              <p>Wrender sits alongside your writing. Open it when you need to think visually — see your setting as a clean line sketch, place your events on the map, and figure out what happens next before you write it.</p>
+              <p className="font-medium text-foreground">Not after you finish your book. While you're writing it.</p>
             </div>
           </div>
 
-          {/* Right visual — split screen mockup */}
           <div className="border border-border rounded-lg overflow-hidden shadow-sm">
             <div className="flex items-center gap-1.5 px-3 py-2 bg-muted/50 border-b border-border">
               <span className="w-2 h-2 rounded-full bg-destructive/40" />
@@ -375,7 +343,6 @@ export default function LandingPage() {
               <span className="w-2 h-2 rounded-full bg-green-400/40" />
             </div>
             <div className="flex h-56 md:h-64">
-              {/* Writing app side */}
               <div className="flex-1 p-4 border-r border-border bg-card">
                 <div className="space-y-2">
                   <div className="h-2 bg-muted rounded w-3/4" />
@@ -391,7 +358,6 @@ export default function LandingPage() {
                 </div>
                 <p className="text-[8px] text-muted-foreground/40 mt-3 font-serif italic">Your writing app</p>
               </div>
-              {/* Figment side */}
               <div className="flex-1 bg-[hsl(40,20%,97%)] flex items-center justify-center">
                 <svg viewBox="0 0 160 120" className="w-4/5 h-4/5" fill="none">
                   <path d="M30 60 Q40 35 60 30 Q80 25 100 30 Q120 40 130 60 Q120 70 100 75 Q80 80 60 75 Q40 70 30 60Z" stroke="currentColor" strokeWidth="0.8" fill="none" />
@@ -410,21 +376,13 @@ export default function LandingPage() {
       <section className="py-20 px-6 md:px-12">
         <div className="max-w-4xl mx-auto text-center mb-12">
           <span className="text-xs font-medium text-secondary uppercase tracking-widest mb-3 block">Sound familiar?</span>
-          <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground">
-            Your story's world lives entirely in your head.
-          </h2>
+          <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground">Your story's world lives entirely in your head.</h2>
         </div>
         <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
-            <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-4 font-medium">Before Figment</h3>
+            <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-4 font-medium">Before Wrender</h3>
             <ul className="space-y-3">
-              {[
-                "Scribbled maps on notebook paper you keep losing",
-                "Stopping mid-scene because you can't picture the geography",
-                "Characters whose locations you're constantly second-guessing",
-                "Plot events you know happen somewhere but can't visualise",
-                "Staring at a blank page when you could be planning what comes next",
-              ].map((t) => (
+              {["Scribbled maps on notebook paper you keep losing","Stopping mid-scene because you can't picture the geography","Characters whose locations you're constantly second-guessing","Plot events you know happen somewhere but can't visualise","Staring at a blank page when you could be planning what comes next"].map((t) => (
                 <li key={t} className="flex items-start gap-2.5 text-sm text-muted-foreground">
                   <span className="w-1.5 h-1.5 rounded-full bg-destructive/50 mt-1.5 flex-shrink-0" />
                   {t}
@@ -433,15 +391,9 @@ export default function LandingPage() {
             </ul>
           </div>
           <div>
-            <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-4 font-medium">With Figment</h3>
+            <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-4 font-medium">With Wrender</h3>
             <ul className="space-y-3">
-              {[
-                "A precise line sketch of your setting — always open beside your writing",
-                "Every location planned before you write the scene",
-                "Characters tracked across your world — you always know where everyone is",
-                "Plot events pinned to the sketch so you can see the story spatially",
-                "Clarity on what happens next — before you write a single word",
-              ].map((t) => (
+              {["A precise line sketch of your setting — always open beside your writing","Every location planned before you write the scene","Characters tracked across your world — you always know where everyone is","Plot events pinned to the sketch so you can see the story spatially","Clarity on what happens next — before you write a single word"].map((t) => (
                 <li key={t} className="flex items-start gap-2.5 text-sm text-foreground">
                   <span className="w-1.5 h-1.5 rounded-full bg-secondary mt-1.5 flex-shrink-0" />
                   {t}
@@ -458,24 +410,18 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center p-6">
               <IconSketchSetting />
-              <h3 className="font-serif font-semibold text-lg mb-2">Sketch Your Setting</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Describe your world or upload a reference — Figment generates a precise architectural line sketch of your setting. Like a floor plan for your story.
-              </p>
+              <h3 className="font-serif font-semibold text-lg mb-2">Render Your Setting</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">Describe your world or upload a reference — Wrender generates a precise architectural line sketch of your setting. Like a floor plan for your story.</p>
             </div>
             <div className="text-center p-6">
               <IconPlaceStory />
               <h3 className="font-serif font-semibold text-lg mb-2">Place Your Story</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Pin plot events and scenes directly onto your sketch. See exactly where everything happens — and whether your story's geography actually works.
-              </p>
+              <p className="text-sm text-muted-foreground leading-relaxed">Pin plot events and scenes directly onto your sketch. See exactly where everything happens — and whether your story's geography actually works.</p>
             </div>
             <div className="text-center p-6">
               <IconTrackChars />
               <h3 className="font-serif font-semibold text-lg mb-2">Track Your Characters</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Track your characters across your setting. Know where everyone is at every moment — especially when your scenes get complex.
-              </p>
+              <p className="text-sm text-muted-foreground leading-relaxed">Track your characters across your setting. Know where everyone is at every moment — especially when your scenes get complex.</p>
             </div>
           </div>
           <div className="text-center mt-8">
@@ -488,33 +434,13 @@ export default function LandingPage() {
       <section className="py-20 px-6 md:px-12">
         <div className="max-w-5xl mx-auto text-center mb-12">
           <span className="text-xs font-medium text-secondary uppercase tracking-widest mb-3 block">Works for every kind of story</span>
-          <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-3">If setting matters to your story — Figment is for you.</h2>
-          <p className="text-muted-foreground max-w-lg mx-auto">
-            Whether your world is a fantasy kingdom, a controlled dystopia, or a sun-bleached island — if place shapes your story, you need to see it.
-          </p>
+          <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-3">If setting matters to your story — Wrender is for you.</h2>
+          <p className="text-muted-foreground max-w-lg mx-auto">Whether your world is a fantasy kingdom, a controlled dystopia, or a sun-bleached island — if place shapes your story, you need to see it.</p>
         </div>
         <div className="max-w-5xl mx-auto flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4 md:grid md:grid-cols-3 md:overflow-visible">
-          <BookCard
-            title="The Paper Palace"
-            genre="Literary Fiction"
-            setting="Cape Cod, Massachusetts"
-            quote="The lake, the house, the woods. Every scene lives in a specific place."
-            sketch={<CapeCodSketch />}
-          />
-          <BookCard
-            title="The Giver"
-            genre="Dystopian Fiction"
-            setting="The Community"
-            quote="The boundary between here and Elsewhere is everything."
-            sketch={<CommunitySketch />}
-          />
-          <BookCard
-            title="A Court of Thorns and Roses"
-            genre="Fantasy"
-            setting="Prythian"
-            quote="You need to know where the Wall is before you can cross it."
-            sketch={<PrythianSketch />}
-          />
+          <BookCard title="The Paper Palace" genre="Literary Fiction" setting="Cape Cod, Massachusetts" quote="The lake, the house, the woods. Every scene lives in a specific place." sketch={<CapeCodSketch />} />
+          <BookCard title="The Giver" genre="Dystopian Fiction" setting="The Community" quote="The boundary between here and Elsewhere is everything." sketch={<CommunitySketch />} />
+          <BookCard title="A Court of Thorns and Roses" genre="Fantasy" setting="Prythian" quote="You need to know where the Wall is before you can cross it." sketch={<PrythianSketch />} />
         </div>
       </section>
 
@@ -522,16 +448,14 @@ export default function LandingPage() {
       <section id="how-it-works" className="py-20 px-6 md:px-12 bg-[hsl(40,20%,97%)]">
         <div className="max-w-5xl mx-auto text-center mb-14">
           <span className="text-xs font-medium text-secondary uppercase tracking-widest mb-3 block">How it works</span>
-          <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground">
-            From figment to floor plan in minutes.
-          </h2>
+          <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground">From the world in your head — to a floor plan in minutes.</h2>
         </div>
         <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 relative">
           <div className="hidden md:block absolute top-16 left-[12.5%] right-[12.5%] border-t-2 border-dashed border-border" />
           <Step num={1} title="Describe what you imagined" desc="Type a description of your setting or upload reference images of real places that inspired your world." icon={<StepIcon1 />} />
-          <Step num={2} title="Mark it up" desc="Circle what to keep, exclude, or adapt. Guide Figment toward your exact vision using the markup tool." icon={<StepIcon2 />} />
-          <Step num={3} title="Generate your sketch" desc="Figment draws a precise black line sketch of your setting — like an architectural floor plan or a director's location map." icon={<StepIcon3 />} />
-          <Step num={4} title="Write alongside it" desc="Keep Figment open while you write. Drop pins, track characters, plan scenes. Your sketch grows as your story does." icon={<StepIcon4 />} />
+          <Step num={2} title="Mark it up" desc="Circle what to keep, exclude, or adapt. Guide Wrender toward your exact vision using the markup tool." icon={<StepIcon2 />} />
+          <Step num={3} title="Render your sketch" desc="Wrender draws a precise black line sketch of your setting — like an architectural floor plan or a director's location map." icon={<StepIcon3 />} />
+          <Step num={4} title="Write alongside it" desc="Keep Wrender open while you write. Drop pins, track characters, plan scenes. Your sketch grows as your story does." icon={<StepIcon4 />} />
         </div>
       </section>
 
@@ -539,7 +463,7 @@ export default function LandingPage() {
       <section className="py-20 px-6 md:px-12">
         <div className="max-w-3xl mx-auto text-center">
           <p className="font-serif text-xl md:text-2xl italic text-foreground leading-relaxed mb-6">
-            "I always knew what the island looked like. I just couldn't see it — until I sketched it out in Figment. Now I visualise every scene in Figment before I write it."
+            "I always knew what the island looked like. I just couldn't see it — until I rendered it out in Wrender. Now I visualise every scene before I write it."
           </p>
           <div className="flex items-center justify-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary/10 border border-border" />
@@ -559,45 +483,19 @@ export default function LandingPage() {
           <p className="text-muted-foreground">Start free. Upgrade when your world demands it.</p>
         </div>
         <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-          <PricingCard
-            name="Free"
-            price="$0"
-            features={["1 project", "Up to 10 map pins", "5 characters", "Basic line sketch generation", "Watermarked export"]}
-            cta="Start Free"
-          />
-          <PricingCard
-            name="Storyteller"
-            price="$9/month"
-            period="$7/month billed annually"
-            popular
-            features={["Unlimited projects", "Unlimited pins & characters", "AI sketch generation", "Upload & adapt real locations", "Clean export — print ready", "Location sketch mood boards"]}
-            cta="Start Free Trial"
-          />
-          <PricingCard
-            name="Worldbuilder"
-            price="$15/month"
-            period="$12/month billed annually"
-            features={["Everything in Storyteller", "Character movement mapping", "Advanced timeline view", "Co-authoring", "Priority generation", "Full version history"]}
-            cta="Start Free Trial"
-          />
+          <PricingCard name="Free" price="$0" features={["1 project","Up to 10 map pins","5 characters","Basic line sketch generation","Watermarked export"]} cta="Start Free" />
+          <PricingCard name="Storyteller" price="$9/month" period="$7/month billed annually" popular features={["Unlimited projects","Unlimited pins & characters","AI sketch generation","Upload & adapt real locations","Clean export — print ready","Location sketch mood boards"]} cta="Start Free Trial" />
+          <PricingCard name="Worldbuilder" price="$15/month" period="$12/month billed annually" features={["Everything in Storyteller","Character movement mapping","Advanced timeline view","Co-authoring","Priority generation","Full version history"]} cta="Start Free Trial" />
         </div>
-        <p className="text-center text-xs text-muted-foreground/60 mt-8">
-          All plans include a 14-day free trial. No credit card required.
-        </p>
+        <p className="text-center text-xs text-muted-foreground/60 mt-8">All plans include a 14-day free trial. No credit card required.</p>
       </section>
 
       {/* ══ Section 10 — Emotional Close ══ */}
       <section className="py-24 px-6 text-center">
-        <h2 className="font-serif text-3xl md:text-5xl font-bold text-foreground leading-tight max-w-2xl mx-auto mb-2">
-          You imagined it.
-        </h2>
-        <h2 className="font-serif text-3xl md:text-5xl font-bold text-foreground leading-tight max-w-2xl mx-auto mb-8">
-          Now you can see it.
-        </h2>
-        <p className="text-muted-foreground mb-8">Join writers who visualise their world in Figment.</p>
-        <Button className="bg-primary text-secondary font-medium rounded-full px-10 h-12 text-base mb-3">
-          Start Visualising Your World
-        </Button>
+        <h2 className="font-serif text-3xl md:text-5xl font-bold text-foreground leading-tight max-w-2xl mx-auto mb-2">You imagined it.</h2>
+        <h2 className="font-serif text-3xl md:text-5xl font-bold text-foreground leading-tight max-w-2xl mx-auto mb-8">Now you can see it.</h2>
+        <p className="text-muted-foreground mb-8">Join writers who visualise their world in Wrender.</p>
+        <Button className="bg-primary text-secondary font-medium rounded-full px-10 h-12 text-base mb-3">Start Visualising Your World</Button>
         <p className="text-xs text-muted-foreground/60">Free to start · No credit card · 14-day trial</p>
       </section>
 
@@ -605,7 +503,7 @@ export default function LandingPage() {
       <footer className="border-t border-border py-8 px-6 md:px-12">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <SeeneryLogo variant="sidebar" />
-          <p className="text-xs italic font-serif text-muted-foreground/50">See your story's world.</p>
+          <p className="text-xs italic font-serif text-muted-foreground/50">Render your world. Write your story.</p>
           <div className="flex items-center gap-6 text-xs text-muted-foreground">
             <a href="#" className="hover:text-foreground transition-colors">Features</a>
             <a href="#" className="hover:text-foreground transition-colors">Pricing</a>
@@ -613,7 +511,7 @@ export default function LandingPage() {
             <a href="#" className="hover:text-foreground transition-colors font-medium text-foreground">Start Free</a>
           </div>
         </div>
-        <p className="text-center text-[10px] text-muted-foreground/40 mt-6">© 2025 Figment · Built for fiction writers</p>
+        <p className="text-center text-[10px] text-muted-foreground/40 mt-6">© 2025 Wrender · Built for fiction writers</p>
       </footer>
     </div>
   );
