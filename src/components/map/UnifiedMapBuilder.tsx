@@ -501,26 +501,34 @@ function traceImageToSVGPaths(imageData: ImageData, w: number, h: number): strin
 }
 
 function generateOutlinePath(w: number, h: number): string {
-  // Generate a simple organic outline as fallback
-  const cx = w / 2, cy = h / 2;
+  const cx = w / 2;
+  const cy = h / 2;
   const r = Math.min(w, h) * 0.35;
+
+  // Fixed variation values — consistent every time, organic but stable
+  const variations = [1.0, 0.88, 1.1, 0.92, 0.85, 1.05, 0.95, 1.08, 1.0, 0.9, 1.12, 0.87, 0.95, 1.02, 0.88, 1.0];
+  const cpOffsets = [8, -10, 12, -8, 10, -12, 6, -9, 11, -7, 9, -11, 7, -8, 10, -6];
+
   const points: Array<{ x: number; y: number }> = [];
-  for (let a = 0; a < Math.PI * 2; a += Math.PI / 8) {
-    const variation = r * (0.85 + Math.random() * 0.3);
+  const steps = 16;
+  for (let i = 0; i < steps; i++) {
+    const a = (i / steps) * Math.PI * 2;
+    const variation = r * variations[i];
     points.push({
       x: cx + Math.cos(a) * variation,
       y: cy + Math.sin(a) * variation,
     });
   }
+
   let d = `M ${points[0].x.toFixed(0)} ${points[0].y.toFixed(0)}`;
   for (let i = 1; i < points.length; i++) {
     const prev = points[i - 1];
     const curr = points[i];
-    const cpx = (prev.x + curr.x) / 2 + (Math.random() - 0.5) * 20;
-    const cpy = (prev.y + curr.y) / 2 + (Math.random() - 0.5) * 20;
+    const cpx = (prev.x + curr.x) / 2 + cpOffsets[i];
+    const cpy = (prev.y + curr.y) / 2 + cpOffsets[(i + 4) % 16];
     d += ` Q ${cpx.toFixed(0)} ${cpy.toFixed(0)} ${curr.x.toFixed(0)} ${curr.y.toFixed(0)}`;
   }
-  d += "Z";
+  d += " Z";
   return d;
 }
 
