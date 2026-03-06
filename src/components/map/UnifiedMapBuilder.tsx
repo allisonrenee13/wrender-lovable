@@ -53,34 +53,50 @@ function completedStepsForPhase(phase: Phase): Set<number> {
 const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   const { currentProject, confirmMap } = useProject();
   const isDemoIsla = currentProject.id === "isla-serrano";
+  const isSaltMarsh = currentProject.id === "salt-marsh";
 
-  // Isla Serrano starts at step 3 (render ready)
-  const [phase, setPhase] = useState<Phase>(isDemoIsla ? "renderReady" : "entry");
+  // Salt Marsh starts at step 2 with a pre-loaded tidal island shape
+  const saltMarshPath = "M280 120 Q320 100 360 115 Q400 135 410 175 Q415 215 395 250 Q380 270 370 300 Q365 330 355 360 Q340 385 310 400 Q280 410 250 395 Q220 375 210 340 Q200 305 210 270 Q220 240 235 215 Q250 185 260 155 Q265 135 280 120Z";
+
+  const getInitialPhase = (): Phase => {
+    if (isDemoIsla) return "renderReady";
+    if (isSaltMarsh) return "style";
+    return "entry";
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<MapTemplate | null>(null);
   const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
 
-  const [canvasState, setCanvasState] = useState<CanvasState>(
-    isDemoIsla
-      ? {
-          paths: [
-            "M300 75 Q330 72 345 85 Q370 100 365 120 Q375 135 370 155 Q380 180 375 200 Q385 225 378 250 Q382 275 375 295 Q380 315 370 335 Q378 355 372 375 Q380 400 368 420 Q365 445 355 460 Q348 480 338 500 Q330 520 322 540 Q315 560 308 575 Q303 588 300 600 Q297 588 292 575 Q285 560 278 540 Q270 520 262 500 Q252 480 245 460 Q235 445 232 420 Q220 400 228 375 Q222 355 230 335 Q220 315 225 295 Q218 275 222 250 Q215 225 225 200 Q220 180 230 155 Q225 135 235 120 Q230 100 255 85 Q270 72 300 75Z",
-          ],
-          features: [
-            { type: "building", x: 310, y: 160 },
-            { type: "road", x: 300, y: 85, x2: 300, y2: 560 },
-            { type: "elevation", x: 300, y: 580 },
-          ],
-          referenceImage: null,
-          referenceOpacity: 20,
-          nodeCount: 12,
-        }
-      : defaultCanvas
-  );
+  const [canvasState, setCanvasState] = useState<CanvasState>(() => {
+    if (isDemoIsla) return {
+      paths: [
+        "M300 75 Q330 72 345 85 Q370 100 365 120 Q375 135 370 155 Q380 180 375 200 Q385 225 378 250 Q382 275 375 295 Q380 315 370 335 Q378 355 372 375 Q380 400 368 420 Q365 445 355 460 Q348 480 338 500 Q330 520 322 540 Q315 560 308 575 Q303 588 300 600 Q297 588 292 575 Q285 560 278 540 Q270 520 262 500 Q252 480 245 460 Q235 445 232 420 Q220 400 228 375 Q222 355 230 335 Q220 315 225 295 Q218 275 222 250 Q215 225 225 200 Q220 180 230 155 Q225 135 235 120 Q230 100 255 85 Q270 72 300 75Z",
+      ],
+      features: [
+        { type: "building", x: 310, y: 160 },
+        { type: "road", x: 300, y: 85, x2: 300, y2: 560 },
+        { type: "elevation", x: 300, y: 580 },
+      ],
+      referenceImage: null, referenceOpacity: 20, nodeCount: 12,
+    };
+    if (isSaltMarsh) return {
+      paths: [saltMarshPath],
+      features: [
+        { type: "forest", x: 330, y: 200 },
+        { type: "river", x: 280, y: 300 },
+      ],
+      referenceImage: null, referenceOpacity: 40, nodeCount: 8,
+    };
+    return defaultCanvas;
+  });
 
-  const [stylePrefs, setStylePrefs] = useState<StylePreferences>(
-    isDemoIsla ? islaSerranoStylePrefs : defaultStylePreferences
-  );
+  const [stylePrefs, setStylePrefs] = useState<StylePreferences>(() => {
+    if (isDemoIsla) return islaSerranoStylePrefs;
+    if (isSaltMarsh) return { ...defaultStylePreferences, lineStyle: "hand-drawn" as const };
+    return defaultStylePreferences;
+  });
 
   const hasShape = canvasState.paths.length > 0 || selectedTemplate !== null;
   const currentStep = phaseToStep(phase);
