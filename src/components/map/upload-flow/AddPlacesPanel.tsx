@@ -3,13 +3,15 @@ import { MapPin, Pencil, MessageSquare, Camera, ChevronDown } from "lucide-react
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { islaSerranoLocations, type IslaSerranoLocation } from "@/data/isla-serrano";
+import { type IslaSerranoLocation } from "@/data/isla-serrano";
 
 interface AddPlacesPanelProps {
   selectedLocationId: string | null;
   onSelectLocation: (id: string | null) => void;
   pinDropMode: boolean;
   onTogglePinDrop: () => void;
+  locations: IslaSerranoLocation[];
+  onAddLocation: (loc: IslaSerranoLocation) => void;
 }
 
 const typeLabels: Record<string, string> = {
@@ -28,6 +30,8 @@ const AddPlacesPanel = ({
   onSelectLocation,
   pinDropMode,
   onTogglePinDrop,
+  locations,
+  onAddLocation,
 }: AddPlacesPanelProps) => {
   const [expanded, setExpanded] = useState<ToolSection>("pin");
 
@@ -168,8 +172,33 @@ const AddPlacesPanel = ({
               <p className="text-xs text-muted-foreground">
                 Describe a place and Figment will find the right spot for it
               </p>
-              <Input placeholder="e.g. A grand hotel on the northern beach" className="h-8 text-xs" />
-              <Button size="sm" variant="outline" className="w-full text-xs">
+              <Input
+                id="describe-place-input"
+                placeholder="e.g. A grand hotel on the northern beach"
+                className="h-8 text-xs"
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full text-xs"
+                onClick={() => {
+                  const input = document.getElementById("describe-place-input") as HTMLInputElement;
+                  const name = input?.value?.trim();
+                  if (!name) return;
+                  const newLoc: IslaSerranoLocation = {
+                    id: `desc-${Date.now()}`,
+                    name,
+                    type: "landmark",
+                    description: name,
+                    x: 260 + Math.random() * 80,
+                    y: 150 + Math.random() * 350,
+                    labelAnchor: Math.random() > 0.5 ? "right" : "left",
+                  };
+                  onAddLocation(newLoc);
+                  onSelectLocation(newLoc.id);
+                  input.value = "";
+                }}
+              >
                 Place It
               </Button>
               <div className="flex flex-wrap gap-1.5">
@@ -214,7 +243,7 @@ const AddPlacesPanel = ({
       <div className="border-t border-border p-3">
         <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">Placed</p>
         <div className="space-y-1 max-h-[200px] overflow-y-auto">
-          {islaSerranoLocations.map((loc) => (
+          {locations.map((loc) => (
             <button
               key={loc.id}
               onClick={() => onSelectLocation(selectedLocationId === loc.id ? null : loc.id)}

@@ -1,17 +1,37 @@
-import { islaSerranoLocations } from "@/data/isla-serrano";
+import { islaSerranoLocations, type IslaSerranoLocation } from "@/data/isla-serrano";
 
 interface IslaSerranoMapProps {
   selectedLocationId: string | null;
   onSelectLocation: (id: string | null) => void;
+  locations?: IslaSerranoLocation[];
+  pinDropMode?: boolean;
+  onMapClick?: (x: number, y: number) => void;
 }
 
-const IslaSerranoMap = ({ selectedLocationId, onSelectLocation }: IslaSerranoMapProps) => {
+const IslaSerranoMap = ({
+  selectedLocationId,
+  onSelectLocation,
+  locations,
+  pinDropMode = false,
+  onMapClick,
+}: IslaSerranoMapProps) => {
+  const displayLocations = locations || islaSerranoLocations;
+
+  const handleSvgClick = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (!pinDropMode || !onMapClick) return;
+    const svg = e.currentTarget;
+    const rect = svg.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 600;
+    const y = ((e.clientY - rect.top) / rect.height) * 700;
+    onMapClick(x, y);
+  };
   return (
     <div className="w-full flex justify-center py-6">
       <svg
         viewBox="0 0 600 700"
-        className="w-full max-w-[600px] h-auto"
+        className={`w-full max-w-[600px] h-auto ${pinDropMode ? "cursor-crosshair" : ""}`}
         style={{ fontFamily: "var(--font-serif)" }}
+        onClick={handleSvgClick}
       >
         {/* Cream background */}
         <rect width="600" height="700" fill="#faf8f4" rx="4" />
@@ -129,7 +149,7 @@ const IslaSerranoMap = ({ selectedLocationId, onSelectLocation }: IslaSerranoMap
         </g>
 
         {/* Location markers */}
-        {islaSerranoLocations.map((loc) => {
+        {displayLocations.map((loc) => {
           const isSelected = selectedLocationId === loc.id;
           return (
             <g
