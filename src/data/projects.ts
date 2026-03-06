@@ -4,6 +4,7 @@ import mapAcotar from "@/assets/map-acotar.jpg";
 
 export type PinType = "plot" | "character" | "location";
 export type EventTier = "main" | "minor";
+export type LocationStatus = "pinned" | "illustrated";
 
 export interface Pin {
   id: string;
@@ -38,6 +39,16 @@ export interface Location {
   firstAppears: number;
   eventCount: number;
   photo: string | null;
+  status: LocationStatus;
+}
+
+export interface MapVersion {
+  id: string;
+  version: number;
+  label: string;
+  description: string;
+  date: string;
+  mapImage: string;
 }
 
 export interface TimelineEvent {
@@ -65,9 +76,60 @@ export interface Project {
   locations: Location[];
   timeline: TimelineEvent[];
   recentActivity: string[];
+  mapVersions: MapVersion[];
 }
 
 export const projects: Project[] = [
+  {
+    id: "isla-serrano",
+    title: "Isla Serrano",
+    genre: "Literary Fiction",
+    setting: "Isla Serrano, a barrier island",
+    wordCount: "72,100",
+    lastEdited: "March 6, 2026",
+    mapImage: "",
+    mapConfirmed: true,
+    pins: [
+      { id: "is1", title: "The Solano Hotel", type: "location", tier: "main", chapter: 1, location: "The Solano Hotel", note: "Grand old beach hotel, 90s glamour", x: 330, y: 145, placed: true },
+      { id: "is2", title: "Cape Serrano Lighthouse", type: "location", tier: "main", chapter: 5, location: "Cape Serrano Lighthouse", note: "Remote south end. Isolated, dramatic.", x: 300, y: 580, placed: true },
+      { id: "is3", title: "The Reef Cottage", type: "location", tier: "main", chapter: 2, location: "The Reef Cottage", note: "The island house at the heart of the story", x: 340, y: 340, placed: true },
+      { id: "is4", title: "The Village Green", type: "location", tier: "main", chapter: 4, location: "The Village Green", note: "Public square, community hub", x: 300, y: 350, placed: true },
+      { id: "is5", title: "The Police Station", type: "location", tier: "main", chapter: 14, location: "The Police Station", note: "Where everything unravels", x: 280, y: 280, placed: true },
+      { id: "is6", title: "The Ferry Dock", type: "location", tier: "main", chapter: 3, location: "The Ferry Dock", note: "The only way on or off the island by water", x: 240, y: 200, placed: true },
+      { id: "is7", title: "The Old Cemetery", type: "location", tier: "main", chapter: 19, location: "The Old Cemetery", note: "Hidden among the dunes, holds island secrets", x: 310, y: 480, placed: true },
+    ],
+    characters: [
+      { id: "c1", name: "Maren Solano", initial: "M", role: "Protagonist", age: "34", firstAppears: 1, traits: ["Restless", "Perceptive", "Guarded"], notes: "Returns to the island after 12 years.", photo: null },
+      { id: "c2", name: "Leo Westwood", initial: "L", role: "Supporting", age: "36", firstAppears: 2, traits: ["Magnetic", "Secretive", "Loyal"], notes: "Childhood friend with unresolved history.", photo: null },
+    ],
+    locations: [
+      { id: "l1", name: "The Solano Hotel", description: "Grand old beach hotel, 90s glamour. North end, beachside.", type: "Hotel", firstAppears: 1, eventCount: 3, photo: null, status: "illustrated" },
+      { id: "l2", name: "Cape Serrano Lighthouse", description: "Remote south end. Isolated, dramatic.", type: "Landmark", firstAppears: 5, eventCount: 2, photo: null, status: "illustrated" },
+      { id: "l3", name: "The Reef Cottage", description: "The island house at the heart of the story. Mid-island, ocean side.", type: "House", firstAppears: 2, eventCount: 2, photo: null, status: "illustrated" },
+      { id: "l4", name: "The Village Green", description: "Public square, community hub. Centre of the island village.", type: "Landmark", firstAppears: 4, eventCount: 1, photo: null, status: "illustrated" },
+      { id: "l5", name: "The Police Station", description: "Where everything unravels. Mid-island.", type: "Landmark", firstAppears: 14, eventCount: 1, photo: null, status: "pinned" },
+      { id: "l6", name: "The Ferry Dock", description: "The only way on or off the island by water.", type: "Waterfront", firstAppears: 3, eventCount: 1, photo: null, status: "pinned" },
+      { id: "l7", name: "The Old Cemetery", description: "Hidden among the dunes, holds island secrets.", type: "Landmark", firstAppears: 19, eventCount: 0, photo: null, status: "pinned" },
+    ],
+    timeline: [
+      { id: "t1", title: "Maren arrives at the hotel", tier: "main", chapter: 1, character: "Maren", characterInitial: "M", pinType: "plot", location: "The Solano Hotel" },
+      { id: "t2", title: "Reunion at Reef Cottage", tier: "main", chapter: 2, character: "Leo", characterInitial: "L", pinType: "character", location: "The Reef Cottage" },
+      { id: "t3", title: "The ferry doesn't come", tier: "main", chapter: 3, character: "Maren", characterInitial: "M", pinType: "plot", location: "The Ferry Dock" },
+      { id: "t4", title: "Village fair", tier: "minor", chapter: 4, character: "Maren", characterInitial: "M", pinType: "plot", location: "The Village Green" },
+      { id: "t5", title: "Lighthouse at night", tier: "main", chapter: 5, character: "Leo", characterInitial: "L", pinType: "plot", location: "Cape Serrano Lighthouse" },
+    ],
+    recentActivity: [
+      "Added pin: The Old Cemetery — Chapter 19",
+      "Added pin: The Police Station — Chapter 14",
+      "Map updated · Version 3 saved",
+      "Added pin: The Ferry Dock — Chapter 3",
+    ],
+    mapVersions: [
+      { id: "v1", version: 1, label: "Original", description: "Basic island outline, lighthouse, hotel", date: "Feb 20, 2026", mapImage: "" },
+      { id: "v2", version: 2, label: "Added: Harbour Club, Beach Club, Reef Cottage", description: "Added harbour club, beach club, reef cottage", date: "Feb 28, 2026", mapImage: "" },
+      { id: "v3", version: 3, label: "Added: Westwood House, Village Green", description: "Added westwood house, village green", date: "Mar 4, 2026", mapImage: "" },
+    ],
+  },
   {
     id: "paper-palace",
     title: "The Paper Palace",
@@ -95,11 +157,11 @@ export const projects: Project[] = [
       { id: "c5", name: "Anna", initial: "A", role: "Supporting", age: "48", firstAppears: 3, traits: ["Loyal", "Sharp", "Protective"], notes: "Elle's sister.", photo: null },
     ],
     locations: [
-      { id: "l1", name: "The Paper Palace", description: "The weathered summer house where every summer returns", type: "House", firstAppears: 1, eventCount: 3, photo: null },
-      { id: "l2", name: "The Pond", description: "Still water reflecting decades of memory", type: "Landmark", firstAppears: 1, eventCount: 2, photo: null },
-      { id: "l3", name: "The Woods", description: "Dense Cape Cod forest hiding old secrets", type: "Landmark", firstAppears: 3, eventCount: 1, photo: null },
-      { id: "l4", name: "The Boathouse", description: "Hidden at the water's edge, scene of secret meetings", type: "Landmark", firstAppears: 8, eventCount: 1, photo: null },
-      { id: "l5", name: "The Old Cape Road", description: "Winding road connecting all the landmarks of summer", type: "Road", firstAppears: 1, eventCount: 0, photo: null },
+      { id: "l1", name: "The Paper Palace", description: "The weathered summer house where every summer returns", type: "House", firstAppears: 1, eventCount: 3, photo: null, status: "illustrated" },
+      { id: "l2", name: "The Pond", description: "Still water reflecting decades of memory", type: "Landmark", firstAppears: 1, eventCount: 2, photo: null, status: "illustrated" },
+      { id: "l3", name: "The Woods", description: "Dense Cape Cod forest hiding old secrets", type: "Landmark", firstAppears: 3, eventCount: 1, photo: null, status: "illustrated" },
+      { id: "l4", name: "The Boathouse", description: "Hidden at the water's edge, scene of secret meetings", type: "Landmark", firstAppears: 8, eventCount: 1, photo: null, status: "illustrated" },
+      { id: "l5", name: "The Old Cape Road", description: "Winding road connecting all the landmarks of summer", type: "Road", firstAppears: 1, eventCount: 0, photo: null, status: "pinned" },
     ],
     timeline: [
       { id: "t1", title: "Elle's Decision", tier: "main", chapter: 1, character: "Elle", characterInitial: "E", pinType: "plot", location: "The Pond" },
@@ -116,6 +178,7 @@ export const projects: Project[] = [
       "Character added: Jonas",
       "Updated pin: Elle's Decision",
     ],
+    mapVersions: [],
   },
   {
     id: "the-giver",
@@ -146,12 +209,12 @@ export const projects: Project[] = [
       { id: "c6", name: "Jonas's Father", initial: "D", role: "Supporting", age: "40", firstAppears: 1, traits: ["Nurturing", "Obedient", "Blind"], notes: "A Nurturer in the community.", photo: null },
     ],
     locations: [
-      { id: "l1", name: "The Community", description: "An ordered, controlled society of sameness", type: "Landmark", firstAppears: 1, eventCount: 2, photo: null },
-      { id: "l2", name: "The Annex", description: "The Giver's dwelling at the edge of the community", type: "House", firstAppears: 10, eventCount: 2, photo: null },
-      { id: "l3", name: "Jonas's Family Unit", description: "A standard dwelling unit in the community", type: "House", firstAppears: 1, eventCount: 1, photo: null },
-      { id: "l4", name: "The River", description: "The boundary separating the community from Elsewhere", type: "Waterfront", firstAppears: 21, eventCount: 2, photo: null },
-      { id: "l5", name: "The Auditorium", description: "Where ceremonies and assignments take place", type: "Landmark", firstAppears: 7, eventCount: 1, photo: null },
-      { id: "l6", name: "Elsewhere", description: "Beyond the boundary — the unknown", type: "Landmark", firstAppears: 23, eventCount: 1, photo: null },
+      { id: "l1", name: "The Community", description: "An ordered, controlled society of sameness", type: "Landmark", firstAppears: 1, eventCount: 2, photo: null, status: "illustrated" },
+      { id: "l2", name: "The Annex", description: "The Giver's dwelling at the edge of the community", type: "House", firstAppears: 10, eventCount: 2, photo: null, status: "illustrated" },
+      { id: "l3", name: "Jonas's Family Unit", description: "A standard dwelling unit in the community", type: "House", firstAppears: 1, eventCount: 1, photo: null, status: "illustrated" },
+      { id: "l4", name: "The River", description: "The boundary separating the community from Elsewhere", type: "Waterfront", firstAppears: 21, eventCount: 2, photo: null, status: "illustrated" },
+      { id: "l5", name: "The Auditorium", description: "Where ceremonies and assignments take place", type: "Landmark", firstAppears: 7, eventCount: 1, photo: null, status: "illustrated" },
+      { id: "l6", name: "Elsewhere", description: "Beyond the boundary — the unknown", type: "Landmark", firstAppears: 23, eventCount: 1, photo: null, status: "pinned" },
     ],
     timeline: [
       { id: "t0", title: "Asher is late again", tier: "minor", chapter: 1, character: "Asher", characterInitial: "A", pinType: "character", location: "The Auditorium" },
@@ -169,6 +232,7 @@ export const projects: Project[] = [
       "Character added: Gabriel",
       "Updated timeline: Chapter 10",
     ],
+    mapVersions: [],
   },
   {
     id: "acotar",
@@ -200,13 +264,13 @@ export const projects: Project[] = [
       { id: "c6", name: "Alis", initial: "S", role: "Minor", age: "Unknown", firstAppears: 6, traits: ["Protective", "Honest", "Brave"], notes: "Feyre's servant at the Spring Court.", photo: null },
     ],
     locations: [
-      { id: "l1", name: "The Mortal Lands", description: "Feyre's impoverished homeland beyond the Wall", type: "Landmark", firstAppears: 1, eventCount: 1, photo: null },
-      { id: "l2", name: "The Wall", description: "Ancient barrier between mortal and faerie realms", type: "Landmark", firstAppears: 4, eventCount: 2, photo: null },
-      { id: "l3", name: "The Forest of Wolves", description: "Dense woodland where Feyre hunts to survive", type: "Landmark", firstAppears: 1, eventCount: 1, photo: null },
-      { id: "l4", name: "The Spring Court Manor", description: "Tamlin's enchanted estate, beautiful and perilous", type: "House", firstAppears: 6, eventCount: 2, photo: null },
-      { id: "l5", name: "Under the Mountain", description: "Amarantha's dark domain beneath the earth", type: "Landmark", firstAppears: 28, eventCount: 2, photo: null },
-      { id: "l6", name: "The Night Court", description: "Glimpsed realm of starlight and shadow", type: "Landmark", firstAppears: 15, eventCount: 0, photo: null },
-      { id: "l7", name: "The River Road", description: "Path winding through the faerie lands", type: "Road", firstAppears: 4, eventCount: 0, photo: null },
+      { id: "l1", name: "The Mortal Lands", description: "Feyre's impoverished homeland beyond the Wall", type: "Landmark", firstAppears: 1, eventCount: 1, photo: null, status: "illustrated" },
+      { id: "l2", name: "The Wall", description: "Ancient barrier between mortal and faerie realms", type: "Landmark", firstAppears: 4, eventCount: 2, photo: null, status: "illustrated" },
+      { id: "l3", name: "The Forest of Wolves", description: "Dense woodland where Feyre hunts to survive", type: "Landmark", firstAppears: 1, eventCount: 1, photo: null, status: "illustrated" },
+      { id: "l4", name: "The Spring Court Manor", description: "Tamlin's enchanted estate, beautiful and perilous", type: "House", firstAppears: 6, eventCount: 2, photo: null, status: "illustrated" },
+      { id: "l5", name: "Under the Mountain", description: "Amarantha's dark domain beneath the earth", type: "Landmark", firstAppears: 28, eventCount: 2, photo: null, status: "illustrated" },
+      { id: "l6", name: "The Night Court", description: "Glimpsed realm of starlight and shadow", type: "Landmark", firstAppears: 15, eventCount: 0, photo: null, status: "pinned" },
+      { id: "l7", name: "The River Road", description: "Path winding through the faerie lands", type: "Road", firstAppears: 4, eventCount: 0, photo: null, status: "pinned" },
     ],
     timeline: [
       { id: "t1", title: "Feyre Kills the Wolf", tier: "main", chapter: 1, character: "Feyre", characterInitial: "F", pinType: "plot", location: "Forest of Wolves" },
@@ -225,5 +289,6 @@ export const projects: Project[] = [
       "Character added: Rhysand",
       "Updated map: The Wall boundary",
     ],
+    mapVersions: [],
   },
 ];

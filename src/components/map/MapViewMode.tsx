@@ -1,7 +1,7 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useProject } from "@/context/ProjectContext";
 import { Pin, PinType } from "@/data/projects";
-import { Pencil, Plus, Layers, X, GripVertical, MapPin } from "lucide-react";
+import { Pencil, Plus, Layers, X, GripVertical, MapPin, PenTool } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,6 +12,9 @@ import IslaSerranoMap from "./IslaSerranoMap";
 import CapeCodeMap from "./CapeCodeMap";
 import CommunityMap from "./CommunityMap";
 import PrythianMap from "./PrythianMap";
+import VersionStrip from "./VersionStrip";
+import VersionPanel from "./VersionPanel";
+import BakeModal from "./BakeModal";
 
 interface MapViewModeProps {
   onEditMap: () => void;
@@ -30,23 +33,22 @@ const pinTypeLabels: Record<PinType, string> = {
 };
 
 const MapViewMode = ({ onEditMap }: MapViewModeProps) => {
-  const { currentProject, addPin, removePin, updatePin } = useProject();
+  const { currentProject, addPin, removePin, updatePin, getUnillustratedCount } = useProject();
   const [selectedPinId, setSelectedPinId] = useState<string | null>(null);
   const [pinDropMode, setPinDropMode] = useState(false);
   const [showLayers, setShowLayers] = useState(false);
+  const [showVersionPanel, setShowVersionPanel] = useState(false);
   const [hoveredListPinId, setHoveredListPinId] = useState<string | null>(null);
+  const [showBakeModal, setShowBakeModal] = useState(false);
+  const [pillDismissed, setPillDismissed] = useState(false);
 
-  // Pin drop form state
   const [dropPoint, setDropPoint] = useState<{ x: number; y: number } | null>(null);
   const [pinForm, setPinForm] = useState({ name: "", type: "location" as PinType, chapter: 1, note: "" });
-
-  // Pin detail editing
   const [editingField, setEditingField] = useState<string | null>(null);
+  const [draggingPinId, setDraggingPinId] = useState<string | null>(null);
 
   const selectedPin = currentProject.pins.find((p) => p.id === selectedPinId) || null;
-
-  // Dragging state
-  const [draggingPinId, setDraggingPinId] = useState<string | null>(null);
+  const unillustratedCount = getUnillustratedCount();
 
   const handleMapClick = useCallback(
     (x: number, y: number) => {
@@ -61,7 +63,7 @@ const MapViewMode = ({ onEditMap }: MapViewModeProps) => {
     addPin({
       title: pinForm.name,
       type: pinForm.type,
-      tier: pinForm.type === "plot" ? "main" : "main",
+      tier: "main",
       chapter: pinForm.chapter,
       location: pinForm.name,
       note: pinForm.note,
@@ -89,6 +91,13 @@ const MapViewMode = ({ onEditMap }: MapViewModeProps) => {
     [updatePin]
   );
 
+  const currentVersionNum = currentProject.mapVersions.length || 1;
+
+  const getLocationStatus = (pinTitle: string) => {
+    const loc = currentProject.locations.find((l) => l.name === pinTitle);
+    return loc?.status || "pinned";
+  };
+
   const renderMap = () => {
     const mapProps = {
       selectedLocationId: selectedPinId,
@@ -96,6 +105,7 @@ const MapViewMode = ({ onEditMap }: MapViewModeProps) => {
         if (!pinDropMode) {
           setSelectedPinId(id);
           setShowLayers(false);
+          setShowVersionPanel(false);
         }
       },
       pins: currentProject.pins,
@@ -119,7 +129,21 @@ const MapViewMode = ({ onEditMap }: MapViewModeProps) => {
     <div className="h-full flex flex-col relative">
       {/* Top bar */}
       <div className="flex items-center justify-between px-6 py-3 border-b border-border bg-background z-10">
-        <h1 className="text-lg font-serif font-semibold text-foreground">{currentProject.title}</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-lg font-serif font-semibold text-foreground">{currentProject.title}</h1>
+          {currentProject.mapVersions.length > 0 && (
+            <button
+              onClick={() => {
+                setShowVersionPanel(!showVersionPanel);
+                setShowLayers(false);
+                setSelectedPinId(null);
+              }}
+              className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+            >
+              v{currentVersionNum} · {currentProject.mapVersions.length} version{currentProject.mapVersions.length !== 1 ? "s" : ""}
+            </button>
+          )}
+        </div>
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="icon" onClick={onEditMap} title="Edit Map">
             <Pencil className="h-4 w-4" />
@@ -141,6 +165,7 @@ const MapViewMode = ({ onEditMap }: MapViewModeProps) => {
             onClick={() => {
               setShowLayers(!showLayers);
               setSelectedPinId(null);
+              setShowVersionPanel(false);
             }}
             title="Layers"
           >
@@ -163,6 +188,15 @@ const MapViewMode = ({ onEditMap }: MapViewModeProps) => {
       {/* Full-screen map */}
       <div className="flex-1 overflow-auto relative" style={{ backgroundColor: "#FAFAF7" }}>
         {renderMap()}
+
+        {/* Empty pin state message */}
+        {currentProject.pins.length === 0 && !pinDropMode && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <p className="text-sm text-muted-foreground/60 font-serif italic max-w-sm text-center">
+              Add locations instantly as pins. When you're ready, bake them into your illustrated map.
+            </p>
+          </div>
+        )}
 
         {/* Pin drop form popup */}
         {dropPoint && (
@@ -223,7 +257,39 @@ const MapViewMode = ({ onEditMap }: MapViewModeProps) => {
             </div>
           </div>
         )}
+
+        {/* Floating bake pill */}
+        {unillustratedCount >= 2 && !pillDismissed && !pinDropMode && !showBakeModal && (
+          <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-30 animate-in fade-in slide-in-from-bottom-3 duration-500">
+            <div className="flex items-center gap-3 px-5 py-3 rounded-full bg-primary text-primary-foreground shadow-lg">
+              <span className="text-sm font-medium">
+                You have {unillustratedCount} locations ready to illustrate
+              </span>
+              <Button
+                size="sm"
+                variant="secondary"
+                className="h-7 text-xs rounded-full"
+                onClick={() => setShowBakeModal(true)}
+              >
+                Bake into Map
+              </Button>
+              <button
+                onClick={() => setPillDismissed(true)}
+                className="text-primary-foreground/70 hover:text-primary-foreground"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Version strip */}
+      <VersionStrip onOpenPanel={() => {
+        setShowVersionPanel(true);
+        setShowLayers(false);
+        setSelectedPinId(null);
+      }} />
 
       {/* Layers sidebar — right */}
       <div
@@ -243,32 +309,43 @@ const MapViewMode = ({ onEditMap }: MapViewModeProps) => {
             <p className="text-xs text-muted-foreground italic p-4 text-center">No pins placed yet. Use the + button to add one.</p>
           ) : (
             <div className="space-y-0.5">
-              {currentProject.pins.map((pin) => (
-                <button
-                  key={pin.id}
-                  onClick={() => {
-                    setSelectedPinId(pin.id);
-                    setShowLayers(false);
-                  }}
-                  onMouseEnter={() => setHoveredListPinId(pin.id)}
-                  onMouseLeave={() => setHoveredListPinId(null)}
-                  className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-md text-left hover:bg-muted/50 transition-colors group"
-                >
-                  <GripVertical className="h-3 w-3 text-muted-foreground/30 group-hover:text-muted-foreground/60 flex-shrink-0" />
-                  <span className={cn("w-2.5 h-2.5 rounded-full flex-shrink-0", pinTypeColors[pin.type])} />
-                  <div className="flex-1 min-w-0">
-                    <span className="text-sm font-medium truncate block">{pin.title}</span>
-                  </div>
-                  <Badge variant="outline" className="text-[9px] px-1.5 py-0 flex-shrink-0">
-                    {pinTypeLabels[pin.type]}
-                  </Badge>
-                  <span className="text-[10px] text-muted-foreground flex-shrink-0">Ch.{pin.chapter}</span>
-                </button>
-              ))}
+              {currentProject.pins.map((pin) => {
+                const status = getLocationStatus(pin.title);
+                return (
+                  <button
+                    key={pin.id}
+                    onClick={() => {
+                      setSelectedPinId(pin.id);
+                      setShowLayers(false);
+                    }}
+                    onMouseEnter={() => setHoveredListPinId(pin.id)}
+                    onMouseLeave={() => setHoveredListPinId(null)}
+                    className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-md text-left hover:bg-muted/50 transition-colors group"
+                  >
+                    <GripVertical className="h-3 w-3 text-muted-foreground/30 group-hover:text-muted-foreground/60 flex-shrink-0" />
+                    <span className={cn("w-2.5 h-2.5 rounded-full flex-shrink-0", pinTypeColors[pin.type])} />
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm font-medium truncate block">{pin.title}</span>
+                    </div>
+                    {status === "illustrated" ? (
+                      <span className="text-[10px] flex-shrink-0" title="Illustrated">🖊️</span>
+                    ) : (
+                      <span className="text-[10px] flex-shrink-0" title="Pinned">📍</span>
+                    )}
+                    <Badge variant="outline" className="text-[9px] px-1.5 py-0 flex-shrink-0">
+                      {pinTypeLabels[pin.type]}
+                    </Badge>
+                    <span className="text-[10px] text-muted-foreground flex-shrink-0">Ch.{pin.chapter}</span>
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
       </div>
+
+      {/* Version panel — right */}
+      <VersionPanel open={showVersionPanel} onClose={() => setShowVersionPanel(false)} />
 
       {/* Pin detail panel — right */}
       <div
@@ -312,6 +389,16 @@ const MapViewMode = ({ onEditMap }: MapViewModeProps) => {
                     {pinTypeLabels[selectedPin.type]}
                   </Badge>
                   <span className="text-xs text-muted-foreground">Ch. {selectedPin.chapter}</span>
+                  {/* Status badge */}
+                  {getLocationStatus(selectedPin.title) === "illustrated" ? (
+                    <span className="text-[10px] text-primary font-medium flex items-center gap-1">
+                      🖊️ Illustrated
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-secondary font-medium flex items-center gap-1">
+                      📍 Pinned
+                    </span>
+                  )}
                 </div>
               </div>
               <button onClick={() => setSelectedPinId(null)} className="text-muted-foreground hover:text-foreground ml-2">
@@ -382,6 +469,20 @@ const MapViewMode = ({ onEditMap }: MapViewModeProps) => {
                     </div>
                   ))}
               </div>
+
+              {/* Bake into map link for pinned locations */}
+              {getLocationStatus(selectedPin.title) === "pinned" && (
+                <button
+                  onClick={() => {
+                    setSelectedPinId(null);
+                    setShowBakeModal(true);
+                  }}
+                  className="text-xs text-primary font-medium hover:underline flex items-center gap-1"
+                >
+                  <PenTool className="h-3 w-3" />
+                  Bake into Map
+                </button>
+              )}
             </div>
 
             <div className="p-5 border-t border-border">
@@ -398,6 +499,9 @@ const MapViewMode = ({ onEditMap }: MapViewModeProps) => {
           </>
         )}
       </div>
+
+      {/* Bake Modal */}
+      <BakeModal open={showBakeModal} onClose={() => setShowBakeModal(false)} />
     </div>
   );
 };

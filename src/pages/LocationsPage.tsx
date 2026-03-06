@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { useProject } from "@/context/ProjectContext";
 import { Location } from "@/data/projects";
-import { MapPin, X, Plus, Image } from "lucide-react";
+import { MapPin, X, Plus, Image, PenTool } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
+import BakeModal from "@/components/map/BakeModal";
 
 const locationTypes = ["Hotel", "House", "Landmark", "Club", "Green Space", "Waterfront", "Road", "Other"];
 
@@ -16,6 +17,7 @@ const LocationsPage = () => {
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAllEvents, setShowAllEvents] = useState(false);
+  const [showBakeModal, setShowBakeModal] = useState(false);
   const [form, setForm] = useState({ name: "", type: "Landmark", description: "", firstAppears: 1 });
   const navigate = useNavigate();
 
@@ -28,6 +30,7 @@ const LocationsPage = () => {
       firstAppears: form.firstAppears,
       eventCount: 0,
       photo: null,
+      status: "pinned",
     });
     setForm({ name: "", type: "Landmark", description: "", firstAppears: 1 });
     setShowAddModal(false);
@@ -35,7 +38,6 @@ const LocationsPage = () => {
 
   const locs = currentProject.locations;
 
-  // Get events at selected location
   const eventsAtLocation = selectedLocation
     ? currentProject.pins
         .filter((p) => p.location === selectedLocation.name || selectedLocation.name.includes(p.location))
@@ -80,37 +82,60 @@ const LocationsPage = () => {
               (p) => p.location === loc.name || loc.name.includes(p.location)
             ).length;
             return (
-              <button
-                key={loc.id}
-                onClick={() => {
-                  setSelectedLocation(loc);
-                  setShowAllEvents(false);
-                }}
-                className="text-left border border-border rounded-lg overflow-hidden bg-card hover:shadow-md transition-shadow"
-              >
-                <div className="h-40 bg-muted flex items-center justify-center relative">
-                  {loc.photo ? (
-                    <img src={loc.photo} alt={loc.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <Image className="h-8 w-8 text-muted-foreground/20" />
-                  )}
-                  <span className="absolute bottom-2 right-2 text-[10px] text-muted-foreground/40 italic font-serif">
-                    Illustration coming soon
-                  </span>
-                </div>
-                <div className="p-4">
-                  <h3 className="text-sm font-serif font-semibold mb-1">{loc.name}</h3>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                      {loc.type}
-                    </Badge>
-                    <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
-                      <MapPin className="h-2.5 w-2.5" />
-                      {eventCount} events
+              <div key={loc.id} className="border border-border rounded-lg overflow-hidden bg-card hover:shadow-md transition-shadow">
+                <button
+                  onClick={() => {
+                    setSelectedLocation(loc);
+                    setShowAllEvents(false);
+                  }}
+                  className="text-left w-full"
+                >
+                  <div className="h-40 bg-muted flex items-center justify-center relative">
+                    {loc.photo ? (
+                      <img src={loc.photo} alt={loc.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <Image className="h-8 w-8 text-muted-foreground/20" />
+                    )}
+                    <span className="absolute bottom-2 right-2 text-[10px] text-muted-foreground/40 italic font-serif">
+                      Illustration coming soon
                     </span>
                   </div>
-                </div>
-              </button>
+                  <div className="p-4">
+                    <h3 className="text-sm font-serif font-semibold mb-1">{loc.name}</h3>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                        {loc.type}
+                      </Badge>
+                      {loc.status === "illustrated" ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] text-primary font-medium">
+                          🖊️ Illustrated
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[10px] text-secondary font-medium">
+                          📍 Pinned
+                        </span>
+                      )}
+                      <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+                        <MapPin className="h-2.5 w-2.5" />
+                        {eventCount} events
+                      </span>
+                    </div>
+                  </div>
+                </button>
+                {loc.status === "pinned" && (
+                  <div className="px-4 pb-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-[11px] h-7 text-primary border-primary/30 hover:bg-primary/5"
+                      onClick={() => setShowBakeModal(true)}
+                    >
+                      <PenTool className="h-3 w-3 mr-1" />
+                      Bake into Map
+                    </Button>
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>
@@ -122,9 +147,16 @@ const LocationsPage = () => {
           <div className="flex items-start justify-between mb-6">
             <div>
               <h2 className="text-xl font-serif font-semibold">{selectedLocation.name}</h2>
-              <Badge variant="outline" className="text-xs mt-1">
-                {selectedLocation.type}
-              </Badge>
+              <div className="flex items-center gap-2 mt-1">
+                <Badge variant="outline" className="text-xs">
+                  {selectedLocation.type}
+                </Badge>
+                {selectedLocation.status === "illustrated" ? (
+                  <span className="text-[10px] text-primary font-medium">🖊️ Illustrated</span>
+                ) : (
+                  <span className="text-[10px] text-secondary font-medium">📍 Pinned</span>
+                )}
+              </div>
             </div>
             <button onClick={() => setSelectedLocation(null)} className="text-muted-foreground hover:text-foreground">
               <X className="h-4 w-4" />
@@ -150,7 +182,7 @@ const LocationsPage = () => {
             ))}
           </div>
 
-          {/* Story events here — with tier system */}
+          {/* Story events */}
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Story Events Here</h3>
             {eventsAtLocation.some((e) => e.tier === "minor") && (
@@ -185,6 +217,20 @@ const LocationsPage = () => {
               <p className="text-xs text-muted-foreground italic">No story events linked to this location yet.</p>
             )}
           </div>
+
+          {/* Bake button for pinned locations */}
+          {selectedLocation.status === "pinned" && (
+            <button
+              onClick={() => {
+                setSelectedLocation(null);
+                setShowBakeModal(true);
+              }}
+              className="text-xs text-primary font-medium hover:underline flex items-center gap-1 mb-4"
+            >
+              <PenTool className="h-3 w-3" />
+              Bake into Map
+            </button>
+          )}
 
           <button
             onClick={() => {
@@ -238,6 +284,9 @@ const LocationsPage = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Bake Modal */}
+      <BakeModal open={showBakeModal} onClose={() => setShowBakeModal(false)} />
     </div>
   );
 };

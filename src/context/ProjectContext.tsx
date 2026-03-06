@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from "react";
-import { projects as initialProjects, Project, Pin, Character, Location, TimelineEvent, PinType, EventTier } from "@/data/projects";
+import { projects as initialProjects, Project, Pin, Character, Location, TimelineEvent, PinType, EventTier, MapVersion } from "@/data/projects";
 import { toast } from "@/hooks/use-toast";
 
 interface ProjectContextType {
@@ -21,6 +21,10 @@ interface ProjectContextType {
   addTimelineEvent: (event: Omit<TimelineEvent, "id">) => void;
   removeTimelineEvent: (id: string) => void;
   logActivity: (message: string) => void;
+  bakeLocations: (locationIds: string[]) => void;
+  addMapVersion: (label: string, description: string) => void;
+  restoreMapVersion: (versionId: string) => void;
+  getUnillustratedCount: () => number;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -62,6 +66,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       locations: [],
       timeline: [],
       recentActivity: ["Project created"],
+      mapVersions: [],
     };
     setAllProjects((prev) => [...prev, newProject]);
     setProjectId(id);
@@ -74,7 +79,17 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   }, [updateCurrentProject]);
 
   const confirmMap = useCallback(() => {
-    updateCurrentProject((p) => ({ ...p, mapConfirmed: true }));
+    updateCurrentProject((p) => {
+      const version: MapVersion = {
+        id: genId(),
+        version: 1,
+        label: "Original",
+        description: "Initial map",
+        date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+        mapImage: p.mapImage,
+      };
+      return { ...p, mapConfirmed: true, mapVersions: [version] };
+    });
     logActivity("Map confirmed");
     toast({ title: "Map confirmed", description: "Your map is now in View Mode" });
   }, [updateCurrentProject, logActivity]);
@@ -161,6 +176,73 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     updateCurrentProject((p) => ({ ...p, timeline: p.timeline.filter((x) => x.id !== id) }));
   }, [updateCurrentProject]);
 
+  const bakeLocations = useCallback((locationIds: string[]) => {
+    updateCurrentProject((p) => {
+      const nextVersion = p.mapVersions.length + 1;
+      const bakedNames = p.locations
+        .filter((l) => locationIds.includes(l.id))
+        .map((l) => l.name);
+      const version: MapVersion = {
+        id: genId(),
+        version: nextVersion,
+        label: `Added: ${bakedNames.join(", ")}`,
+        description: `Added ${bakedNames.join(", ")}`,
+        date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+        mapImage: p.mapImage,
+      };
+      return {
+        ...p,
+        locations: p.locations.map((l) =>
+          locationIds.includes(l.id) ? { ...l, status: "illustrated" as const } : l
+        ),
+        mapVersions: [...p.mapVersions, version],
+      };
+    });
+    logActivity(`Map updated · Version saved`);
+    toast({ title: "Map updated", description: `Version saved` });
+  }, [updateCurrentProject, logActivity]);
+
+  const addMapVersion = useCallback((label: string, description: string) => {
+    updateCurrentProject((p) => {
+      const version: MapVersion = {
+        id: genId(),
+        version: p.mapVersions.length + 1,
+        label,
+        description,
+        date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+        mapImage: p.mapImage,
+      };
+      return { ...p, mapVersions: [...p.mapVersions, version] };
+    });
+  }, [updateCurrentProject]);
+
+  const restoreMapVersion = useCallback((versionId: string) => {
+    updateCurrentProject((p) => {
+      const version = p.mapVersions.find((v) => v.id === versionId);
+      if (!version) return p;
+      // Save current as new version first
+      const saveVersion: MapVersion = {
+        id: genId(),
+        version: p.mapVersions.length + 1,
+        label: "Auto-saved before restore",
+        description: "Auto-saved before restoring an older version",
+        date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+        mapImage: p.mapImage,
+      };
+      return {
+        ...p,
+        mapImage: version.mapImage,
+        mapVersions: [...p.mapVersions, saveVersion],
+      };
+    });
+    logActivity("Restored previous map version");
+    toast({ title: "Version restored", description: "Previous version saved automatically" });
+  }, [updateCurrentProject, logActivity]);
+
+  const getUnillustratedCount = useCallback(() => {
+    return currentProject.locations.filter((l) => l.status === "pinned").length;
+  }, [currentProject]);
+
   return (
     <ProjectContext.Provider
       value={{
@@ -182,6 +264,10 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         addTimelineEvent,
         removeTimelineEvent,
         logActivity,
+        bakeLocations,
+        addMapVersion,
+        restoreMapVersion,
+        getUnillustratedCount,
       }}
     >
       {children}

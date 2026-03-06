@@ -25,7 +25,8 @@ const navItems = [
 
 export function AppSidebar() {
   const location = useLocation();
-  const { currentProject } = useProject();
+  const { currentProject, getUnillustratedCount } = useProject();
+  const unillustratedCount = getUnillustratedCount();
 
   return (
     <Sidebar className="border-r border-border">
@@ -40,6 +41,8 @@ export function AppSidebar() {
             <SidebarMenu>
               {navItems.map((item) => {
                 const isActive = location.pathname === item.url;
+                const showMapInProgress = item.url === "/map" && !currentProject.mapConfirmed;
+                const showBakeIndicator = item.url === "/map" && currentProject.mapConfirmed && unillustratedCount >= 2;
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
@@ -55,7 +58,10 @@ export function AppSidebar() {
                       >
                         <item.icon className="h-4 w-4" />
                         <span>{item.title}</span>
-                        {item.url === "/map" && !currentProject.mapConfirmed && (
+                        {showMapInProgress && (
+                          <span className="w-2 h-2 rounded-full bg-secondary ml-auto flex-shrink-0" />
+                        )}
+                        {showBakeIndicator && (
                           <span className="w-2 h-2 rounded-full bg-secondary ml-auto flex-shrink-0" />
                         )}
                       </NavLink>
