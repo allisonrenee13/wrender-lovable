@@ -36,6 +36,18 @@ const LocationsPage = () => {
     setShowAddModal(false);
   };
 
+  if (!currentProject) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-10">
+        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+          <MapPin className="h-8 w-8 text-muted-foreground/40" />
+        </div>
+        <h2 className="text-lg font-serif font-semibold mb-2">No project selected</h2>
+        <p className="text-sm text-muted-foreground">Create a project first to add locations.</p>
+      </div>
+    );
+  }
+
   const locs = currentProject.locations;
 
   const eventsAtLocation = selectedLocation
@@ -218,7 +230,6 @@ const LocationsPage = () => {
             )}
           </div>
 
-          {/* Bake button for pinned locations */}
           {selectedLocation.status === "pinned" && (
             <button
               onClick={() => {

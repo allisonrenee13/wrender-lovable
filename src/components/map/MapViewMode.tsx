@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useProject } from "@/context/ProjectContext";
 import { Pin, PinType } from "@/data/projects";
 import { Pencil, Plus, Layers, X, GripVertical, MapPin, PenTool } from "lucide-react";
@@ -8,10 +8,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import IslaSerranoMap from "./IslaSerranoMap";
-import CapeCodeMap from "./CapeCodeMap";
-import CommunityMap from "./CommunityMap";
-import PrythianMap from "./PrythianMap";
 import VersionStrip from "./VersionStrip";
 import VersionPanel from "./VersionPanel";
 import BakeModal from "./BakeModal";
@@ -44,19 +40,17 @@ const MapViewMode = ({ onEditMap }: MapViewModeProps) => {
 
   const [dropPoint, setDropPoint] = useState<{ x: number; y: number } | null>(null);
   const [pinForm, setPinForm] = useState({ name: "", type: "location" as PinType, chapter: 1, note: "" });
-  const [editingField, setEditingField] = useState<string | null>(null);
   const [draggingPinId, setDraggingPinId] = useState<string | null>(null);
+
+  if (!currentProject) return null;
 
   const selectedPin = currentProject.pins.find((p) => p.id === selectedPinId) || null;
   const unillustratedCount = getUnillustratedCount();
 
-  const handleMapClick = useCallback(
-    (x: number, y: number) => {
-      if (!pinDropMode) return;
-      setDropPoint({ x, y });
-    },
-    [pinDropMode]
-  );
+  const handleMapClick = (x: number, y: number) => {
+    if (!pinDropMode) return;
+    setDropPoint({ x, y });
+  };
 
   const handlePlacePin = () => {
     if (!dropPoint || !pinForm.name.trim()) return;
@@ -82,14 +76,11 @@ const MapViewMode = ({ onEditMap }: MapViewModeProps) => {
     setPinDropMode(false);
   };
 
-  const handlePinDragEnd = useCallback(
-    (pinId: string, newX: number, newY: number) => {
-      updatePin(pinId, { x: newX, y: newY });
-      setDraggingPinId(null);
-      toast({ title: "Location moved" });
-    },
-    [updatePin]
-  );
+  const handlePinDragEnd = (pinId: string, newX: number, newY: number) => {
+    updatePin(pinId, { x: newX, y: newY });
+    setDraggingPinId(null);
+    toast({ title: "Location moved" });
+  };
 
   const currentVersionNum = currentProject.mapVersions.length || 1;
 
@@ -98,31 +89,29 @@ const MapViewMode = ({ onEditMap }: MapViewModeProps) => {
     return loc?.status || "pinned";
   };
 
-  const renderMap = () => {
-    const mapProps = {
-      selectedLocationId: selectedPinId,
-      onSelectLocation: (id: string | null) => {
-        if (!pinDropMode) {
-          setSelectedPinId(id);
-          setShowLayers(false);
-          setShowVersionPanel(false);
-        }
-      },
-      pins: currentProject.pins,
-      pinDropMode,
-      onMapClick: handleMapClick,
-    };
+  // Render the confirmed map — use the rendered SVG from mapState if available
+  const renderedSVG = currentProject.mapState?.renderedSVG;
 
-    switch (currentProject.id) {
-      case "paper-palace":
-        return <CapeCodeMap {...mapProps} />;
-      case "the-giver":
-        return <CommunityMap {...mapProps} />;
-      case "acotar":
-        return <PrythianMap {...mapProps} />;
-      default:
-        return <IslaSerranoMap {...mapProps} />;
+  const renderMap = () => {
+    if (renderedSVG) {
+      return (
+        <div className="w-full flex justify-center py-6">
+          <div
+            className="w-full max-w-[700px]"
+            dangerouslySetInnerHTML={{ __html: renderedSVG }}
+          />
+        </div>
+      );
     }
+
+    // Fallback: empty map placeholder
+    return (
+      <div className="w-full flex justify-center py-6">
+        <div className="w-full max-w-[700px] aspect-[4/3] bg-muted/30 rounded-lg flex items-center justify-center">
+          <p className="text-sm text-muted-foreground italic">Your rendered map will appear here</p>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -188,6 +177,13 @@ const MapViewMode = ({ onEditMap }: MapViewModeProps) => {
       {/* Full-screen map */}
       <div className="flex-1 overflow-auto relative" style={{ backgroundColor: "#FAFAF7" }}>
         {renderMap()}
+
+        {/* Overlay pins on the map */}
+        {currentProject.pins.length > 0 && (
+          <div className="absolute inset-0 pointer-events-none">
+            {/* Pins would be rendered as overlays here based on coordinates */}
+          </div>
+        )}
 
         {/* Empty pin state message */}
         {currentProject.pins.length === 0 && !pinDropMode && (
@@ -358,23 +354,7 @@ const MapViewMode = ({ onEditMap }: MapViewModeProps) => {
           <>
             <div className="flex items-start justify-between p-5 border-b border-border">
               <div className="flex-1 min-w-0">
-                {editingField === "title" ? (
-                  <Input
-                    value={selectedPin.title}
-                    onChange={(e) => updatePin(selectedPin.id, { title: e.target.value })}
-                    onBlur={() => setEditingField(null)}
-                    onKeyDown={(e) => e.key === "Enter" && setEditingField(null)}
-                    className="text-lg font-serif font-semibold border-none p-0 h-auto focus-visible:ring-0"
-                    autoFocus
-                  />
-                ) : (
-                  <h2
-                    className="text-lg font-serif font-semibold cursor-text hover:text-primary transition-colors"
-                    onClick={() => setEditingField("title")}
-                  >
-                    {selectedPin.title}
-                  </h2>
-                )}
+                <h2 className="text-lg font-serif font-semibold">{selectedPin.title}</h2>
                 <div className="flex items-center gap-2 mt-1.5">
                   <Badge
                     className={cn(
@@ -389,7 +369,6 @@ const MapViewMode = ({ onEditMap }: MapViewModeProps) => {
                     {pinTypeLabels[selectedPin.type]}
                   </Badge>
                   <span className="text-xs text-muted-foreground">Ch. {selectedPin.chapter}</span>
-                  {/* Status badge */}
                   {getLocationStatus(selectedPin.title) === "illustrated" ? (
                     <span className="text-[10px] text-primary font-medium flex items-center gap-1">
                       🖊️ Illustrated
@@ -410,23 +389,9 @@ const MapViewMode = ({ onEditMap }: MapViewModeProps) => {
               {/* Note */}
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Note</label>
-                {editingField === "note" ? (
-                  <Textarea
-                    value={selectedPin.note}
-                    onChange={(e) => updatePin(selectedPin.id, { note: e.target.value })}
-                    onBlur={() => setEditingField(null)}
-                    className="text-sm resize-none"
-                    rows={3}
-                    autoFocus
-                  />
-                ) : (
-                  <p
-                    className="text-sm text-muted-foreground cursor-text hover:text-foreground transition-colors"
-                    onClick={() => setEditingField("note")}
-                  >
-                    {selectedPin.note || "Click to add a note..."}
-                  </p>
-                )}
+                <p className="text-sm text-muted-foreground">
+                  {selectedPin.note || "No note yet."}
+                </p>
               </div>
 
               {/* Mood images placeholder */}

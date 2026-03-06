@@ -27,13 +27,6 @@ const defaultCanvas: CanvasState = {
   nodeCount: 0,
 };
 
-const islaSerranoStylePrefs: StylePreferences = {
-  lineStyle: "nautical",
-  strokeWeight: "medium",
-  background: "cream",
-  labelStyle: "serif",
-};
-
 function phaseToStep(phase: Phase): BuilderStep {
   if (phase === "entry" || phase === "upload" || phase === "shapeCanvas") return 1;
   if (phase === "style") return 2;
@@ -55,17 +48,11 @@ function stepToPhase(step: 1 | 2 | 3): Phase {
 
 const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   const { currentProject, confirmMap, updateMapState } = useProject();
-  const isDemoIsla = currentProject.id === "isla-serrano";
-  const isSaltMarsh = currentProject.id === "salt-marsh";
 
-  const saltMarshPath = "M280 120 Q320 100 360 115 Q400 135 410 175 Q415 215 395 250 Q380 270 370 300 Q365 330 355 360 Q340 385 310 400 Q280 410 250 395 Q220 375 210 340 Q200 305 210 270 Q220 240 235 215 Q250 185 260 155 Q265 135 280 120Z";
-
-  const savedMapState = currentProject.mapState;
+  const savedMapState = currentProject?.mapState;
 
   const getInitialPhase = (): Phase => {
     if (savedMapState?.currentStep) return stepToPhase(savedMapState.currentStep as 1 | 2 | 3);
-    if (isDemoIsla) return "renderReady";
-    if (isSaltMarsh) return "style";
     return "entry";
   };
 
@@ -77,33 +64,10 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   const canvasRef = useRef<MapCanvasHandle | null>(null);
   const autoSaveTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const [canvasState, setCanvasState] = useState<CanvasState>(() => {
-    if (isDemoIsla) return {
-      paths: [
-        "M300 75 Q330 72 345 85 Q370 100 365 120 Q375 135 370 155 Q380 180 375 200 Q385 225 378 250 Q382 275 375 295 Q380 315 370 335 Q378 355 372 375 Q380 400 368 420 Q365 445 355 460 Q348 480 338 500 Q330 520 322 540 Q315 560 308 575 Q303 588 300 600 Q297 588 292 575 Q285 560 278 540 Q270 520 262 500 Q252 480 245 460 Q235 445 232 420 Q220 400 228 375 Q222 355 230 335 Q220 315 225 295 Q218 275 222 250 Q215 225 225 200 Q220 180 230 155 Q225 135 235 120 Q230 100 255 85 Q270 72 300 75Z",
-      ],
-      features: [
-        { type: "building", x: 310, y: 160 },
-        { type: "road", x: 300, y: 85, x2: 300, y2: 560 },
-        { type: "elevation", x: 300, y: 580 },
-      ],
-      referenceImage: null, referenceOpacity: 20, nodeCount: 12,
-    };
-    if (isSaltMarsh) return {
-      paths: [saltMarshPath],
-      features: [
-        { type: "forest", x: 330, y: 200 },
-        { type: "river", x: 280, y: 300 },
-      ],
-      referenceImage: null, referenceOpacity: 40, nodeCount: 8,
-    };
-    return defaultCanvas;
-  });
+  const [canvasState, setCanvasState] = useState<CanvasState>(defaultCanvas);
 
   const [stylePrefs, setStylePrefs] = useState<StylePreferences>(() => {
     if (savedMapState?.stylePrefs) return savedMapState.stylePrefs as unknown as StylePreferences;
-    if (isDemoIsla) return islaSerranoStylePrefs;
-    if (isSaltMarsh) return { ...defaultStylePreferences, lineStyle: "hand-drawn" as const };
     return defaultStylePreferences;
   });
 
@@ -133,7 +97,6 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   // Save on step transitions
   const setPhaseAndSave = useCallback((newPhase: Phase) => {
     setPhase(newPhase);
-    // Defer save so canvas ref is available
     setTimeout(() => {
       const json = canvasRef.current?.getJSON() || null;
       updateMapState({
@@ -174,7 +137,6 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   };
 
   const handleAutoTrace = (imageDataUrl: string) => {
-    // Real client-side edge tracing using canvas pixel analysis
     const img = new Image();
     img.onload = () => {
       const traceCanvas = document.createElement("canvas");
@@ -194,7 +156,6 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
           nodeCount: paths.length * 10,
         });
       } else {
-        // Fallback: generate a traced outline from image edges
         setCanvasState({
           ...defaultCanvas,
           paths: [generateOutlinePath(w, h)],
@@ -217,7 +178,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
     const rawSVG = canvasRef.current?.getSVG();
 
     setTimeout(() => {
-      if (rawSVG) {
+      if (rawSVG && currentProject) {
         const pins = currentProject.pins.map((p) => ({ title: p.title, x: p.x * 1.33, y: p.y * 0.86 }));
         const processed = postProcessSVG(rawSVG, stylePrefs, pins, 800, 600);
         setRenderedSVG(processed);
@@ -233,7 +194,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   };
 
   const handleExportSVG = () => {
-    if (renderedSVG) {
+    if (renderedSVG && currentProject) {
       exportSVG(renderedSVG, currentProject.title.replace(/\s+/g, "-").toLowerCase());
       toast({ title: "SVG exported", description: `${currentProject.title} map downloaded.` });
     }
@@ -241,7 +202,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
 
   const handleExportPNG = () => {
     const dataUrl = canvasRef.current?.getPNG();
-    if (dataUrl) {
+    if (dataUrl && currentProject) {
       exportPNG(dataUrl, currentProject.title.replace(/\s+/g, "-").toLowerCase());
       toast({ title: "PNG exported", description: `${currentProject.title} map downloaded.` });
     }
@@ -426,13 +387,10 @@ function traceImageToSVGPaths(imageData: ImageData, w: number, h: number): strin
   const { data } = imageData;
   const edgePoints: Array<{ x: number; y: number }> = [];
 
-  // Sobel-like edge detection - sample every 3rd pixel for performance
   for (let y = 1; y < h - 1; y += 3) {
     for (let x = 1; x < w - 1; x += 3) {
       const idx = (y * w + x) * 4;
       const gray = (data[idx] + data[idx + 1] + data[idx + 2]) / 3;
-
-      // Check neighbors for edge
       const idxRight = (y * w + (x + 1)) * 4;
       const idxDown = ((y + 1) * w + x) * 4;
       const grayRight = (data[idxRight] + data[idxRight + 1] + data[idxRight + 2]) / 3;
@@ -447,12 +405,10 @@ function traceImageToSVGPaths(imageData: ImageData, w: number, h: number): strin
 
   if (edgePoints.length < 10) return [];
 
-  // Sort edge points and connect them into paths using nearest-neighbor
   const paths: string[] = [];
   const used = new Set<number>();
   
   while (used.size < edgePoints.length) {
-    // Find first unused point
     let startIdx = -1;
     for (let i = 0; i < edgePoints.length; i++) {
       if (!used.has(i)) { startIdx = i; break; }
@@ -462,10 +418,9 @@ function traceImageToSVGPaths(imageData: ImageData, w: number, h: number): strin
     const chain: Array<{ x: number; y: number }> = [edgePoints[startIdx]];
     used.add(startIdx);
 
-    // Follow nearest neighbors
     for (let step = 0; step < 200; step++) {
       const last = chain[chain.length - 1];
-      let bestDist = 15; // max connection distance
+      let bestDist = 15;
       let bestIdx = -1;
       for (let i = 0; i < edgePoints.length; i++) {
         if (used.has(i)) continue;
@@ -483,7 +438,6 @@ function traceImageToSVGPaths(imageData: ImageData, w: number, h: number): strin
     }
 
     if (chain.length >= 5) {
-      // Convert chain to SVG path with quadratic curves for smoothness
       let d = `M ${chain[0].x} ${chain[0].y}`;
       for (let i = 1; i < chain.length - 1; i += 2) {
         const cp = chain[i];
@@ -494,7 +448,6 @@ function traceImageToSVGPaths(imageData: ImageData, w: number, h: number): strin
     }
   }
 
-  // Return longest paths (most significant edges)
   return paths
     .sort((a, b) => b.length - a.length)
     .slice(0, 20);

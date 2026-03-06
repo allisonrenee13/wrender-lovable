@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useProject } from "@/context/ProjectContext";
 import { PinType, EventTier } from "@/data/projects";
-import { Plus, Sparkles } from "lucide-react";
+import { Plus, Sparkles, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -11,6 +11,18 @@ const TimelinePage = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showMinor, setShowMinor] = useState(false);
   const [form, setForm] = useState({ title: "", chapter: 1, character: "", location: "", note: "", tier: "main" as EventTier });
+
+  if (!currentProject) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-10">
+        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+          <Clock className="h-8 w-8 text-muted-foreground/40" />
+        </div>
+        <h2 className="text-lg font-serif font-semibold mb-2">No project selected</h2>
+        <p className="text-sm text-muted-foreground">Create a project first to build your timeline.</p>
+      </div>
+    );
+  }
 
   const timeline = currentProject.timeline;
 
@@ -92,7 +104,6 @@ const TimelinePage = () => {
       <div className="flex items-center justify-between mb-2">
         <h1 className="text-xl font-serif font-semibold">{currentProject.title} — Timeline</h1>
         <div className="flex items-center gap-3">
-          {/* Minor events toggle */}
           <button
             onClick={() => setShowMinor(!showMinor)}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
@@ -131,7 +142,6 @@ const TimelinePage = () => {
               <div key={chapter} className="flex flex-col items-start">
                 <span className="text-xs font-medium text-muted-foreground mb-3 px-1">Ch. {chapter}</span>
                 <div className="space-y-2">
-                  {/* Main events — bold red cards */}
                   {mainEvents.map((event) => (
                     <div key={event.id} className="w-56 border border-border rounded-lg p-4 bg-card hover:shadow-md transition-shadow cursor-pointer">
                       <div className="flex items-center gap-2 mb-2">
@@ -147,12 +157,10 @@ const TimelinePage = () => {
                       </div>
                     </div>
                   ))}
-                  {/* Minor events — lighter grey cards */}
                   {minorEvents.map((event) => (
                     <div
                       key={event.id}
                       className="w-56 border border-dashed border-border/60 rounded-lg p-3 bg-muted/30 hover:bg-muted/50 transition-all cursor-pointer"
-                      style={{ animation: showMinor ? "fadeIn 0.3s ease" : undefined }}
                     >
                       <div className="flex items-center gap-2 mb-1.5">
                         <span className="w-2 h-2 rounded-full bg-muted-foreground/40" />
@@ -225,7 +233,6 @@ function AddEventModal({
         <div className="space-y-3 pt-2">
           <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Event title" className="font-serif" />
 
-          {/* Tier toggle */}
           <div className="flex items-center gap-1 bg-muted rounded-full p-0.5 w-fit">
             <button
               onClick={() => setForm({ ...form, tier: "main" })}

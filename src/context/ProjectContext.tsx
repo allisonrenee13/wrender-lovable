@@ -3,7 +3,7 @@ import { projects as initialProjects, Project, Pin, Character, Location, Timelin
 import { toast } from "@/hooks/use-toast";
 
 interface ProjectContextType {
-  currentProject: Project;
+  currentProject: Project | null;
   setCurrentProjectId: (id: string) => void;
   allProjects: Project[];
   createProject: (data: { title: string; genre: string; setting: string; wordCount: string }) => string;
@@ -36,10 +36,11 @@ function genId() {
 
 export function ProjectProvider({ children }: { children: ReactNode }) {
   const [allProjects, setAllProjects] = useState<Project[]>(() => JSON.parse(JSON.stringify(initialProjects)));
-  const [projectId, setProjectId] = useState(allProjects[0].id);
-  const currentProject = allProjects.find((p) => p.id === projectId) || allProjects[0];
+  const [projectId, setProjectId] = useState<string | null>(allProjects.length > 0 ? allProjects[0].id : null);
+  const currentProject = allProjects.find((p) => p.id === projectId) || null;
 
   const updateCurrentProject = useCallback((updater: (p: Project) => Project) => {
+    if (!projectId) return;
     setAllProjects((prev) => prev.map((p) => (p.id === projectId ? updater(p) : p)));
   }, [projectId]);
 
@@ -221,7 +222,6 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     updateCurrentProject((p) => {
       const version = p.mapVersions.find((v) => v.id === versionId);
       if (!version) return p;
-      // Save current as new version first
       const saveVersion: MapVersion = {
         id: genId(),
         version: p.mapVersions.length + 1,
@@ -241,7 +241,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   }, [updateCurrentProject, logActivity]);
 
   const getUnillustratedCount = useCallback(() => {
-    return currentProject.locations.filter((l) => l.status === "pinned").length;
+    return currentProject?.locations.filter((l) => l.status === "pinned").length ?? 0;
   }, [currentProject]);
 
   const updateMapState = useCallback((state: Partial<MapState>) => {
