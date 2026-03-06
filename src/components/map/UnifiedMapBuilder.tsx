@@ -1,295 +1,158 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useProject } from "@/context/ProjectContext";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Plus, X, BookOpen, Pencil } from "lucide-react";
-import IslaSerranoMap from "./IslaSerranoMap";
-import CapeCodeMap from "./CapeCodeMap";
-import CommunityMap from "./CommunityMap";
-import PrythianMap from "./PrythianMap";
-import MarkupModal from "./markup/MarkupModal";
-import type { MarkupImage } from "./markup/types";
-import refKeyBiscayne from "@/assets/ref-key-biscayne.jpg";
-import refMarcoIsland from "@/assets/ref-marco-island.jpg";
+import { toast } from "@/hooks/use-toast";
+import EntryScreen from "./builder/EntryScreen";
+import TemplatePicker from "./builder/TemplatePicker";
+import UploadTraceFlow from "./builder/UploadTraceFlow";
+import EditingCanvas from "./builder/EditingCanvas";
+import RenderPreview from "./builder/RenderPreview";
+import type { BuilderPath, MapTemplate, AIDirectionNotes, CanvasState } from "./builder/types";
 
-type BuilderState = "idle" | "generating" | "preview";
-
-const demoDescriptions: Record<string, string> = {
-  "isla-serrano":
-    "A long narrow barrier island. Atlantic Ocean on the east, calm bay on the west.",
-  "paper-palace":
-    "A curved peninsula reaching into the Atlantic — Cape Cod, Massachusetts. Summer houses lining a freshwater pond. Dense woods to the north.",
-  "the-giver":
-    "A perfectly ordered circular community. Concentric rings of identical family dwelling units. An auditorium at the centre.",
-  "acotar":
-    "The realm of Prythian. Seven courts divided by magic. The Spring Court lush and green to the east.",
-};
-
-const demoNotes: Record<string, string> = {
-  "isla-serrano": "Want to keep the causeway feel from Key Biscayne. The lighthouse end is critical — remote, windswept. Village should feel like a New England harbour town dropped into tropical warmth.",
-};
-
-const createDemoImages = (projectId: string): MarkupImage[] => {
-  if (projectId === "isla-serrano") {
-    return [
-      {
-        id: "key-biscayne",
-        src: refKeyBiscayne,
-        label: "Key Biscayne",
-        markups: [],
-        notes: "Use the overall island shape and the causeway entry from the north. The southern tip is perfect for the lighthouse. Ignore the northern developed area — my island is quieter.",
-        hasMarkup: false,
-      },
-      {
-        id: "marco-island",
-        src: refMarcoIsland,
-        label: "Marco Island",
-        markups: [],
-        notes: "Love the overall silhouette of this — slightly wider than Key Biscayne. Use as the base shape.",
-        hasMarkup: false,
-      },
-    ];
-  }
-  return [];
-};
+type Phase = "entry" | "upload" | "editing" | "rendering" | "preview";
 
 interface UnifiedMapBuilderProps {
   onConfirm?: () => void;
 }
 
+const defaultCanvas: CanvasState = {
+  paths: [],
+  features: [],
+  referenceImage: null,
+  referenceOpacity: 40,
+  nodeCount: 0,
+};
+
+const emptyNotes: AIDirectionNotes = { renderStyle: "", atmosphereNotes: "", whatToEmphasise: "" };
+
+// Demo state for Isla Serrano — starts in editing canvas via "upload & trace" path
+const islaSerranoNotes: AIDirectionNotes = {
+  renderStyle: "warm and nautical, sun-bleached",
+  atmosphereNotes: "A small barrier island. The lighthouse at the south point is the most important landmark. The harbour is sheltered and intimate.",
+  whatToEmphasise: "",
+};
+
 const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   const { currentProject, confirmMap } = useProject();
-  const descRef = useRef<HTMLTextAreaElement>(null);
 
-  const defaultDesc = demoDescriptions[currentProject.id] || "";
-  const [description, setDescription] = useState(defaultDesc);
-  const [creationNotes, setCreationNotes] = useState(demoNotes[currentProject.id] || "");
-  const [referenceImages, setReferenceImages] = useState<MarkupImage[]>(
-    createDemoImages(currentProject.id)
-  );
-  const [state, setState] = useState<BuilderState>("idle");
-  const [versions, setVersions] = useState<number[]>([]);
+  const isDemoIsla = currentProject.id === "isla-serrano";
+
+  const [phase, setPhase] = useState<Phase>(isDemoIsla ? "editing" : "entry");
+  const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<MapTemplate | null>(null);
   const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
-  const [markupOpen, setMarkupOpen] = useState(false);
-  const [markupInitialId, setMarkupInitialId] = useState<string | undefined>();
 
-  const handleAddImage = () => {
-    if (referenceImages.length >= 3) return;
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*";
-    input.onchange = (e) => {
-      const files = (e.target as HTMLInputElement).files;
-      if (!files || files.length === 0) return;
-      const file = files[0];
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        if (ev.target?.result) {
-          const newImg: MarkupImage = {
-            id: `ref-${Date.now()}`,
-            src: ev.target.result as string,
-            label: `Reference ${referenceImages.length + 1}`,
-            markups: [],
-            notes: "",
-            hasMarkup: false,
-          };
-          setReferenceImages((prev) => [...prev, newImg]);
+  const [canvasState, setCanvasState] = useState<CanvasState>(
+    isDemoIsla
+      ? {
+          paths: [
+            "M300 75 Q330 72 345 85 Q370 100 365 120 Q375 135 370 155 Q380 180 375 200 Q385 225 378 250 Q382 275 375 295 Q380 315 370 335 Q378 355 372 375 Q380 400 368 420 Q365 445 355 460 Q348 480 338 500 Q330 520 322 540 Q315 560 308 575 Q303 588 300 600 Q297 588 292 575 Q285 560 278 540 Q270 520 262 500 Q252 480 245 460 Q235 445 232 420 Q220 400 228 375 Q222 355 230 335 Q220 315 225 295 Q218 275 222 250 Q215 225 225 200 Q220 180 230 155 Q225 135 235 120 Q230 100 255 85 Q270 72 300 75Z",
+          ],
+          features: [
+            { type: "building", x: 310, y: 160 },
+            { type: "road", x: 300, y: 85, x2: 300, y2: 560 },
+            { type: "elevation", x: 300, y: 580 },
+          ],
+          referenceImage: null,
+          referenceOpacity: 20,
+          nodeCount: 12,
         }
-      };
-      reader.readAsDataURL(file);
-    };
-    input.click();
-  };
+      : defaultCanvas
+  );
 
-  const handleRemoveImage = (id: string) => {
-    setReferenceImages((prev) => prev.filter((img) => img.id !== id));
-  };
+  const [aiNotes, setAINotes] = useState<AIDirectionNotes>(isDemoIsla ? islaSerranoNotes : emptyNotes);
 
-  const handleOpenMarkup = (imageId?: string) => {
-    setMarkupInitialId(imageId);
-    setMarkupOpen(true);
-  };
+  // --- Path handlers ---
 
-  const handleSaveMarkup = (updatedImages: MarkupImage[]) => {
-    setReferenceImages(updatedImages);
-  };
-
-  const handleMarkUpGeneratedMap = () => {
-    // Add the generated map as a reference image for markup
-    const generatedMapImg: MarkupImage = {
-      id: "generated-map",
-      src: "/placeholder.svg", // In real app, this would be a screenshot of the generated map
-      label: "Generated Map",
-      markups: [],
-      notes: "",
-      hasMarkup: false,
-    };
-    const allImages = [generatedMapImg, ...referenceImages.filter((img) => img.id !== "generated-map")];
-    setReferenceImages(allImages);
-    setMarkupInitialId("generated-map");
-    setMarkupOpen(true);
-  };
-
-  const handleGenerate = () => {
-    setState("generating");
-    setTimeout(() => {
-      setState("preview");
-      setVersions((prev) => [...prev, prev.length + 1]);
-    }, 2500);
-  };
-
-  const handleKeepRefining = () => {
-    descRef.current?.focus();
-    descRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-  };
-
-  const renderPreviewMap = () => {
-    switch (currentProject.id) {
-      case "paper-palace":
-        return <CapeCodeMap selectedLocationId={selectedLocationId} onSelectLocation={setSelectedLocationId} pins={currentProject.pins} />;
-      case "the-giver":
-        return <CommunityMap selectedLocationId={selectedLocationId} onSelectLocation={setSelectedLocationId} pins={currentProject.pins} />;
-      case "acotar":
-        return <PrythianMap selectedLocationId={selectedLocationId} onSelectLocation={setSelectedLocationId} pins={currentProject.pins} />;
-      default:
-        return <IslaSerranoMap selectedLocationId={selectedLocationId} onSelectLocation={setSelectedLocationId} />;
+  const handleEntrySelect = (path: BuilderPath) => {
+    if (path === "template") {
+      setTemplatePickerOpen(true);
+    } else if (path === "upload") {
+      setPhase("upload");
+    } else {
+      // draw from scratch
+      setCanvasState(defaultCanvas);
+      setPhase("editing");
     }
   };
 
+  const handleTemplateSelect = (template: MapTemplate) => {
+    setSelectedTemplate(template);
+    setTemplatePickerOpen(false);
+    setCanvasState({ ...defaultCanvas, paths: [template.svgPath] });
+    setPhase("editing");
+    toast({ title: "Template loaded", description: "Edit the shape to match your world." });
+  };
+
+  const handleAutoTrace = (_image: string) => {
+    // Simulated: load the demo island outline as if traced
+    setCanvasState({
+      ...defaultCanvas,
+      paths: [
+        "M300 75 Q330 72 345 85 Q370 100 365 120 Q375 135 370 155 Q380 180 375 200 Q385 225 378 250 Q382 275 375 295 Q380 315 370 335 Q378 355 372 375 Q380 400 368 420 Q365 445 355 460 Q348 480 338 500 Q330 520 322 540 Q315 560 308 575 Q303 588 300 600 Q297 588 292 575 Q285 560 278 540 Q270 520 262 500 Q252 480 245 460 Q235 445 232 420 Q220 400 228 375 Q222 355 230 335 Q220 315 225 295 Q218 275 222 250 Q215 225 225 200 Q220 180 230 155 Q225 135 235 120 Q230 100 255 85 Q270 72 300 75Z",
+      ],
+      nodeCount: 12,
+    });
+    setPhase("editing");
+    toast({ title: "Trace complete", description: "Trace result is editable. Drag nodes to adjust, or use sculpt tools to reshape." });
+  };
+
+  const handleManualTrace = (image: string) => {
+    setCanvasState({ ...defaultCanvas, referenceImage: image, referenceOpacity: 40 });
+    setPhase("editing");
+  };
+
+  const handleRenderPreview = () => {
+    setPhase("rendering");
+    const hasNotes = !!(aiNotes.renderStyle || aiNotes.atmosphereNotes || aiNotes.whatToEmphasise);
+    setTimeout(() => {
+      setPhase("preview");
+    }, 2500);
+  };
+
+  const handleUseMap = () => {
+    confirmMap();
+    onConfirm?.();
+  };
+
+  const handleKeepEditing = () => {
+    setPhase("editing");
+  };
+
+  const hasNotes = !!(aiNotes.renderStyle || aiNotes.atmosphereNotes || aiNotes.whatToEmphasise);
+
   return (
     <div className="flex h-full">
-      {/* Left — Input Panel */}
-      <div className="w-[420px] min-w-[360px] border-r border-border flex flex-col overflow-y-auto">
-        <div className="p-6 space-y-8 flex-1">
-          {/* Section 1: Describe */}
-          <div className="space-y-2">
-            <label className="text-sm font-serif font-semibold text-foreground">
-              Describe your world
-            </label>
-            <Textarea
-              ref={descRef}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe your location, geography, and key places. Be as detailed or loose as you like. You can keep adding detail after seeing the preview."
-              className="min-h-[160px] text-sm border-border bg-card resize-none leading-relaxed"
-            />
-          </div>
+      {/* Full-width content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Entry */}
+        {phase === "entry" && <EntryScreen onSelect={handleEntrySelect} />}
 
-
-          {/* Section 3: Reference Images */}
-          <div className="space-y-2">
-            <label className="text-sm font-serif font-semibold text-foreground">
-              Reference Images
-            </label>
-            <p className="text-xs text-muted-foreground">
-              Upload up to 3 reference images — maps, satellite views, photos, sketches
-            </p>
-            <div className="flex gap-3 pt-1">
-              {/* Image slots */}
-              {referenceImages.map((img) => (
-                <div key={img.id} className="flex flex-col items-center gap-1.5">
-                  <div className="relative w-24 h-24 rounded-lg border border-border overflow-hidden group">
-                    <img src={img.src} alt={img.label} className="w-full h-full object-cover" />
-                    {/* Remove button */}
-                    <button
-                      onClick={() => handleRemoveImage(img.id)}
-                      className="absolute top-1 right-1 w-5 h-5 bg-foreground/70 text-background rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                    {/* Markup button */}
-                    <button
-                      onClick={() => handleOpenMarkup(img.id)}
-                      className="absolute bottom-1 right-1 w-6 h-6 bg-background/90 border border-border rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Pencil className="h-3 w-3 text-foreground" />
-                    </button>
-                    {/* Has markup indicator */}
-                    {img.hasMarkup && (
-                      <div className="absolute top-1 left-1 w-3 h-3 rounded-full bg-green-500 border border-background" />
-                    )}
-                  </div>
-                  <span className="text-[11px] text-muted-foreground">{img.label}</span>
-                </div>
-              ))}
-              {/* Add slot */}
-              {referenceImages.length < 3 && (
-                <div className="flex flex-col items-center gap-1.5">
-                  <button
-                    onClick={handleAddImage}
-                    className="w-24 h-24 rounded-lg border-2 border-dashed border-border hover:border-muted-foreground/50 flex flex-col items-center justify-center gap-1 transition-colors"
-                  >
-                    <Plus className="h-5 w-5 text-muted-foreground" />
-                    <span className="text-[10px] text-muted-foreground">Add image</span>
-                  </button>
-                  <span className="text-[11px] text-muted-foreground">
-                    Reference {referenceImages.length + 1}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Mark Up Images button */}
-            {referenceImages.length > 0 && (
-              <button
-                onClick={() => handleOpenMarkup()}
-                className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mt-2"
-              >
-                <Pencil className="h-3.5 w-3.5" />
-                <span>Mark Up Images</span>
-              </button>
-            )}
-          </div>
-
-          {/* Direction Notes */}
-          <div className="space-y-2">
-            <label className="text-sm font-serif font-semibold text-foreground">
-              Direction Notes
-            </label>
-            <p className="text-xs text-muted-foreground">
-              Specific instructions for the generator beyond your description — optional, especially useful on iterations.
-            </p>
-            <Textarea
-              value={creationNotes}
-              onChange={(e) => setCreationNotes(e.target.value)}
-              placeholder="e.g. Make the southern tip more dramatic, move the village closer to the bay, keep the lighthouse but remove the marina..."
-              className="min-h-[80px] text-sm border-border bg-muted/30 resize-none leading-relaxed text-muted-foreground"
-            />
-          </div>
-
-          {/* Generate */}
-          <div className="space-y-3">
-            <Button
-              onClick={handleGenerate}
-              disabled={state === "generating" || !description.trim()}
-              className="w-full bg-primary text-secondary font-semibold h-11"
-            >
-              Generate Map Preview
-            </Button>
-            <p className="text-[11px] text-muted-foreground italic text-center">
-              Not quite right? Add more description or images above and generate again — each version improves on the last.
-            </p>
-          </div>
-
-        </div>
-      </div>
-
-      {/* Right — Preview Window */}
-      <div className="flex-1 flex flex-col overflow-y-auto" style={{ backgroundColor: "#FAFAF7" }}>
-        {state === "idle" && (
-          <div className="flex-1 flex flex-col items-center justify-center p-10">
-            <div className="border-2 border-dashed border-border rounded-xl p-12 flex flex-col items-center gap-4 max-w-md">
-              <BookOpen className="h-10 w-10 text-muted-foreground/40" />
-              <h3 className="text-lg font-serif font-semibold text-foreground">Your map will appear here</h3>
-              <p className="text-sm text-muted-foreground text-center">
-                Describe your world and add references on the left, then hit Generate
-              </p>
-            </div>
-          </div>
+        {/* Upload flow */}
+        {phase === "upload" && (
+          <UploadTraceFlow
+            onImageUploaded={() => {}}
+            onAutoTrace={handleAutoTrace}
+            onManualTrace={handleManualTrace}
+          />
         )}
 
-        {state === "generating" && (
-          <div className="flex-1 flex flex-col items-center justify-center p-10 gap-4">
+        {/* Editing canvas */}
+        {phase === "editing" && (
+          <EditingCanvas
+            initialTemplate={selectedTemplate}
+            referenceImage={canvasState.referenceImage}
+            canvasState={canvasState}
+            onCanvasChange={setCanvasState}
+            aiNotes={aiNotes}
+            onAINotesChange={setAINotes}
+            onRenderPreview={handleRenderPreview}
+            demoMode={isDemoIsla && canvasState.paths.length > 0}
+          />
+        )}
+
+        {/* Rendering animation */}
+        {phase === "rendering" && (
+          <div className="flex-1 flex flex-col items-center justify-center p-10 gap-4" style={{ backgroundColor: "#FAFAF7" }}>
             <div className="relative w-16 h-16">
               <svg viewBox="0 0 64 64" className="w-full h-full">
                 <path
@@ -304,83 +167,36 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                   <animate attributeName="stroke-dashoffset" from="100" to="0" dur="1.5s" repeatCount="indefinite" />
                 </path>
                 <circle r="3" fill="hsl(var(--secondary))">
-                  <animateMotion
-                    path="M 8 48 Q 20 20, 32 36 Q 44 52, 56 16"
-                    dur="1.5s"
-                    repeatCount="indefinite"
-                  />
+                  <animateMotion path="M 8 48 Q 20 20, 32 36 Q 44 52, 56 16" dur="1.5s" repeatCount="indefinite" />
                 </circle>
               </svg>
             </div>
-            <h3 className="text-lg font-serif font-semibold text-foreground">Sketching your world...</h3>
+            <h3 className="text-lg font-serif font-semibold text-foreground">
+              {hasNotes ? "Rendering your sketch with your direction notes..." : "Rendering your sketch..."}
+            </h3>
             <p className="text-sm text-muted-foreground">This takes a few seconds</p>
           </div>
         )}
 
-        {state === "preview" && (
-          <div className="flex-1 flex flex-col p-6">
-            <div className="flex-1 flex items-start justify-center">
-              {renderPreviewMap()}
-            </div>
-
-            {/* Mark Up This Map */}
-            <div className="flex justify-center pt-2">
-              <button
-                onClick={handleMarkUpGeneratedMap}
-                className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <Pencil className="h-3.5 w-3.5" />
-                <span>Mark Up This Map</span>
-              </button>
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex flex-col items-center gap-3 pt-4 pb-2">
-              {/* Confirm button — full width, navy */}
-              <Button
-                onClick={() => {
-                  confirmMap();
-                  onConfirm?.();
-                }}
-                className="w-full max-w-md bg-primary text-primary-foreground font-semibold h-12 text-sm"
-              >
-                Confirm This Map
-              </Button>
-              <button
-                onClick={handleKeepRefining}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
-              >
-                Keep Refining
-              </button>
-
-              {versions.length > 1 && (
-                <div className="flex items-center gap-2 mt-2">
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Previous versions</span>
-                  <div className="flex gap-1.5">
-                    {versions.slice(0, -1).slice(-3).map((v) => (
-                      <button
-                        key={v}
-                        className="w-8 h-8 rounded border border-border bg-muted/50 hover:border-muted-foreground/40 transition-colors flex items-center justify-center"
-                        title={`Version ${v}`}
-                      >
-                        <span className="text-[9px] text-muted-foreground">v{v}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+        {/* Render preview */}
+        {phase === "preview" && (
+          <RenderPreview
+            projectId={currentProject.id}
+            hasAINotes={hasNotes}
+            onUseMap={handleUseMap}
+            onKeepEditing={handleKeepEditing}
+            selectedLocationId={selectedLocationId}
+            onSelectLocation={setSelectedLocationId}
+            pins={currentProject.pins}
+          />
         )}
       </div>
 
-      {/* Markup Modal */}
-      <MarkupModal
-        open={markupOpen}
-        onClose={() => setMarkupOpen(false)}
-        images={referenceImages}
-        onSave={handleSaveMarkup}
-        initialSelectedId={markupInitialId}
+      {/* Template Picker Modal */}
+      <TemplatePicker
+        open={templatePickerOpen}
+        onClose={() => setTemplatePickerOpen(false)}
+        onSelect={handleTemplateSelect}
       />
     </div>
   );
