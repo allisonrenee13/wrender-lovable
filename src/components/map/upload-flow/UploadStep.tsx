@@ -1,3 +1,4 @@
+import { useRef, useState, DragEvent } from "react";
 import { Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -8,9 +9,26 @@ interface UploadStepProps {
 }
 
 const UploadStep = ({ onNext, uploadedImage, onImageChange }: UploadStepProps) => {
-  const handleFileSelect = () => {
-    // Demo: simulate selecting a reference image
-    onImageChange("key-biscayne-ref");
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [dragging, setDragging] = useState(false);
+
+  const handleFile = (file: File) => {
+    if (!file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = (e) => onImageChange(e.target?.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleFile(file);
+  };
+
+  const handleDrop = (e: DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleFile(file);
   };
 
   return (
@@ -25,10 +43,23 @@ const UploadStep = ({ onNext, uploadedImage, onImageChange }: UploadStepProps) =
           </p>
         </div>
 
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleInputChange}
+        />
+
         {!uploadedImage ? (
           <button
-            onClick={handleFileSelect}
-            className="w-full border-2 border-dashed border-border rounded-lg p-12 flex flex-col items-center justify-center bg-card hover:border-secondary/50 transition-colors cursor-pointer"
+            onClick={() => inputRef.current?.click()}
+            onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={handleDrop}
+            className={`w-full border-2 border-dashed rounded-lg p-12 flex flex-col items-center justify-center bg-card transition-colors cursor-pointer ${
+              dragging ? "border-secondary bg-secondary/5" : "border-border hover:border-secondary/50"
+            }`}
           >
             <Upload className="h-8 w-8 text-muted-foreground mb-3" />
             <p className="text-sm font-medium text-foreground">
@@ -40,37 +71,17 @@ const UploadStep = ({ onNext, uploadedImage, onImageChange }: UploadStepProps) =
           </button>
         ) : (
           <div className="space-y-3">
-            {/* Demo reference thumbnail */}
             <div className="border border-border rounded-lg overflow-hidden bg-card">
-              <svg viewBox="0 0 400 220" className="w-full">
-                <rect width="400" height="220" fill="#e8f0f8" />
-                {/* Water */}
-                <rect x="0" y="0" width="400" height="220" fill="#d4e4f0" />
-                {/* Island shape */}
-                <path
-                  d="M 180 20 Q 210 15, 225 30 Q 240 50, 235 80 Q 240 110, 230 140 Q 225 165, 215 185 Q 205 200, 200 210 Q 195 200, 185 185 Q 175 165, 170 140 Q 160 110, 165 80 Q 160 50, 175 30 Q 190 15, 180 20 Z"
-                  fill="#c8d4a0"
-                  stroke="#8a9a6a"
-                  strokeWidth="1"
-                />
-                {/* Bridge from north */}
-                <line x1="200" y1="0" x2="200" y2="22" stroke="#888" strokeWidth="2" />
-                {/* Label */}
-                <text x="200" y="130" textAnchor="middle" fontSize="11" fill="#555" fontWeight="500">
-                  Key Biscayne
-                </text>
-                <text x="320" y="110" textAnchor="middle" fontSize="9" fill="#7a8ea0" fontStyle="italic">
-                  Atlantic
-                </text>
-                <text x="80" y="110" textAnchor="middle" fontSize="9" fill="#7a8ea0" fontStyle="italic">
-                  Bay
-                </text>
-              </svg>
+              <img
+                src={uploadedImage}
+                alt="Uploaded reference"
+                className="w-full max-h-[300px] object-contain bg-muted/30"
+              />
             </div>
             <div className="flex items-center justify-center gap-2">
-              <span className="text-sm text-muted-foreground">Key Biscayne reference</span>
+              <span className="text-sm text-muted-foreground">Your reference image</span>
               <button
-                onClick={() => onImageChange(null)}
+                onClick={() => { onImageChange(null); if (inputRef.current) inputRef.current.value = ""; }}
                 className="text-xs text-secondary hover:underline"
               >
                 Change

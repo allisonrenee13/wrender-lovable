@@ -6,11 +6,12 @@ import { Badge } from "@/components/ui/badge";
 interface DescribeStepProps {
   onGenerate: () => void;
   onBack: () => void;
+  uploadedImage: string | null;
 }
 
 const DEFAULT_DESCRIPTION = `This is Isla Serrano — a fictional version of this island. Rename the island to Isla Serrano. The large hotel on the northern beach should be called The Solano Hotel — grand, slightly faded, 90s glamour. The main residential cottage near the ocean side should be called The Reef Cottage. Add a yacht club on the bay side called The Harbour Club. Keep the Village Green in the centre. Add a Beach Club on the ocean side. The lighthouse at the southern tip should be called Cape Serrano Lighthouse. The causeway entry from the north is the only way on or off. The aesthetic should feel like Florida Keys warmth meets Ogunquit Maine — storybook, sun-bleached, lush.`;
 
-const DescribeStep = ({ onGenerate, onBack }: DescribeStepProps) => {
+const DescribeStep = ({ onGenerate, onBack, uploadedImage }: DescribeStepProps) => {
   const [description, setDescription] = useState(DEFAULT_DESCRIPTION);
   const [style, setStyle] = useState<"line-art" | "illustrated">("line-art");
 
@@ -20,19 +21,13 @@ const DescribeStep = ({ onGenerate, onBack }: DescribeStepProps) => {
       <div className="w-1/2 border-r border-border p-6 flex flex-col items-center justify-center bg-muted/30">
         <p className="text-xs text-muted-foreground uppercase tracking-wider mb-4">Your reference</p>
         <div className="w-full max-w-sm border border-border rounded-lg overflow-hidden bg-card">
-          <svg viewBox="0 0 400 300" className="w-full">
-            <rect width="400" height="300" fill="#d4e4f0" />
-            <path
-              d="M 180 25 Q 210 18, 228 38 Q 245 60, 238 100 Q 245 140, 233 175 Q 228 205, 218 235 Q 208 260, 200 280 Q 192 260, 182 235 Q 172 205, 167 175 Q 155 140, 162 100 Q 155 60, 172 38 Q 190 18, 180 25 Z"
-              fill="#c8d4a0"
-              stroke="#8a9a6a"
-              strokeWidth="1"
-            />
-            <line x1="200" y1="0" x2="200" y2="28" stroke="#888" strokeWidth="2" />
-            <text x="200" y="160" textAnchor="middle" fontSize="11" fill="#555" fontWeight="500">Key Biscayne</text>
-            <text x="330" y="150" textAnchor="middle" fontSize="9" fill="#7a8ea0" fontStyle="italic">Atlantic Ocean</text>
-            <text x="70" y="150" textAnchor="middle" fontSize="9" fill="#7a8ea0" fontStyle="italic">Biscayne Bay</text>
-          </svg>
+          {uploadedImage ? (
+            <img src={uploadedImage} alt="Reference" className="w-full max-h-[400px] object-contain bg-muted/30" />
+          ) : (
+            <div className="h-[300px] bg-muted/50 flex items-center justify-center text-sm text-muted-foreground">
+              No image uploaded
+            </div>
+          )}
         </div>
       </div>
 
