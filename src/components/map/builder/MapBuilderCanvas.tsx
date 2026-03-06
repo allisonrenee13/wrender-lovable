@@ -6,7 +6,17 @@ import {
   useImperativeHandle,
   forwardRef,
 } from "react";
-import { Canvas, PencilBrush, FabricObject, Path, Rect, Circle, Line, FabricImage, util, loadSVGFromString } from "fabric";
+import {
+  Canvas,
+  PencilBrush,
+  FabricObject,
+  Path,
+  Rect,
+  Circle,
+  Line,
+  FabricImage,
+  loadSVGFromString,
+} from "fabric";
 import type { StylePreferences, ShapeTool, FeatureStamp } from "./types";
 import { strokeWeightValues, backgroundColors } from "./types";
 
@@ -36,23 +46,21 @@ interface MapBuilderCanvasProps {
 
 const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
   ({ stylePrefs, activeTool, activeStamp, onStateChange, width, height }, ref) => {
+    const containerRef = useRef<HTMLDivElement>(null);
     const canvasElRef = useRef<HTMLCanvasElement>(null);
     const fabricRef = useRef<Canvas | null>(null);
     const historyRef = useRef<string[]>([]);
     const historyIndexRef = useRef(-1);
     const isLoadingRef = useRef(false);
     const refImageRef = useRef<FabricImage | null>(null);
-    const containerRef = useRef<HTMLDivElement>(null);
     const sculptingRef = useRef(false);
-    const [canvasReady, setCanvasReady] = useState(false);
 
     const canvasWidth = width || 800;
     const canvasHeight = height || 600;
-
     const colors = backgroundColors[stylePrefs.background];
     const sw = strokeWeightValues[stylePrefs.strokeWeight];
 
-    // --- Save / Restore History ---
+    // --- History ---
     const saveState = useCallback(() => {
       const canvas = fabricRef.current;
       if (!canvas || isLoadingRef.current) return;
@@ -87,7 +95,7 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
       });
     }, [onStateChange]);
 
-    // --- Init Canvas ---
+    // --- Init Canvas With Correct Dimensions ---
     useEffect(() => {
       if (!canvasElRef.current || fabricRef.current) return;
 
@@ -107,9 +115,9 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
 
       fabricRef.current = canvas;
 
-      // Add dot grid
-      for (let x = 20; x < canvasWidth; x += 20) {
-        for (let y = 20; y < canvasHeight; y += 20) {
+      // Dot grid
+      for (let x = 20; x < actualWidth; x += 20) {
+        for (let y = 20; y < actualHeight; y += 20) {
           const dot = new Circle({
             left: x - 0.5,
             top: y - 0.5,
@@ -124,14 +132,8 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
         }
       }
 
-      // Listen for path created (freehand drawing)
-      canvas.on("path:created", () => {
-        saveState();
-      });
-
-      // Save initial state
+      canvas.on("path:created", () => saveState());
       saveState();
-      setCanvasReady(true);
 
       return () => {
         canvas.dispose();
@@ -145,80 +147,84 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
       const handler = (e: KeyboardEvent) => {
         if ((e.metaKey || e.ctrlKey) && e.key === "z") {
           e.preventDefault();
-          if (e.shiftKey) {
-            doRedo();
-          } else {
-            doUndo();
-          }
+          e.shiftKey ? doRedo() : doUndo();
         }
       };
       window.addEventListener("keydown", handler);
       return () => window.removeEventListener("keydown", handler);
     }, [doUndo, doRedo]);
 
-    // --- Apply Style Changes (including line style variations) ---
+    // --- Style Changes ---
     useEffect(() => {
       const canvas = fabricRef.current;
       if (!canvas) return;
-
       canvas.backgroundColor = colors.bg;
-
-      // Line style effects
       const lineStyle = stylePrefs.lineStyle;
-      const getLineStyleProps = () => {
+      const getLineProps = () => {
         switch (lineStyle) {
-          case "hand-drawn":
-            return { strokeDashArray: undefined, opacity: 0.95, stroke: colors.stroke };
-          case "nautical":
-            return { strokeDashArray: undefined, opacity: 1, stroke: colors.stroke };
-          case "aged":
-            return { strokeDashArray: [1, 0.5], opacity: 0.85, stroke: stylePrefs.background === "dark" ? "#d4c9a8" : "#2a1f0f" };
-          default: // clean
-            return { strokeDashArray: undefined, opacity: 1, stroke: colors.stroke };
+          case "hand-drawn": return { strokeDashArray: undefined, opacity: 0.95, stroke: colors.stroke };
+          case "nautical": return { strokeDashArray: undefined, opacity: 1, stroke: colors.stroke };
+          case "aged": return { strokeDashArray: [1, 0.5], opacity: 0.85, stroke: stylePrefs.background === "dark" ? "#d4c9a8" : "#2a1f0f" };
+          default: return { strokeDashArray: undefined, opacity: 1, stroke: colors.stroke };
         }
       };
-      const lineProps = getLineStyleProps();
-
+      const lineProps = getLineProps();
       canvas.getObjects().forEach((obj) => {
         if (obj.excludeFromExport) {
           obj.set({ fill: colors.stroke });
         } else if (obj instanceof Path) {
-          const isCoastline = !(obj as any)._isFeature;
+          const isOutline = !(obj as any)._isFeature;
           obj.set({
             stroke: (obj as any)._isRiver ? "#6B8CAE" : lineProps.stroke,
-            strokeWidth: lineStyle === "nautical" && isCoastline ? sw * 1.6 : sw,
+            strokeWidth: lineStyle === "nautical" && isOutline ? sw * 1.6 : sw,
             strokeDashArray: lineProps.strokeDashArray as number[] | undefined,
             opacity: lineProps.opacity,
           });
         } else if (obj instanceof Line) {
           obj.set({ stroke: lineProps.stroke });
         } else if (obj instanceof Rect || obj instanceof Circle) {
-          if ((obj as any).isRefImage) return;
-          obj.set({ stroke: lineProps.stroke });
+          if (!(obj as any).isRefImage) obj.set({ stroke: lineProps.stroke });
         }
       });
-
       if (canvas.freeDrawingBrush) {
         canvas.freeDrawingBrush.color = lineProps.stroke;
         canvas.freeDrawingBrush.width = sw;
       }
-
       canvas.renderAll();
     }, [colors.bg, colors.stroke, sw, stylePrefs.lineStyle, stylePrefs.background]);
+
+    // --- Path rebuild helper for sculpt and smooth ---
+    const rebuildPath = useCallback((canvas: Canvas, obj: Path, pathData: any[]) => {
+      const newPathStr = pathData.map((seg: any[]) => seg.join(" ")).join(" ");
+      const rebuilt = new Path(newPathStr, {
+        fill: "transparent",
+        stroke: obj.stroke,
+        strokeWidth: obj.strokeWidth,
+        strokeLineCap: "round",
+        strokeLineJoin: "round",
+        strokeDashArray: obj.strokeDashArray as number[] | undefined,
+        opacity: obj.opacity,
+        selectable: false,
+        evented: false,
+      });
+      if ((obj as any)._isFeature) (rebuilt as any)._isFeature = true;
+      if ((obj as any)._isRiver) (rebuilt as any)._isRiver = true;
+      canvas.remove(obj);
+      canvas.add(rebuilt);
+      return rebuilt;
+    }, []);
 
     // --- Tool Activation ---
     useEffect(() => {
       const canvas = fabricRef.current;
       if (!canvas) return;
 
-      // Clean up previous listeners
       canvas.off("mouse:down");
       canvas.off("mouse:move");
       canvas.off("mouse:up");
       canvas.isDrawingMode = false;
       canvas.selection = false;
       canvas.defaultCursor = "default";
-
       canvas.getObjects().forEach((obj) => {
         if (!obj.excludeFromExport && !(obj instanceof FabricImage)) {
           obj.selectable = false;
@@ -229,14 +235,12 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
       if (activeStamp) {
         canvas.defaultCursor = "crosshair";
         if (activeStamp === "road") {
-          // Two-click road placement
           let startPoint: { x: number; y: number } | null = null;
           let previewLine: Line | null = null;
           canvas.on("mouse:down", (e) => {
             const pointer = canvas.getScenePoint(e.e);
             if (!startPoint) {
               startPoint = { x: pointer.x, y: pointer.y };
-              canvas.defaultCursor = "crosshair";
             } else {
               if (previewLine) canvas.remove(previewLine);
               placeRoad(startPoint.x, startPoint.y, pointer.x, pointer.y);
@@ -249,13 +253,9 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
             const pointer = canvas.getScenePoint(e.e);
             if (previewLine) canvas.remove(previewLine);
             previewLine = new Line([startPoint.x, startPoint.y, pointer.x, pointer.y], {
-              stroke: colors.stroke,
-              strokeWidth: 1,
-              strokeDashArray: [4, 4],
-              selectable: false,
-              evented: false,
-              excludeFromExport: true,
-              opacity: 0.4,
+              stroke: colors.stroke, strokeWidth: 1,
+              strokeDashArray: [4, 4], selectable: false,
+              evented: false, excludeFromExport: true, opacity: 0.4,
             });
             canvas.add(previewLine);
             canvas.renderAll();
@@ -271,6 +271,7 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
 
       switch (activeTool) {
         case "pen": {
+          // Assign brush BEFORE enabling drawing mode
           const brush = new PencilBrush(canvas);
           brush.color = colors.stroke;
           brush.width = sw;
@@ -284,38 +285,23 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
           canvas.defaultCursor = "grab";
           let isPanning = false;
           let lastPos = { x: 0, y: 0 };
-
-          const getClientPos = (ev: any) => {
-            if (ev.touches && ev.touches.length) {
-              return { x: ev.touches[0].clientX, y: ev.touches[0].clientY };
-            }
-            return { x: ev.clientX ?? 0, y: ev.clientY ?? 0 };
-          };
-
-          canvas.on("mouse:down", (e) => {
-            isPanning = true;
-            lastPos = getClientPos(e.e);
-            canvas.defaultCursor = "grabbing";
-          });
+          const getPos = (ev: any) =>
+            ev.touches?.length
+              ? { x: ev.touches[0].clientX, y: ev.touches[0].clientY }
+              : { x: ev.clientX ?? 0, y: ev.clientY ?? 0 };
+          canvas.on("mouse:down", (e) => { isPanning = true; lastPos = getPos(e.e); canvas.defaultCursor = "grabbing"; });
           canvas.on("mouse:move", (e) => {
             if (!isPanning) return;
-            const pos = getClientPos(e.e);
-            const dx = pos.x - lastPos.x;
-            const dy = pos.y - lastPos.y;
-            canvas.relativePan({ x: dx, y: dy } as any);
+            const pos = getPos(e.e);
+            canvas.relativePan({ x: pos.x - lastPos.x, y: pos.y - lastPos.y } as any);
             lastPos = pos;
           });
-          canvas.on("mouse:up", () => {
-            isPanning = false;
-            canvas.defaultCursor = "grab";
-          });
+          canvas.on("mouse:up", () => { isPanning = false; canvas.defaultCursor = "grab"; });
           break;
         }
 
         case "eraser": {
           canvas.defaultCursor = "pointer";
-          canvas.selection = false;
-
           const makeEvented = () => {
             canvas.getObjects().forEach((obj) => {
               if (!obj.excludeFromExport && !(obj instanceof FabricImage)) {
@@ -326,14 +312,9 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
             });
           };
           makeEvented();
-
           canvas.on("mouse:down", (e) => {
             const target = e.target || canvas.findTarget(e.e);
-            if (
-              target &&
-              !target.excludeFromExport &&
-              !(target instanceof FabricImage)
-            ) {
+            if (target && !target.excludeFromExport && !(target instanceof FabricImage)) {
               canvas.remove(target);
               canvas.discardActiveObject();
               canvas.renderAll();
@@ -359,9 +340,7 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
               obj.transparentCorners = false;
             }
           });
-          canvas.on("mouse:up", () => {
-            saveState();
-          });
+          canvas.on("mouse:up", () => saveState());
           canvas.renderAll();
           break;
         }
@@ -372,19 +351,15 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
           const direction = activeTool === "sculpt-out" ? 1 : -1;
           const brushRadius = 40;
           const strength = 3;
-
-          canvas.on("mouse:down", () => {
-            sculptingRef.current = true;
-          });
+          canvas.on("mouse:down", () => { sculptingRef.current = true; });
           canvas.on("mouse:move", (e) => {
             if (!sculptingRef.current) return;
             const pointer = canvas.getScenePoint(e.e);
-
+            const toReplace: Array<{ old: Path; pathData: any[] }> = [];
             canvas.getObjects().forEach((obj) => {
               if (!(obj instanceof Path) || obj.excludeFromExport) return;
               const pathData = (obj as any).path as any[];
               if (!pathData) return;
-
               let modified = false;
               pathData.forEach((segment: any[]) => {
                 for (let j = 1; j < segment.length; j += 2) {
@@ -403,33 +378,13 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
                   }
                 }
               });
-
-              if (modified) {
-                const newPathStr = pathData.map((seg: any[]) => seg.join(" ")).join(" ");
-                const newPath = new Path(newPathStr, {
-                  fill: "transparent",
-                  stroke: obj.stroke,
-                  strokeWidth: obj.strokeWidth,
-                  strokeLineCap: "round",
-                  strokeLineJoin: "round",
-                  strokeDashArray: obj.strokeDashArray as number[] | undefined,
-                  opacity: obj.opacity,
-                  selectable: false,
-                  evented: false,
-                });
-                if ((obj as any)._isFeature) (newPath as any)._isFeature = true;
-                if ((obj as any)._isRiver) (newPath as any)._isRiver = true;
-                canvas.remove(obj);
-                canvas.add(newPath);
-              }
+              if (modified) toReplace.push({ old: obj, pathData });
             });
-            canvas.renderAll();
+            toReplace.forEach(({ old, pathData }) => rebuildPath(canvas, old, pathData));
+            if (toReplace.length > 0) canvas.renderAll();
           });
           canvas.on("mouse:up", () => {
-            if (sculptingRef.current) {
-              sculptingRef.current = false;
-              saveState();
-            }
+            if (sculptingRef.current) { sculptingRef.current = false; saveState(); }
           });
           break;
         }
@@ -437,78 +392,36 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
         case "smooth": {
           canvas.defaultCursor = "crosshair";
           const smoothRadius = 40;
-
-          canvas.on("mouse:down", () => {
-            sculptingRef.current = true;
-          });
-
+          canvas.on("mouse:down", () => { sculptingRef.current = true; });
           canvas.on("mouse:move", (e) => {
             if (!sculptingRef.current) return;
             const pointer = canvas.getScenePoint(e.e);
-            const toReplace: Array<{ old: Path; newPath: Path }> = [];
-
+            const toReplace: Array<{ old: Path; pathData: any[] }> = [];
             canvas.getObjects().forEach((obj) => {
               if (!(obj instanceof Path) || obj.excludeFromExport) return;
               const pathData = (obj as any).path as any[];
               if (!pathData) return;
-
               let modified = false;
               for (let i = 1; i < pathData.length - 1; i++) {
                 const seg = pathData[i];
-                const px = seg[1];
-                const py = seg[2];
+                const px = seg[1]; const py = seg[2];
                 if (px === undefined || py === undefined) continue;
-                const dist = Math.sqrt(
-                  (px - pointer.x) ** 2 + (py - pointer.y) ** 2
-                );
+                const dist = Math.sqrt((px - pointer.x) ** 2 + (py - pointer.y) ** 2);
                 if (dist < smoothRadius) {
-                  const prev = pathData[i - 1];
-                  const next = pathData[i + 1];
-                  const prevX = prev[1] ?? px;
-                  const prevY = prev[2] ?? py;
-                  const nextX = next[1] ?? px;
-                  const nextY = next[2] ?? py;
+                  const prev = pathData[i - 1]; const next = pathData[i + 1];
                   const influence = (1 - dist / smoothRadius) * 0.3;
-                  seg[1] = px + ((prevX + nextX) / 2 - px) * influence;
-                  seg[2] = py + ((prevY + nextY) / 2 - py) * influence;
+                  seg[1] = px + (((prev[1] ?? px) + (next[1] ?? px)) / 2 - px) * influence;
+                  seg[2] = py + (((prev[2] ?? py) + (next[2] ?? py)) / 2 - py) * influence;
                   modified = true;
                 }
               }
-
-              if (modified) {
-                const newPathStr = pathData
-                  .map((seg: any[]) => seg.join(" "))
-                  .join(" ");
-                const rebuilt = new Path(newPathStr, {
-                  fill: "transparent",
-                  stroke: obj.stroke,
-                  strokeWidth: obj.strokeWidth,
-                  strokeLineCap: "round",
-                  strokeLineJoin: "round",
-                  strokeDashArray: obj.strokeDashArray as number[] | undefined,
-                  opacity: obj.opacity,
-                  selectable: false,
-                  evented: false,
-                });
-                if ((obj as any)._isFeature) (rebuilt as any)._isFeature = true;
-                if ((obj as any)._isRiver) (rebuilt as any)._isRiver = true;
-                toReplace.push({ old: obj, newPath: rebuilt });
-              }
+              if (modified) toReplace.push({ old: obj, pathData });
             });
-
-            toReplace.forEach(({ old, newPath }) => {
-              canvas.remove(old);
-              canvas.add(newPath);
-            });
-
+            toReplace.forEach(({ old, pathData }) => rebuildPath(canvas, old, pathData));
             if (toReplace.length > 0) canvas.renderAll();
           });
-
           canvas.on("mouse:up", () => {
-            if (sculptingRef.current) {
-              sculptingRef.current = false;
-              saveState();
-            }
+            if (sculptingRef.current) { sculptingRef.current = false; saveState(); }
           });
           break;
         }
@@ -516,138 +429,80 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeTool, activeStamp, colors.stroke, sw]);
 
-    // --- Place Road (two-click) ---
+    // --- Place Road ---
     const placeRoad = useCallback((x1: number, y1: number, x2: number, y2: number) => {
       const canvas = fabricRef.current;
       if (!canvas) return;
-      const road = new Line([x1, y1, x2, y2], {
-        stroke: colors.stroke,
-        strokeWidth: 1.5,
-        strokeDashArray: [8, 4],
-        selectable: false,
-        evented: false,
-      });
-      canvas.add(road);
+      canvas.add(new Line([x1, y1, x2, y2], {
+        stroke: colors.stroke, strokeWidth: 1.5,
+        strokeDashArray: [8, 4], selectable: false, evented: false,
+      }));
       canvas.renderAll();
       saveState();
     }, [colors.stroke, saveState]);
 
-    // --- Place Feature Stamp ---
+    // --- Place Stamp ---
     const placeStamp = useCallback((type: FeatureStamp, x: number, y: number) => {
       const canvas = fabricRef.current;
       if (!canvas) return;
-
       const stroke = colors.stroke;
-
       switch (type) {
-        case "building": {
-          const building = new Rect({
-            left: x - 8,
-            top: y - 6,
-            width: 16,
-            height: 12,
-            fill: "transparent",
-            stroke,
-            strokeWidth: 1.2,
-            selectable: false,
-            evented: false,
-            angle: 0,
-          });
-          canvas.add(building);
+        case "building":
+          canvas.add(new Rect({
+            left: x - 8, top: y - 6, width: 16, height: 12,
+            fill: "transparent", stroke, strokeWidth: 1.2,
+            selectable: false, evented: false, angle: 0,
+          }));
           break;
-        }
-        case "forest": {
-          const offsets = [[-6, 0], [6, 0], [0, -8], [-10, -6], [10, -6]];
-          offsets.forEach(([dx, dy]) => {
-            const tree = new Circle({
-              left: x + dx - 4,
-              top: y + dy - 4,
-              radius: 4,
-              fill: "transparent",
-              stroke,
-              strokeWidth: 1,
-              selectable: false,
-              evented: false,
-            });
-            canvas.add(tree);
+        case "forest":
+          [[-6, 0], [6, 0], [0, -8], [-10, -6], [10, -6]].forEach(([dx, dy]) => {
+            canvas.add(new Circle({
+              left: x + dx - 4, top: y + dy - 4, radius: 4,
+              fill: "transparent", stroke, strokeWidth: 1,
+              selectable: false, evented: false,
+            }));
           });
           break;
-        }
-        case "elevation": {
+        case "elevation":
           [20, 14, 8].forEach((r) => {
-            const arc = new Path(
-              `M ${x - r} ${y} Q ${x} ${y - r * 0.8} ${x + r} ${y}`,
-              {
-                fill: "transparent",
-                stroke,
-                strokeWidth: 0.8,
-                opacity: 0.5,
-                selectable: false,
-                evented: false,
-              }
-            );
-            canvas.add(arc);
+            canvas.add(new Path(`M ${x - r} ${y} Q ${x} ${y - r * 0.8} ${x + r} ${y}`, {
+              fill: "transparent", stroke, strokeWidth: 0.8,
+              opacity: 0.5, selectable: false, evented: false,
+            }));
           });
-          break;
-        }
-        case "road":
-          // handled by placeRoad for two-click, fallback single stamp
           break;
         case "river": {
-          const river = new Path(
-            `M ${x} ${y - 25} Q ${x + 12} ${y} ${x} ${y + 25}`,
-            {
-              fill: "transparent",
-              stroke: "#6B8CAE",
-              strokeWidth: 1.5,
-              selectable: false,
-              evented: false,
-            }
-          );
+          const river = new Path(`M ${x} ${y - 25} Q ${x + 12} ${y} ${x} ${y + 25}`, {
+            fill: "transparent", stroke: "#6B8CAE", strokeWidth: 1.5,
+            selectable: false, evented: false,
+          });
           (river as any)._isRiver = true;
           (river as any)._isFeature = true;
           canvas.add(river);
           break;
         }
       }
-
       canvas.renderAll();
       saveState();
     }, [colors.stroke, saveState]);
 
     // --- Public API ---
     useImperativeHandle(ref, () => ({
-      getSVG: () => {
-        const canvas = fabricRef.current;
-        return canvas ? canvas.toSVG() : "";
-      },
-      getPNG: () => {
-        const canvas = fabricRef.current;
-        return canvas ? canvas.toDataURL({ format: "png", quality: 1, multiplier: 2 }) : "";
-      },
+      getSVG: () => fabricRef.current?.toSVG() ?? "",
+      getPNG: () => fabricRef.current?.toDataURL({ format: "png", quality: 1, multiplier: 2 }) ?? "",
       loadSVG: async (svgString: string) => {
         const canvas = fabricRef.current;
         if (!canvas) return;
         isLoadingRef.current = true;
         try {
           const result = await loadSVGFromString(svgString);
-          canvas.getObjects()
-            .filter((o) => !o.excludeFromExport)
-            .forEach((o) => canvas.remove(o));
-
+          canvas.getObjects().filter((o) => !o.excludeFromExport).forEach((o) => canvas.remove(o));
           result.objects
             .filter((obj): obj is FabricObject => obj !== null)
             .forEach((obj) => {
-              obj.set({
-                stroke: colors.stroke,
-                strokeWidth: sw,
-                fill: "transparent",
-                selectable: false,
-                evented: false,
-              });
+              obj.set({ stroke: colors.stroke, strokeWidth: sw, fill: "transparent", selectable: false, evented: false });
               canvas.add(obj);
             });
-
           canvas.renderAll();
           saveState();
         } catch (err) {
@@ -668,10 +523,7 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
       },
       undo: doUndo,
       redo: doRedo,
-      getJSON: () => {
-        const canvas = fabricRef.current;
-        return canvas ? JSON.stringify(canvas.toJSON()) : "{}";
-      },
+      getJSON: () => JSON.stringify(fabricRef.current?.toJSON() ?? {}),
       loadJSON: async (json: string) => {
         const canvas = fabricRef.current;
         if (!canvas) return;
@@ -685,23 +537,16 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
         if (!canvas) return;
         FabricImage.fromURL(url).then((img) => {
           if (!img) return;
-          const scaleX = canvasWidth / (img.width || canvasWidth);
-          const scaleY = canvasHeight / (img.height || canvasHeight);
           img.set({
-            opacity: opacity / 100,
-            selectable: false,
-            evented: false,
-            scaleX,
-            scaleY,
+            opacity: opacity / 100, selectable: false, evented: false,
+            scaleX: canvasWidth / (img.width || canvasWidth),
+            scaleY: canvasHeight / (img.height || canvasHeight),
             excludeFromExport: true,
           });
           canvas.add(img);
           canvas.sendObjectToBack(img);
-          // Move dot grid below image
           canvas.getObjects().forEach((obj) => {
-            if (obj.excludeFromExport && !(obj instanceof FabricImage)) {
-              canvas.sendObjectToBack(obj);
-            }
+            if (obj.excludeFromExport && !(obj instanceof FabricImage)) canvas.sendObjectToBack(obj);
           });
           refImageRef.current = img;
           canvas.renderAll();
@@ -719,33 +564,23 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
         let count = 0;
         canvas.getObjects().forEach((obj) => {
           if (obj instanceof Path && !obj.excludeFromExport) {
-            const pathData = (obj as any).path;
-            if (pathData) count += pathData.length;
+            const p = (obj as any).path;
+            if (p) count += p.length;
           }
         });
         return count;
       },
-      getObjectCount: () => {
-        const canvas = fabricRef.current;
-        if (!canvas) return 0;
-        return canvas.getObjects().filter((o) => !o.excludeFromExport).length;
-      },
+      getObjectCount: () =>
+        fabricRef.current?.getObjects().filter((o) => !o.excludeFromExport).length ?? 0,
     }), [doUndo, doRedo, saveState, colors.bg, colors.stroke, sw, canvasWidth, canvasHeight]);
 
     return (
-      <div
-        ref={containerRef}
-        style={{ width: "100%", maxWidth: canvasWidth }}
-      >
-        <canvas
-          ref={canvasElRef}
-          style={{ display: "block" }}
-        />
+      <div ref={containerRef} style={{ width: "100%", maxWidth: canvasWidth }}>
+        <canvas ref={canvasElRef} style={{ display: "block" }} />
       </div>
     );
   }
 );
 
 MapBuilderCanvas.displayName = "MapBuilderCanvas";
-
 export default MapBuilderCanvas;
