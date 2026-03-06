@@ -89,7 +89,7 @@ function PricingCard({ name, price, period, features, cta, popular }: {
   return (
     <div className={`border rounded-lg p-6 bg-card relative flex flex-col ${popular ? "border-secondary shadow-md" : "border-border"}`}>
       {popular && (
-        <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-secondary text-secondary-foreground text-[10px] font-semibold px-3 py-0.5 rounded-full">
+        <span className="absolute -top-3 right-4 bg-secondary text-secondary-foreground text-[10px] font-semibold px-3 py-0.5 rounded-full">
           Most Popular
         </span>
       )}
@@ -214,14 +214,21 @@ export default function LandingPage() {
 
       {/* ══ Section 1 — Hero ══ */}
       <section className="min-h-[90vh] flex flex-col items-center justify-center text-center px-6 pb-16">
-        <h1 className="font-serif text-4xl md:text-6xl font-bold text-foreground leading-tight max-w-3xl mb-2">
-          You imagined it.
-        </h1>
         <h1 className="font-serif text-4xl md:text-6xl font-bold text-foreground leading-tight max-w-3xl mb-6">
-          Now you can see it.
+          See your story's world.
         </h1>
+
+        {/* Italic origin line with gold dividers */}
+        <div className="flex flex-col items-center gap-3 mb-6">
+          <div className="w-10 h-px bg-secondary" />
+          <p className="font-serif italic text-foreground/50 text-sm md:text-base">
+            From figment of imagination — to something you can actually see.
+          </p>
+          <div className="w-10 h-px bg-secondary" />
+        </div>
+
         <p className="text-muted-foreground text-base md:text-lg max-w-xl mb-8 leading-relaxed">
-          Seenery is the visual companion writers use while writing. Sketch your story's setting as a clean architectural line drawing — see what's in your head, plan where everything happens, and write with clarity.
+          Figment is the visual companion writers use while writing. Sketch your story's setting as a clean line drawing — see what's in your head, plan where everything happens, and write with clarity.
         </p>
         <div className="flex flex-col sm:flex-row items-center gap-3 mb-4">
           <Button className="bg-primary text-secondary font-medium rounded-full px-8 h-11 text-base">
@@ -239,7 +246,7 @@ export default function LandingPage() {
             <span className="w-2.5 h-2.5 rounded-full bg-destructive/40" />
             <span className="w-2.5 h-2.5 rounded-full bg-secondary/40" />
             <span className="w-2.5 h-2.5 rounded-full bg-green-400/40" />
-            <span className="ml-3 text-[10px] text-muted-foreground">Seenery — Isla Serrano</span>
+            <span className="ml-3 text-[10px] text-muted-foreground">Figment — Isla Serrano</span>
           </div>
           <div className="h-64 md:h-96 bg-[hsl(40,20%,97%)] flex items-center justify-center relative overflow-hidden">
             <svg viewBox="0 0 600 300" className="w-full h-full" fill="none">
@@ -276,8 +283,70 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ══ Section 2 — Writing Companion ══ */}
+      {/* ══ Section 2 — From Figment to Reality ══ */}
       <section className="py-20 px-6 md:px-12">
+        <div className="max-w-4xl mx-auto text-center mb-14">
+          <span className="text-xs font-medium text-secondary uppercase tracking-widest mb-3 block">The idea behind Figment</span>
+          <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground leading-tight mb-2">You imagined it.</h2>
+          <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground leading-tight mb-6">Now you can see it.</h2>
+          <p className="text-muted-foreground max-w-xl mx-auto leading-relaxed">
+            A figment is something that exists only in the mind — vivid, detailed, fully formed, but invisible to everyone else. Figment takes the world you've been carrying in your head and turns it into something you can see, plan, and build on.
+          </p>
+        </div>
+
+        {/* Figment → Reality visual */}
+        <div className="max-w-3xl mx-auto flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10">
+          {/* Left — dotted / imagined */}
+          <div className="flex flex-col items-center">
+            <svg width="160" height="120" viewBox="0 0 160 120" fill="none" className="mb-3">
+              <path
+                d="M30 65 Q35 40 55 33 Q75 26 95 30 Q115 25 130 45 Q140 55 138 68 Q130 78 110 82 Q85 88 65 82 Q42 78 32 72 Q28 70 30 65Z"
+                stroke="currentColor"
+                strokeWidth="1"
+                strokeDasharray="3 3"
+                fill="none"
+                opacity="0.4"
+              />
+              <circle cx="80" cy="52" r="2" stroke="currentColor" strokeWidth="0.8" strokeDasharray="2 2" fill="none" opacity="0.3" />
+            </svg>
+            <p className="text-xs italic text-muted-foreground">The figment</p>
+          </div>
+
+          {/* Arrow */}
+          <div className="flex flex-col items-center gap-1">
+            <span className="text-[10px] text-muted-foreground/50">Figment</span>
+            <svg width="60" height="20" viewBox="0 0 60 20" fill="none" className="md:block hidden">
+              <line x1="0" y1="10" x2="50" y2="10" stroke="hsl(var(--secondary))" strokeWidth="1.5" />
+              <path d="M46 5 L55 10 L46 15" stroke="hsl(var(--secondary))" strokeWidth="1.5" fill="none" />
+            </svg>
+            <svg width="20" height="40" viewBox="0 0 20 40" fill="none" className="md:hidden block">
+              <line x1="10" y1="0" x2="10" y2="32" stroke="hsl(var(--secondary))" strokeWidth="1.5" />
+              <path d="M5 28 L10 37 L15 28" stroke="hsl(var(--secondary))" strokeWidth="1.5" fill="none" />
+            </svg>
+          </div>
+
+          {/* Right — solid / real */}
+          <div className="flex flex-col items-center">
+            <svg width="160" height="120" viewBox="0 0 160 120" fill="none" className="mb-3">
+              <path
+                d="M30 65 Q35 40 55 33 Q75 26 95 30 Q115 25 130 45 Q140 55 138 68 Q130 78 110 82 Q85 88 65 82 Q42 78 32 72 Q28 70 30 65Z"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                fill="none"
+              />
+              <circle cx="80" cy="52" r="2.5" className="fill-primary" />
+              {/* Detail lines */}
+              <line x1="50" y1="55" x2="70" y2="50" stroke="currentColor" strokeWidth="0.5" opacity="0.3" />
+              <line x1="90" y1="48" x2="115" y2="52" stroke="currentColor" strokeWidth="0.5" opacity="0.3" />
+              <path d="M60 65 Q70 60 80 63" stroke="currentColor" strokeWidth="0.4" opacity="0.2" />
+            </svg>
+            <p className="text-xs italic text-muted-foreground">Your setting</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ══ Section 3 — Writing Companion ══ */}
+      <section className="py-20 px-6 md:px-12 bg-[hsl(40,20%,97%)]">
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
           {/* Left text */}
           <div>
@@ -290,7 +359,7 @@ export default function LandingPage() {
                 You're mid-chapter. Your characters are at the yacht club and split up — but you can't quite picture where everyone goes. You know the lighthouse is north and the hotel is south, but is the timing right? Does the geography work?
               </p>
               <p>
-                Seenery sits alongside your writing. Open it when you need to think visually — see your setting as a clean line sketch, place your events on the map, and figure out what happens next before you write it.
+                Figment sits alongside your writing. Open it when you need to think visually — see your setting as a clean line sketch, place your events on the map, and figure out what happens next before you write it.
               </p>
               <p className="font-medium text-foreground">
                 Not after you finish your book. While you're writing it.
@@ -322,7 +391,7 @@ export default function LandingPage() {
                 </div>
                 <p className="text-[8px] text-muted-foreground/40 mt-3 font-serif italic">Your writing app</p>
               </div>
-              {/* Seenery side */}
+              {/* Figment side */}
               <div className="flex-1 bg-[hsl(40,20%,97%)] flex items-center justify-center">
                 <svg viewBox="0 0 160 120" className="w-4/5 h-4/5" fill="none">
                   <path d="M30 60 Q40 35 60 30 Q80 25 100 30 Q120 40 130 60 Q120 70 100 75 Q80 80 60 75 Q40 70 30 60Z" stroke="currentColor" strokeWidth="0.8" fill="none" />
@@ -337,8 +406,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ══ Section 3 — The Problem ══ */}
-      <section className="py-20 px-6 md:px-12 bg-[hsl(40,20%,97%)]">
+      {/* ══ Section 4 — The Problem ══ */}
+      <section className="py-20 px-6 md:px-12">
         <div className="max-w-4xl mx-auto text-center mb-12">
           <span className="text-xs font-medium text-secondary uppercase tracking-widest mb-3 block">Sound familiar?</span>
           <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground">
@@ -347,7 +416,7 @@ export default function LandingPage() {
         </div>
         <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
-            <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-4 font-medium">Before Seenery</h3>
+            <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-4 font-medium">Before Figment</h3>
             <ul className="space-y-3">
               {[
                 "Scribbled maps on notebook paper you keep losing",
@@ -364,13 +433,13 @@ export default function LandingPage() {
             </ul>
           </div>
           <div>
-            <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-4 font-medium">With Seenery</h3>
+            <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-4 font-medium">With Figment</h3>
             <ul className="space-y-3">
               {[
-                "A precise line sketch of your story's setting — always open beside your writing",
-                "Every location planned and placed before you write the scene",
+                "A precise line sketch of your setting — always open beside your writing",
+                "Every location planned before you write the scene",
                 "Characters tracked across your world — you always know where everyone is",
-                "Plot events pinned to the map so you can see the story spatially",
+                "Plot events pinned to the sketch so you can see the story spatially",
                 "Clarity on what happens next — before you write a single word",
               ].map((t) => (
                 <li key={t} className="flex items-start gap-2.5 text-sm text-foreground">
@@ -383,15 +452,15 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ══ Section 4 — Three Core Features ══ */}
-      <section className="py-20 px-6 md:px-12">
+      {/* ══ Section 5 — Three Core Features ══ */}
+      <section className="py-20 px-6 md:px-12 bg-[hsl(40,20%,97%)]">
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center p-6">
               <IconSketchSetting />
               <h3 className="font-serif font-semibold text-lg mb-2">Sketch Your Setting</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Describe your world or upload a reference place — Seenery generates a precise architectural line sketch of your setting. Like a floor plan for your story.
+                Describe your world or upload a reference — Figment generates a precise architectural line sketch of your setting. Like a floor plan for your story.
               </p>
             </div>
             <div className="text-center p-6">
@@ -415,11 +484,11 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ══ Section 5 — Three Books Demo ══ */}
-      <section className="py-20 px-6 md:px-12 bg-[hsl(40,20%,97%)]">
+      {/* ══ Section 6 — Three Books Demo ══ */}
+      <section className="py-20 px-6 md:px-12">
         <div className="max-w-5xl mx-auto text-center mb-12">
           <span className="text-xs font-medium text-secondary uppercase tracking-widest mb-3 block">Works for every kind of story</span>
-          <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-3">If setting matters to your story — Seenery is for you.</h2>
+          <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-3">If setting matters to your story — Figment is for you.</h2>
           <p className="text-muted-foreground max-w-lg mx-auto">
             Whether your world is a fantasy kingdom, a controlled dystopia, or a sun-bleached island — if place shapes your story, you need to see it.
           </p>
@@ -449,31 +518,31 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ══ Section 6 — How It Works ══ */}
-      <section id="how-it-works" className="py-20 px-6 md:px-12">
+      {/* ══ Section 7 — How It Works ══ */}
+      <section id="how-it-works" className="py-20 px-6 md:px-12 bg-[hsl(40,20%,97%)]">
         <div className="max-w-5xl mx-auto text-center mb-14">
           <span className="text-xs font-medium text-secondary uppercase tracking-widest mb-3 block">How it works</span>
           <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground">
-            From imagination to line sketch in minutes.
+            From figment to floor plan in minutes.
           </h2>
         </div>
         <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 relative">
           <div className="hidden md:block absolute top-16 left-[12.5%] right-[12.5%] border-t-2 border-dashed border-border" />
           <Step num={1} title="Describe what you imagined" desc="Type a description of your setting or upload reference images of real places that inspired your world." icon={<StepIcon1 />} />
-          <Step num={2} title="Mark it up" desc="Circle what to keep, exclude, or adapt. Guide Seenery toward your exact vision using the markup tool." icon={<StepIcon2 />} />
-          <Step num={3} title="Generate your sketch" desc="Seenery draws a precise black line sketch of your setting — like an architectural floor plan or a director's location map." icon={<StepIcon3 />} />
-          <Step num={4} title="Write alongside it" desc="Keep Seenery open while you write. Drop pins, track characters, plan scenes. Your sketch grows as your story does." icon={<StepIcon4 />} />
+          <Step num={2} title="Mark it up" desc="Circle what to keep, exclude, or adapt. Guide Figment toward your exact vision using the markup tool." icon={<StepIcon2 />} />
+          <Step num={3} title="Generate your sketch" desc="Figment draws a precise black line sketch of your setting — like an architectural floor plan or a director's location map." icon={<StepIcon3 />} />
+          <Step num={4} title="Write alongside it" desc="Keep Figment open while you write. Drop pins, track characters, plan scenes. Your sketch grows as your story does." icon={<StepIcon4 />} />
         </div>
       </section>
 
-      {/* ══ Section 7 — Testimonial Quote ══ */}
-      <section className="py-20 px-6 md:px-12 bg-[hsl(40,20%,97%)]">
+      {/* ══ Section 8 — Writer Quote ══ */}
+      <section className="py-20 px-6 md:px-12">
         <div className="max-w-3xl mx-auto text-center">
           <p className="font-serif text-xl md:text-2xl italic text-foreground leading-relaxed mb-6">
-            "I always knew what the island looked like. I just couldn't see it — until I sketched it out. Now I open Seenery before I write every scene."
+            "I always knew what the island looked like. I just couldn't see it — until I sketched it out in Figment. Now I visualise every scene in Figment before I write it."
           </p>
           <div className="flex items-center justify-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-muted border border-border" />
+            <div className="w-10 h-10 rounded-full bg-primary/10 border border-border" />
             <div className="text-left">
               <p className="text-sm text-muted-foreground">Fiction writer</p>
               <p className="text-xs text-muted-foreground/60">Thriller set on an island</p>
@@ -482,8 +551,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ══ Section 8 — Pricing ══ */}
-      <section className="py-20 px-6 md:px-12">
+      {/* ══ Section 9 — Pricing ══ */}
+      <section className="py-20 px-6 md:px-12 bg-[hsl(40,20%,97%)]">
         <div className="max-w-5xl mx-auto text-center mb-12">
           <span className="text-xs font-medium text-secondary uppercase tracking-widest mb-3 block">Pricing</span>
           <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-3">Simple, writer-friendly pricing.</h2>
@@ -501,7 +570,7 @@ export default function LandingPage() {
             price="$9/month"
             period="$7/month billed annually"
             popular
-            features={["Unlimited projects", "Unlimited pins & characters", "AI sketch generation", "Upload & adapt real locations", "Clean export — print ready", "Location mood boards"]}
+            features={["Unlimited projects", "Unlimited pins & characters", "AI sketch generation", "Upload & adapt real locations", "Clean export — print ready", "Location sketch mood boards"]}
             cta="Start Free Trial"
           />
           <PricingCard
@@ -517,7 +586,7 @@ export default function LandingPage() {
         </p>
       </section>
 
-      {/* ══ Section 9 — Emotional Close ══ */}
+      {/* ══ Section 10 — Emotional Close ══ */}
       <section className="py-24 px-6 text-center">
         <h2 className="font-serif text-3xl md:text-5xl font-bold text-foreground leading-tight max-w-2xl mx-auto mb-2">
           You imagined it.
@@ -525,14 +594,14 @@ export default function LandingPage() {
         <h2 className="font-serif text-3xl md:text-5xl font-bold text-foreground leading-tight max-w-2xl mx-auto mb-8">
           Now you can see it.
         </h2>
-        <p className="text-muted-foreground mb-8">Join writers who sketch their world in Seenery.</p>
+        <p className="text-muted-foreground mb-8">Join writers who visualise their world in Figment.</p>
         <Button className="bg-primary text-secondary font-medium rounded-full px-10 h-12 text-base mb-3">
-          Start Sketching Your World
+          Start Visualising Your World
         </Button>
         <p className="text-xs text-muted-foreground/60">Free to start · No credit card · 14-day trial</p>
       </section>
 
-      {/* ══ Section 10 — Footer ══ */}
+      {/* ══ Section 11 — Footer ══ */}
       <footer className="border-t border-border py-8 px-6 md:px-12">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <SeeneryLogo variant="sidebar" />
@@ -544,7 +613,7 @@ export default function LandingPage() {
             <a href="#" className="hover:text-foreground transition-colors font-medium text-foreground">Start Free</a>
           </div>
         </div>
-        <p className="text-center text-[10px] text-muted-foreground/40 mt-6">© 2025 Seenery · Built for fiction writers</p>
+        <p className="text-center text-[10px] text-muted-foreground/40 mt-6">© 2025 Figment · Built for fiction writers</p>
       </footer>
     </div>
   );
