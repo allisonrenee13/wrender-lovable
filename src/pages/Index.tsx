@@ -120,22 +120,6 @@ const Index = () => {
         <StatCard icon={<Map className="h-5 w-5 text-muted-foreground" />} label="Locations" value={currentProject.locations.length} />
       </div>
 
-      {/* Recent Activity */}
-      <h2 className="text-lg font-serif font-semibold mb-4">Recent Activity</h2>
-      {currentProject.recentActivity.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">
-          <p className="text-sm">No activity yet. Start adding content to your project!</p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {currentProject.recentActivity.map((item, i) => (
-            <div key={i} className="flex items-center gap-3 p-3 rounded-md bg-muted/50 text-sm">
-              <div className="w-1.5 h-1.5 rounded-full bg-secondary flex-shrink-0" />
-              <span className="text-foreground">{item}</span>
-            </div>
-          ))}
-        </div>
-      )}
 
       <NewProjectModal
         open={showNewProject}
