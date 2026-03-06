@@ -2,6 +2,9 @@ import { useState, useRef, useCallback } from "react";
 import CanvasToolbar from "./CanvasToolbar";
 import StylePreferencesPanel from "./StylePreferencesPanel";
 import MapBuilderCanvas, { type MapCanvasHandle } from "./MapBuilderCanvas";
+import GuidanceOverlay, { shouldShowGuidance } from "./GuidanceOverlay";
+import EmptyCanvasPrompt from "./EmptyCanvasPrompt";
+import { shapeToolHints, stampHints } from "./toolHints";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import type {
@@ -12,7 +15,6 @@ import type {
   MapTemplate,
   CanvasState,
 } from "./types";
-import { lineStyleLabels } from "./types";
 
 interface EditingCanvasProps {
   initialTemplate?: MapTemplate | null;
@@ -47,6 +49,11 @@ const EditingCanvas = ({
   const [objectCount, setObjectCount] = useState(0);
   const [refOpacity, setRefOpacity] = useState(canvasState.referenceOpacity);
   const [templateLoaded, setTemplateLoaded] = useState(false);
+  const [showGuidance, setShowGuidance] = useState(() => {
+    // Show guidance only if canvas is empty and not previously dismissed
+    return canvasState.paths.length === 0 && !initialTemplate && shouldShowGuidance();
+  });
+  const [hasDrawn, setHasDrawn] = useState(canvasState.paths.length > 0 || !!initialTemplate);
 
   const internalRef = useRef<MapCanvasHandle | null>(null);
   const canvasHandle = externalCanvasRef || internalRef;
@@ -57,6 +64,11 @@ const EditingCanvas = ({
 
     setNodeCount(handle.getNodeCount());
     setObjectCount(handle.getObjectCount());
+
+    // Mark that user has drawn something
+    if (handle.getNodeCount() > 0 || handle.getObjectCount() > 0) {
+      setHasDrawn(true);
+    }
 
     // Extract current SVG paths and save back to parent
     const svg = handle.getSVG();
@@ -82,7 +94,6 @@ const EditingCanvas = ({
     if (!handle) return;
 
     if (initialTemplate && !templateLoaded) {
-      // Load template from the templateSVGs
       import("./templates").then(({ templateSVGs }) => {
         const svg = templateSVGs[initialTemplate.id];
         if (svg) {
@@ -96,7 +107,6 @@ const EditingCanvas = ({
       handle.addReferenceImage(referenceImage, refOpacity);
     }
 
-    // If there are existing canvas paths (demo mode), load them as SVG
     if (canvasState.paths.length > 0 && !initialTemplate) {
       const svgStr = `<svg viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
         ${canvasState.paths.map((p) => `<path d="${p}" fill="none" stroke="#1B2A4A" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`).join("\n")}
@@ -114,6 +124,17 @@ const EditingCanvas = ({
     canvasHandle.current?.setReferenceOpacity(value);
   };
 
+  const handleGuidanceDismiss = () => {
+    setShowGuidance(false);
+    setActiveTool("pen");
+  };
+
+  // Determine current hint text
+  const currentHint = activeStamp
+    ? stampHints[activeStamp]
+    : shapeToolHints[activeTool];
+
+  const showEmptyPrompt = !hasDrawn && activeTool === "pen" && !activeStamp && !showGuidance;
   const hasContent = nodeCount > 0 || objectCount > 0 || canvasState.paths.length > 0 || !!initialTemplate;
 
   return (
@@ -135,8 +156,8 @@ const EditingCanvas = ({
 
         {/* Canvas area */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 overflow-auto flex items-center justify-center p-4 bg-muted/20">
-            <div className="border border-border rounded shadow-sm overflow-hidden" style={{ maxWidth: 800 }}>
+          <div className="flex-1 overflow-auto flex items-center justify-center p-4 bg-muted/20 relative">
+            <div className="border border-border rounded shadow-sm overflow-hidden relative" style={{ maxWidth: 800 }}>
               <MapBuilderCanvas
                 ref={(handle) => {
                   if (externalCanvasRef) {
@@ -144,7 +165,6 @@ const EditingCanvas = ({
                   }
                   internalRef.current = handle;
                   if (handle) {
-                    // defer to next frame so canvas is mounted
                     requestAnimationFrame(handleCanvasReady);
                   }
                 }}
@@ -155,6 +175,12 @@ const EditingCanvas = ({
                 width={800}
                 height={600}
               />
+
+              {/* Empty canvas prompt */}
+              {showEmptyPrompt && <EmptyCanvasPrompt />}
+
+              {/* First-time guidance overlay */}
+              {showGuidance && <GuidanceOverlay onDismiss={handleGuidanceDismiss} />}
             </div>
           </div>
 
@@ -174,12 +200,12 @@ const EditingCanvas = ({
             </div>
           )}
 
-          {/* Status bar */}
-          <div className="flex items-center justify-between px-5 py-2 border-t border-border bg-muted/30">
-            <span className="text-[11px] text-muted-foreground">
-              {nodeCount} path nodes · {objectCount} objects · Style: {lineStyleLabels[stylePrefs.lineStyle]}
-              {hasContent && " · Ready to render"}
-            </span>
+          {/* Contextual hint bar */}
+          <div className="px-5 py-2.5 border-t border-border bg-card">
+            <p className="text-[13px] text-foreground leading-snug">{currentHint}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              {nodeCount} path nodes · {objectCount} objects
+            </p>
           </div>
         </div>
       </div>

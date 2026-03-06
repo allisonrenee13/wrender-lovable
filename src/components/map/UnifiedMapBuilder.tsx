@@ -237,10 +237,13 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
               hideRenderButton
               canvasRef={canvasRef}
             />
-            <div className="px-5 py-3 border-t border-border bg-card flex justify-end">
+            <div className="px-5 py-3 border-t border-border bg-card flex items-center justify-end gap-4">
+              <span className="text-[12px] text-muted-foreground hidden sm:inline">
+                Happy with the shape? Continue when ready — you can always come back and edit.
+              </span>
               <Button
                 onClick={() => setPhaseAndSave("style")}
-                className="bg-primary text-primary-foreground font-semibold px-6"
+                className="bg-primary text-primary-foreground font-semibold px-6 shrink-0"
               >
                 Continue to Style →
               </Button>
