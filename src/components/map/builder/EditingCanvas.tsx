@@ -22,6 +22,8 @@ interface EditingCanvasProps {
   onStylePrefsChange: (prefs: StylePreferences) => void;
   onRenderPreview: () => void;
   demoMode?: boolean;
+  hideStylePanel?: boolean;
+  hideRenderButton?: boolean;
 }
 
 const EditingCanvas = ({
@@ -33,6 +35,8 @@ const EditingCanvas = ({
   onStylePrefsChange,
   onRenderPreview,
   demoMode,
+  hideStylePanel,
+  hideRenderButton,
 }: EditingCanvasProps) => {
   const [mode, setMode] = useState<ToolMode>("shape");
   const [activeTool, setActiveTool] = useState<ShapeTool>("pen");
@@ -234,18 +238,20 @@ const EditingCanvas = ({
       </div>
 
       {/* Style Preferences */}
-      <StylePreferencesPanel prefs={stylePrefs} onChange={onStylePrefsChange} />
+      {!hideStylePanel && <StylePreferencesPanel prefs={stylePrefs} onChange={onStylePrefsChange} />}
 
       {/* Render button */}
-      <div className="px-5 py-3 border-t border-border bg-card flex justify-end">
-        <Button
-          onClick={onRenderPreview}
-          className="bg-primary text-secondary font-semibold px-8 h-10"
-          disabled={displayPaths.length === 0 && !initialTemplate}
-        >
-          Render Preview
-        </Button>
-      </div>
+      {!hideRenderButton && (
+        <div className="px-5 py-3 border-t border-border bg-card flex justify-end">
+          <Button
+            onClick={onRenderPreview}
+            className="bg-primary text-secondary font-semibold px-8 h-10"
+            disabled={displayPaths.length === 0 && !initialTemplate}
+          >
+            Render Preview
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

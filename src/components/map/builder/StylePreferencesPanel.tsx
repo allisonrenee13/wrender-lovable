@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import type {
   StylePreferences,
@@ -16,6 +16,7 @@ import {
 interface StylePreferencesPanelProps {
   prefs: StylePreferences;
   onChange: (prefs: StylePreferences) => void;
+  forceExpanded?: boolean;
 }
 
 /* tiny island swatch paths per line style */
@@ -32,8 +33,8 @@ const strokeWeights: StrokeWeight[] = ["fine", "medium", "bold"];
 const backgrounds: BackgroundStyle[] = ["white", "cream", "aged-paper", "dark"];
 const labelStyles: LabelStyle[] = ["serif", "sans-serif", "hidden"];
 
-const StylePreferencesPanel = ({ prefs, onChange }: StylePreferencesPanelProps) => {
-  const [expanded, setExpanded] = useState(false);
+const StylePreferencesPanel = ({ prefs, onChange, forceExpanded }: StylePreferencesPanelProps) => {
+  const [expanded, setExpanded] = useState(forceExpanded ?? false);
 
   const update = <K extends keyof StylePreferences>(key: K, value: StylePreferences[K]) =>
     onChange({ ...prefs, [key]: value });
