@@ -226,22 +226,27 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
         case "pan": {
           canvas.defaultCursor = "grab";
           let isPanning = false;
-          let lastX = 0;
-          let lastY = 0;
+          let lastPos = { x: 0, y: 0 };
+
+          const getClientPos = (ev: any) => {
+            if (ev.touches && ev.touches.length) {
+              return { x: ev.touches[0].clientX, y: ev.touches[0].clientY };
+            }
+            return { x: ev.clientX ?? 0, y: ev.clientY ?? 0 };
+          };
 
           canvas.on("mouse:down", (e) => {
             isPanning = true;
-            lastX = e.e.clientX;
-            lastY = e.e.clientY;
+            lastPos = getClientPos(e.e);
             canvas.defaultCursor = "grabbing";
           });
           canvas.on("mouse:move", (e) => {
             if (!isPanning) return;
-            const dx = e.e.clientX - lastX;
-            const dy = e.e.clientY - lastY;
+            const pos = getClientPos(e.e);
+            const dx = pos.x - lastPos.x;
+            const dy = pos.y - lastPos.y;
             canvas.relativePan({ x: dx, y: dy } as any);
-            lastX = e.e.clientX;
-            lastY = e.e.clientY;
+            lastPos = pos;
           });
           canvas.on("mouse:up", () => {
             isPanning = false;
