@@ -376,7 +376,7 @@ export default function LandingPage() {
           <div>
             <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-4 font-medium">With Wrender</h3>
             <ul className="space-y-3">
-              {["A precise line sketch of your setting, always open beside your writing","Every location planned before you write the scene","Characters tracked across your world so you always know where everyone is","Plot events pinned to the sketch so you can see the story spatially","Clarity on what comes next, before you write a single word"].map((t) => (
+              {["A precise line sketch of your setting, always open beside your writing","Every location planned before you write the scene","Characters tracked across your world so you always know where everyone is","Plot events pinned to the sketch so you can see the story spatially","Visual clarity, before and while writing"].map((t) => (
                 <li key={t} className="flex items-start gap-2.5 text-sm text-foreground">
                   <span className="w-1.5 h-1.5 rounded-full bg-secondary mt-1.5 flex-shrink-0" />
                   {t}
