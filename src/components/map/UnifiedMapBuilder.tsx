@@ -263,16 +263,6 @@ const UnifiedMapBuilder = () => {
             </p>
           </div>
 
-          {/* Coming Soon: Pen Tool */}
-          <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-1 opacity-60">
-            <div className="flex items-center gap-2">
-              <Pencil className="h-4 w-4 text-muted-foreground" />
-              <span className="text-xs font-semibold text-muted-foreground">Pen Tool — coming soon</span>
-            </div>
-            <p className="text-[11px] text-muted-foreground leading-relaxed">
-              Circle areas on your reference images to include or exclude, or annotate your generated map to mark what needs changing.
-            </p>
-          </div>
         </div>
       </div>
 
