@@ -42,6 +42,7 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
     const historyIndexRef = useRef(-1);
     const isLoadingRef = useRef(false);
     const refImageRef = useRef<FabricImage | null>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
     const sculptingRef = useRef(false);
     const [canvasReady, setCanvasReady] = useState(false);
 
@@ -90,11 +91,17 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
     useEffect(() => {
       if (!canvasElRef.current || fabricRef.current) return;
 
+      const container = canvasElRef.current.parentElement;
+      const actualWidth = container
+        ? Math.min(container.clientWidth, canvasWidth)
+        : canvasWidth;
+      const actualHeight = Math.round(actualWidth * (canvasHeight / canvasWidth));
+
       const canvas = new Canvas(canvasElRef.current, {
         isDrawingMode: false,
         backgroundColor: colors.bg,
-        width: canvasWidth,
-        height: canvasHeight,
+        width: actualWidth,
+        height: actualHeight,
         selection: false,
       });
 
@@ -264,12 +271,12 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
 
       switch (activeTool) {
         case "pen": {
-          canvas.isDrawingMode = true;
           const brush = new PencilBrush(canvas);
           brush.color = colors.stroke;
           brush.width = sw;
           brush.decimate = 4;
           canvas.freeDrawingBrush = brush;
+          canvas.isDrawingMode = true;
           break;
         }
 
@@ -726,10 +733,15 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
     }), [doUndo, doRedo, saveState, colors.bg, colors.stroke, sw, canvasWidth, canvasHeight]);
 
     return (
-      <canvas
-        ref={canvasElRef}
-        style={{ display: "block", width: "100%", maxWidth: canvasWidth }}
-      />
+      <div
+        ref={containerRef}
+        style={{ width: "100%", maxWidth: canvasWidth }}
+      >
+        <canvas
+          ref={canvasElRef}
+          style={{ display: "block" }}
+        />
+      </div>
     );
   }
 );
