@@ -6,7 +6,8 @@ import TemplatePicker from "./builder/TemplatePicker";
 import UploadTraceFlow from "./builder/UploadTraceFlow";
 import EditingCanvas from "./builder/EditingCanvas";
 import RenderPreview from "./builder/RenderPreview";
-import type { BuilderPath, MapTemplate, AIDirectionNotes, CanvasState } from "./builder/types";
+import type { BuilderPath, MapTemplate, StylePreferences, CanvasState } from "./builder/types";
+import { defaultStylePreferences } from "./builder/types";
 
 type Phase = "entry" | "upload" | "editing" | "rendering" | "preview";
 
@@ -22,13 +23,11 @@ const defaultCanvas: CanvasState = {
   nodeCount: 0,
 };
 
-const emptyNotes: AIDirectionNotes = { renderStyle: "", atmosphereNotes: "", whatToEmphasise: "" };
-
-// Demo state for Isla Serrano — starts in editing canvas via "upload & trace" path
-const islaSerranoNotes: AIDirectionNotes = {
-  renderStyle: "warm and nautical, sun-bleached",
-  atmosphereNotes: "A small barrier island. The lighthouse at the south point is the most important landmark. The harbour is sheltered and intimate.",
-  whatToEmphasise: "",
+const islaSerranoStylePrefs: StylePreferences = {
+  lineStyle: "nautical",
+  strokeWeight: "medium",
+  background: "cream",
+  labelStyle: "serif",
 };
 
 const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
@@ -59,7 +58,9 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
       : defaultCanvas
   );
 
-  const [aiNotes, setAINotes] = useState<AIDirectionNotes>(isDemoIsla ? islaSerranoNotes : emptyNotes);
+  const [stylePrefs, setStylePrefs] = useState<StylePreferences>(
+    isDemoIsla ? islaSerranoStylePrefs : defaultStylePreferences
+  );
 
   // --- Path handlers ---
 
@@ -69,7 +70,6 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
     } else if (path === "upload") {
       setPhase("upload");
     } else {
-      // draw from scratch
       setCanvasState(defaultCanvas);
       setPhase("editing");
     }
@@ -84,7 +84,6 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   };
 
   const handleAutoTrace = (_image: string) => {
-    // Simulated: load the demo island outline as if traced
     setCanvasState({
       ...defaultCanvas,
       paths: [
@@ -103,10 +102,9 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
 
   const handleRenderPreview = () => {
     setPhase("rendering");
-    const hasNotes = !!(aiNotes.renderStyle || aiNotes.atmosphereNotes || aiNotes.whatToEmphasise);
     setTimeout(() => {
       setPhase("preview");
-    }, 2500);
+    }, 1500);
   };
 
   const handleUseMap = () => {
@@ -114,20 +112,11 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
     onConfirm?.();
   };
 
-  const handleKeepEditing = () => {
-    setPhase("editing");
-  };
-
-  const hasNotes = !!(aiNotes.renderStyle || aiNotes.atmosphereNotes || aiNotes.whatToEmphasise);
-
   return (
     <div className="flex h-full">
-      {/* Full-width content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Entry */}
         {phase === "entry" && <EntryScreen onSelect={handleEntrySelect} />}
 
-        {/* Upload flow */}
         {phase === "upload" && (
           <UploadTraceFlow
             onImageUploaded={() => {}}
@@ -136,21 +125,19 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
           />
         )}
 
-        {/* Editing canvas */}
         {phase === "editing" && (
           <EditingCanvas
             initialTemplate={selectedTemplate}
             referenceImage={canvasState.referenceImage}
             canvasState={canvasState}
             onCanvasChange={setCanvasState}
-            aiNotes={aiNotes}
-            onAINotesChange={setAINotes}
+            stylePrefs={stylePrefs}
+            onStylePrefsChange={setStylePrefs}
             onRenderPreview={handleRenderPreview}
             demoMode={isDemoIsla && canvasState.paths.length > 0}
           />
         )}
 
-        {/* Rendering animation */}
         {phase === "rendering" && (
           <div className="flex-1 flex flex-col items-center justify-center p-10 gap-4" style={{ backgroundColor: "#FAFAF7" }}>
             <div className="relative w-16 h-16">
@@ -171,20 +158,16 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                 </circle>
               </svg>
             </div>
-            <h3 className="text-lg font-serif font-semibold text-foreground">
-              {hasNotes ? "Rendering your sketch with your direction notes..." : "Rendering your sketch..."}
-            </h3>
-            <p className="text-sm text-muted-foreground">This takes a few seconds</p>
+            <h3 className="text-lg font-serif font-semibold text-foreground">Finishing your map...</h3>
+            <p className="text-sm text-muted-foreground">Applying style and cleaning up strokes</p>
           </div>
         )}
 
-        {/* Render preview */}
         {phase === "preview" && (
           <RenderPreview
             projectId={currentProject.id}
-            hasAINotes={hasNotes}
             onUseMap={handleUseMap}
-            onKeepEditing={handleKeepEditing}
+            onKeepEditing={() => setPhase("editing")}
             selectedLocationId={selectedLocationId}
             onSelectLocation={setSelectedLocationId}
             pins={currentProject.pins}
@@ -192,7 +175,6 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
         )}
       </div>
 
-      {/* Template Picker Modal */}
       <TemplatePicker
         open={templatePickerOpen}
         onClose={() => setTemplatePickerOpen(false)}

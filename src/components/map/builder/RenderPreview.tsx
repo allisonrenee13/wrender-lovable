@@ -6,7 +6,6 @@ import PrythianMap from "../PrythianMap";
 
 interface RenderPreviewProps {
   projectId: string;
-  hasAINotes: boolean;
   onUseMap: () => void;
   onKeepEditing: () => void;
   selectedLocationId: string | null;
@@ -16,7 +15,6 @@ interface RenderPreviewProps {
 
 const RenderPreview = ({
   projectId,
-  hasAINotes,
   onUseMap,
   onKeepEditing,
   selectedLocationId,
@@ -55,11 +53,9 @@ const RenderPreview = ({
         >
           Keep Editing
         </button>
-        {hasAINotes && (
-          <p className="text-[11px] text-muted-foreground/60 italic text-center">
-            Not quite right? Adjust your direction notes and re-render, or keep editing the shape.
-          </p>
-        )}
+        <p className="text-[11px] text-muted-foreground/60 italic text-center">
+          Your map looks exactly like what you drew — just finished and consistent. Edit the shape anytime and re-render instantly.
+        </p>
       </div>
     </div>
   );

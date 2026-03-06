@@ -60,7 +60,7 @@ const EntryScreen = ({ onSelect }: EntryScreenProps) => (
       })}
     </div>
     <p className="text-xs text-muted-foreground/60 italic tracking-wide">
-      You shape it. We render it. You control the geography — we handle the line art.
+      You draw it. Wrender makes it look exactly right. Your shape, your geography, finished consistently every time.
     </p>
   </div>
 );

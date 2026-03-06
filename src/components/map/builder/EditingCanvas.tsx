@@ -1,18 +1,25 @@
 import { useState, useCallback } from "react";
 import CanvasToolbar from "./CanvasToolbar";
-import AIDirectionNotesPanel from "./AIDirectionNotes";
+import StylePreferencesPanel from "./StylePreferencesPanel";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import type { ShapeTool, ToolMode, FeatureStamp, AIDirectionNotes, MapTemplate, CanvasState } from "./types";
+import type {
+  ShapeTool,
+  ToolMode,
+  FeatureStamp,
+  StylePreferences,
+  MapTemplate,
+  CanvasState,
+} from "./types";
+import { lineStyleLabels, strokeWeightValues, backgroundColors } from "./types";
 
 interface EditingCanvasProps {
   initialTemplate?: MapTemplate | null;
   referenceImage?: string | null;
-  isTrace?: boolean;
   canvasState: CanvasState;
   onCanvasChange: (state: CanvasState) => void;
-  aiNotes: AIDirectionNotes;
-  onAINotesChange: (notes: AIDirectionNotes) => void;
+  stylePrefs: StylePreferences;
+  onStylePrefsChange: (prefs: StylePreferences) => void;
   onRenderPreview: () => void;
   demoMode?: boolean;
 }
@@ -20,11 +27,10 @@ interface EditingCanvasProps {
 const EditingCanvas = ({
   initialTemplate,
   referenceImage,
-  isTrace,
   canvasState,
   onCanvasChange,
-  aiNotes,
-  onAINotesChange,
+  stylePrefs,
+  onStylePrefsChange,
   onRenderPreview,
   demoMode,
 }: EditingCanvasProps) => {
@@ -33,8 +39,6 @@ const EditingCanvas = ({
   const [activeStamp, setActiveStamp] = useState<FeatureStamp | null>(null);
   const [undoStack] = useState<string[]>([]);
   const [redoStack] = useState<string[]>([]);
-
-  const hasAINotes = !!(aiNotes.renderStyle || aiNotes.atmosphereNotes || aiNotes.whatToEmphasise);
 
   const getCursorClass = () => {
     if (activeStamp) return "cursor-crosshair";
@@ -79,6 +83,23 @@ const EditingCanvas = ({
   const nodeCount = demoMode ? 12 : canvasState.nodeCount;
   const featCount = displayFeatures.length;
 
+  // Style-driven values
+  const sw = strokeWeightValues[stylePrefs.strokeWeight];
+  const colors = backgroundColors[stylePrefs.background];
+  const strokeColor = colors.stroke;
+  const bgColor = colors.bg;
+
+  // Line style adjustments
+  const getStrokeDasharray = () => {
+    switch (stylePrefs.lineStyle) {
+      case "hand-drawn": return undefined; // wobble applied differently in production
+      case "aged": return undefined;
+      default: return undefined;
+    }
+  };
+
+  const coastlineExtra = stylePrefs.lineStyle === "nautical" ? sw * 1.3 : sw;
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <div className="flex-1 flex overflow-hidden">
@@ -98,7 +119,7 @@ const EditingCanvas = ({
 
         {/* Canvas area */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 overflow-auto flex items-center justify-center p-6" style={{ backgroundColor: "#FAFAF7" }}>
+          <div className="flex-1 overflow-auto flex items-center justify-center p-6" style={{ backgroundColor: bgColor }}>
             <svg
               viewBox="0 0 600 600"
               className={`w-full max-w-[560px] h-auto ${getCursorClass()}`}
@@ -107,10 +128,10 @@ const EditingCanvas = ({
               {/* Dot grid background */}
               <defs>
                 <pattern id="dotGrid" width="20" height="20" patternUnits="userSpaceOnUse">
-                  <circle cx="10" cy="10" r="0.5" fill="hsl(var(--foreground))" opacity="0.08" />
+                  <circle cx="10" cy="10" r="0.5" fill={strokeColor} opacity="0.08" />
                 </pattern>
               </defs>
-              <rect width="600" height="600" fill="white" />
+              <rect width="600" height="600" fill={bgColor} />
               <rect width="600" height="600" fill="url(#dotGrid)" />
 
               {/* Reference image */}
@@ -129,8 +150,8 @@ const EditingCanvas = ({
                   <path
                     d={initialTemplate.svgPath}
                     fill="none"
-                    stroke="hsl(var(--primary))"
-                    strokeWidth="2"
+                    stroke={strokeColor}
+                    strokeWidth={sw}
                     strokeLinejoin="round"
                   />
                 </g>
@@ -142,10 +163,11 @@ const EditingCanvas = ({
                   key={i}
                   d={p}
                   fill="none"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth="2"
+                  stroke={strokeColor}
+                  strokeWidth={coastlineExtra}
                   strokeLinejoin="round"
                   strokeLinecap="round"
+                  strokeDasharray={getStrokeDasharray()}
                 />
               ))}
 
@@ -153,24 +175,24 @@ const EditingCanvas = ({
               {displayFeatures.map((f, i) => (
                 <g key={i}>
                   {f.type === "building" && (
-                    <rect x={f.x - 6} y={f.y - 5} width="12" height="10" fill="none" stroke="hsl(var(--primary))" strokeWidth="1" rx="0.5" />
+                    <rect x={f.x - 6} y={f.y - 5} width="12" height="10" fill="none" stroke={strokeColor} strokeWidth={sw * 0.6} rx="0.5" />
                   )}
                   {f.type === "road" && f.x2 !== undefined && f.y2 !== undefined && (
-                    <line x1={f.x} y1={f.y} x2={f.x2} y2={f.y2} stroke="hsl(var(--primary))" strokeWidth="0.8" strokeDasharray="5 3" />
+                    <line x1={f.x} y1={f.y} x2={f.x2} y2={f.y2} stroke={strokeColor} strokeWidth={sw * 0.5} strokeDasharray="5 3" />
                   )}
                   {f.type === "road" && f.x2 === undefined && (
-                    <line x1={f.x - 10} y1={f.y} x2={f.x + 10} y2={f.y} stroke="hsl(var(--primary))" strokeWidth="0.8" strokeDasharray="5 3" />
+                    <line x1={f.x - 10} y1={f.y} x2={f.x + 10} y2={f.y} stroke={strokeColor} strokeWidth={sw * 0.5} strokeDasharray="5 3" />
                   )}
                   {f.type === "elevation" && (
-                    <path d={`M${f.x - 8} ${f.y} Q${f.x} ${f.y - 8} ${f.x + 8} ${f.y}`} fill="none" stroke="hsl(var(--primary))" strokeWidth="0.8" />
+                    <path d={`M${f.x - 8} ${f.y} Q${f.x} ${f.y - 8} ${f.x + 8} ${f.y}`} fill="none" stroke={strokeColor} strokeWidth={sw * 0.5} />
                   )}
                   {f.type === "river" && (
-                    <path d={`M${f.x} ${f.y - 10} Q${f.x + 5} ${f.y} ${f.x} ${f.y + 10}`} fill="none" stroke="hsl(var(--primary))" strokeWidth="1" />
+                    <path d={`M${f.x} ${f.y - 10} Q${f.x + 5} ${f.y} ${f.x} ${f.y + 10}`} fill="none" stroke={strokeColor} strokeWidth={sw * 0.6} opacity="0.6" />
                   )}
                   {f.type === "forest" && (
                     <g>
-                      <path d={`M${f.x} ${f.y - 7} L${f.x - 4} ${f.y} L${f.x + 4} ${f.y}Z`} fill="none" stroke="hsl(var(--primary))" strokeWidth="0.8" />
-                      <line x1={f.x} y1={f.y} x2={f.x} y2={f.y + 3} stroke="hsl(var(--primary))" strokeWidth="0.8" />
+                      <path d={`M${f.x} ${f.y - 7} L${f.x - 4} ${f.y} L${f.x + 4} ${f.y}Z`} fill="none" stroke={strokeColor} strokeWidth={sw * 0.5} />
+                      <line x1={f.x} y1={f.y} x2={f.x} y2={f.y + 3} stroke={strokeColor} strokeWidth={sw * 0.5} />
                     </g>
                   )}
                 </g>
@@ -178,8 +200,8 @@ const EditingCanvas = ({
 
               {/* Hint text for blank canvas */}
               {displayPaths.length === 0 && !initialTemplate && !displayRef && (
-                <text x="300" y="300" textAnchor="middle" fontSize="14" fill="hsl(var(--muted-foreground))" opacity="0.5">
-                  Draw your world's outline. We'll render it into a line sketch.
+                <text x="300" y="300" textAnchor="middle" fontSize="14" fill={strokeColor} opacity="0.3">
+                  Draw your world's outline. Wrender finishes it into clean line art.
                 </text>
               )}
             </svg>
@@ -204,16 +226,15 @@ const EditingCanvas = ({
           {/* Status bar */}
           <div className="flex items-center justify-between px-5 py-2 border-t border-border bg-muted/30">
             <span className="text-[11px] text-muted-foreground">
-              {nodeCount} path nodes · {featCount} features placed
-              {hasAINotes && " · AI direction notes added"}
+              {nodeCount} path nodes · {featCount} features placed · Style: {lineStyleLabels[stylePrefs.lineStyle]}
               {(displayPaths.length > 0 || initialTemplate) && " · Ready to render"}
             </span>
           </div>
         </div>
       </div>
 
-      {/* AI Direction Notes */}
-      <AIDirectionNotesPanel notes={aiNotes} onChange={onAINotesChange} hasNotes={hasAINotes} />
+      {/* Style Preferences */}
+      <StylePreferencesPanel prefs={stylePrefs} onChange={onStylePrefsChange} />
 
       {/* Render button */}
       <div className="px-5 py-3 border-t border-border bg-card flex justify-end">
