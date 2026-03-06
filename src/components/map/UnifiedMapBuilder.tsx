@@ -1,15 +1,22 @@
 import { useState } from "react";
 import { useProject } from "@/context/ProjectContext";
 import { toast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import StepIndicator, { type BuilderStep } from "./builder/StepIndicator";
 import EntryScreen from "./builder/EntryScreen";
 import TemplatePicker from "./builder/TemplatePicker";
 import UploadTraceFlow from "./builder/UploadTraceFlow";
 import EditingCanvas from "./builder/EditingCanvas";
+import StyleStep from "./builder/StyleStep";
 import RenderPreview from "./builder/RenderPreview";
+import IslaSerranoMap from "./IslaSerranoMap";
+import CapeCodeMap from "./CapeCodeMap";
+import CommunityMap from "./CommunityMap";
+import PrythianMap from "./PrythianMap";
 import type { BuilderPath, MapTemplate, StylePreferences, CanvasState } from "./builder/types";
-import { defaultStylePreferences } from "./builder/types";
+import { defaultStylePreferences, lineStyleLabels, backgroundColors } from "./builder/types";
 
-type Phase = "entry" | "upload" | "editing" | "rendering" | "preview";
+type Phase = "entry" | "upload" | "shapeCanvas" | "style" | "renderReady" | "rendering" | "preview";
 
 interface UnifiedMapBuilderProps {
   onConfirm?: () => void;
@@ -30,12 +37,25 @@ const islaSerranoStylePrefs: StylePreferences = {
   labelStyle: "serif",
 };
 
+function phaseToStep(phase: Phase): BuilderStep {
+  if (phase === "entry" || phase === "upload" || phase === "shapeCanvas") return 1;
+  if (phase === "style") return 2;
+  return 3;
+}
+
+function completedStepsForPhase(phase: Phase): Set<number> {
+  const s = new Set<number>();
+  if (phase === "style") s.add(1);
+  if (phase === "renderReady" || phase === "rendering" || phase === "preview") { s.add(1); s.add(2); }
+  return s;
+}
+
 const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   const { currentProject, confirmMap } = useProject();
-
   const isDemoIsla = currentProject.id === "isla-serrano";
 
-  const [phase, setPhase] = useState<Phase>(isDemoIsla ? "editing" : "entry");
+  // Isla Serrano starts at step 3 (render ready)
+  const [phase, setPhase] = useState<Phase>(isDemoIsla ? "renderReady" : "entry");
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<MapTemplate | null>(null);
   const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
@@ -62,8 +82,11 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
     isDemoIsla ? islaSerranoStylePrefs : defaultStylePreferences
   );
 
-  // --- Path handlers ---
+  const hasShape = canvasState.paths.length > 0 || selectedTemplate !== null;
+  const currentStep = phaseToStep(phase);
+  const completed = completedStepsForPhase(phase);
 
+  // --- Handlers ---
   const handleEntrySelect = (path: BuilderPath) => {
     if (path === "template") {
       setTemplatePickerOpen(true);
@@ -71,7 +94,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
       setPhase("upload");
     } else {
       setCanvasState(defaultCanvas);
-      setPhase("editing");
+      setPhase("shapeCanvas");
     }
   };
 
@@ -79,11 +102,11 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
     setSelectedTemplate(template);
     setTemplatePickerOpen(false);
     setCanvasState({ ...defaultCanvas, paths: [template.svgPath] });
-    setPhase("editing");
+    setPhase("shapeCanvas");
     toast({ title: "Template loaded", description: "Edit the shape to match your world." });
   };
 
-  const handleAutoTrace = (_image: string) => {
+  const handleAutoTrace = () => {
     setCanvasState({
       ...defaultCanvas,
       paths: [
@@ -91,20 +114,18 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
       ],
       nodeCount: 12,
     });
-    setPhase("editing");
-    toast({ title: "Trace complete", description: "Trace result is editable. Drag nodes to adjust, or use sculpt tools to reshape." });
+    setPhase("shapeCanvas");
+    toast({ title: "Trace complete", description: "Edit the shape with sculpt tools, or continue to style." });
   };
 
   const handleManualTrace = (image: string) => {
     setCanvasState({ ...defaultCanvas, referenceImage: image, referenceOpacity: 40 });
-    setPhase("editing");
+    setPhase("shapeCanvas");
   };
 
-  const handleRenderPreview = () => {
+  const handleRender = () => {
     setPhase("rendering");
-    setTimeout(() => {
-      setPhase("preview");
-    }, 1500);
+    setTimeout(() => setPhase("preview"), 1500);
   };
 
   const handleUseMap = () => {
@@ -112,11 +133,33 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
     onConfirm?.();
   };
 
+  const renderProjectMap = () => {
+    switch (currentProject.id) {
+      case "paper-palace":
+        return <CapeCodeMap selectedLocationId={selectedLocationId} onSelectLocation={setSelectedLocationId} pins={currentProject.pins} />;
+      case "the-giver":
+        return <CommunityMap selectedLocationId={selectedLocationId} onSelectLocation={setSelectedLocationId} pins={currentProject.pins} />;
+      case "acotar":
+        return <PrythianMap selectedLocationId={selectedLocationId} onSelectLocation={setSelectedLocationId} pins={currentProject.pins} />;
+      default:
+        return <IslaSerranoMap selectedLocationId={selectedLocationId} onSelectLocation={setSelectedLocationId} />;
+    }
+  };
+
+  const colors = backgroundColors[stylePrefs.background];
+
   return (
-    <div className="flex h-full">
+    <div className="flex-1 flex flex-col h-full overflow-hidden">
+      {/* Step Indicator — always visible */}
+      <StepIndicator currentStep={currentStep} completedSteps={completed} />
+
+      {/* Phase content */}
       <div className="flex-1 flex flex-col overflow-hidden">
+
+        {/* Step 1: Entry cards */}
         {phase === "entry" && <EntryScreen onSelect={handleEntrySelect} />}
 
+        {/* Step 1: Upload flow */}
         {phase === "upload" && (
           <UploadTraceFlow
             onImageUploaded={() => {}}
@@ -125,19 +168,98 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
           />
         )}
 
-        {phase === "editing" && (
-          <EditingCanvas
-            initialTemplate={selectedTemplate}
-            referenceImage={canvasState.referenceImage}
-            canvasState={canvasState}
-            onCanvasChange={setCanvasState}
+        {/* Step 1: Shape canvas */}
+        {phase === "shapeCanvas" && (
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <EditingCanvas
+              initialTemplate={selectedTemplate}
+              referenceImage={canvasState.referenceImage}
+              canvasState={canvasState}
+              onCanvasChange={setCanvasState}
+              stylePrefs={stylePrefs}
+              onStylePrefsChange={setStylePrefs}
+              onRenderPreview={() => {}} // disabled in step flow
+              demoMode={false}
+              hideStylePanel
+              hideRenderButton
+            />
+            {/* Continue button */}
+            {hasShape && (
+              <div className="px-5 py-3 border-t border-border bg-card flex justify-end">
+                <Button
+                  onClick={() => setPhase("style")}
+                  className="bg-primary text-primary-foreground font-semibold px-6"
+                >
+                  Continue to Style →
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Step 2: Style */}
+        {phase === "style" && (
+          <StyleStep
             stylePrefs={stylePrefs}
             onStylePrefsChange={setStylePrefs}
-            onRenderPreview={handleRenderPreview}
-            demoMode={isDemoIsla && canvasState.paths.length > 0}
+            canvasState={canvasState}
+            onContinue={() => setPhase("renderReady")}
+            onBack={() => setPhase("shapeCanvas")}
           />
         )}
 
+        {/* Step 3: Render ready */}
+        {phase === "renderReady" && (
+          <div className="flex-1 flex flex-col items-center justify-center p-8 gap-6" style={{ backgroundColor: colors.bg }}>
+            {/* Preview of styled outline */}
+            <div className="flex-1 flex items-center justify-center w-full max-w-[500px]">
+              <svg viewBox="0 0 600 600" className="w-full h-auto">
+                <rect width="600" height="600" fill={colors.bg} />
+                {canvasState.paths.map((p, i) => (
+                  <path
+                    key={i}
+                    d={p}
+                    fill="none"
+                    stroke={colors.stroke}
+                    strokeWidth={stylePrefs.strokeWeight === "fine" ? 1 : stylePrefs.strokeWeight === "bold" ? 2.5 : 1.8}
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                  />
+                ))}
+              </svg>
+            </div>
+
+            <div className="flex flex-col items-center gap-3 w-full max-w-sm">
+              <Button
+                onClick={handleRender}
+                className="w-full bg-primary text-primary-foreground font-bold h-14 text-base"
+              >
+                Render My Map
+              </Button>
+              <p className="text-xs text-muted-foreground text-center">
+                Wrender will finish your map with consistent strokes, terrain marks, a compass rose, and place labels.
+              </p>
+              <p className="text-[11px] text-muted-foreground/50 text-center">
+                This takes about 2 seconds. You can re-render any time after editing.
+              </p>
+              <button
+                onClick={() => setPhase("style")}
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors mt-1"
+              >
+                ← Back to Style
+              </button>
+            </div>
+
+            {/* Status bar */}
+            <div className="w-full text-center">
+              <span className="text-[11px] text-muted-foreground">
+                {canvasState.nodeCount || canvasState.paths.length > 0 ? "12" : "0"} path nodes · {canvasState.features.length} features placed · Style: {lineStyleLabels[stylePrefs.lineStyle]} · Ready to render
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Rendering animation */}
         {phase === "rendering" && (
           <div className="flex-1 flex flex-col items-center justify-center p-10 gap-4" style={{ backgroundColor: "#FAFAF7" }}>
             <div className="relative w-16 h-16">
@@ -163,11 +285,12 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
           </div>
         )}
 
+        {/* Step 3: Preview result */}
         {phase === "preview" && (
           <RenderPreview
             projectId={currentProject.id}
             onUseMap={handleUseMap}
-            onKeepEditing={() => setPhase("editing")}
+            onKeepEditing={() => setPhase("shapeCanvas")}
             selectedLocationId={selectedLocationId}
             onSelectLocation={setSelectedLocationId}
             pins={currentProject.pins}
@@ -175,6 +298,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
         )}
       </div>
 
+      {/* Template Picker Modal */}
       <TemplatePicker
         open={templatePickerOpen}
         onClose={() => setTemplatePickerOpen(false)}
