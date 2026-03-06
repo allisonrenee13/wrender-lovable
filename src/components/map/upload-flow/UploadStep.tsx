@@ -55,7 +55,7 @@ const UploadStep = ({ onNext, uploadedImage, onImageChange }: UploadStepProps) =
             Start with a real place
           </h1>
           <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
-            Upload a photo, satellite image, or map of a real location. Figment will trace it into a story sketch and let you adapt it into your world.
+            Upload a photo, satellite image, or map of a real location. Seenery will trace it into a story sketch and let you adapt it into your world.
           </p>
         </div>
 
