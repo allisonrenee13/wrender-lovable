@@ -48,7 +48,7 @@ const EditingCanvas = ({
   const [nodeCount, setNodeCount] = useState(0);
   const [objectCount, setObjectCount] = useState(0);
   const [refOpacity, setRefOpacity] = useState(canvasState.referenceOpacity);
-  const [templateLoaded, setTemplateLoaded] = useState(false);
+  const templateLoadedRef = useRef(false);
   const [showGuidance, setShowGuidance] = useState(() => {
     // Show guidance only if canvas is empty and not previously dismissed
     return canvasState.paths.length === 0 && !initialTemplate && shouldShowGuidance();
@@ -93,12 +93,12 @@ const EditingCanvas = ({
     const handle = canvasHandle.current;
     if (!handle) return;
 
-    if (initialTemplate && !templateLoaded) {
+    if (initialTemplate && !templateLoadedRef.current) {
+      templateLoadedRef.current = true;
       import("./templates").then(({ templateSVGs }) => {
         const svg = templateSVGs[initialTemplate.id];
         if (svg) {
           handle.loadSVG(svg);
-          setTemplateLoaded(true);
         }
       });
     }
@@ -163,8 +163,9 @@ const EditingCanvas = ({
                   if (externalCanvasRef) {
                     (externalCanvasRef as React.MutableRefObject<MapCanvasHandle | null>).current = handle;
                   }
+                  const wasNull = internalRef.current === null;
                   internalRef.current = handle;
-                  if (handle) {
+                  if (handle && wasNull) {
                     requestAnimationFrame(handleCanvasReady);
                   }
                 }}
