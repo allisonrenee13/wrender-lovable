@@ -37,6 +37,7 @@ const UploadAdaptMode = ({ selectedLocationId = null, onSelectLocation }: Upload
       <DescribeStep
         onBack={() => setStep("upload")}
         onGenerate={() => setStep("generating")}
+        uploadedImage={uploadedImage}
       />
     );
   }
@@ -49,6 +50,7 @@ const UploadAdaptMode = ({ selectedLocationId = null, onSelectLocation }: Upload
     <MapCanvasStep
       selectedLocationId={selectedLocationId}
       onSelectLocation={handleSelectLocation}
+      uploadedImage={uploadedImage}
     />
   );
 };

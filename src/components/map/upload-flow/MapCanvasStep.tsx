@@ -8,9 +8,10 @@ import LocationDetailDrawer from "./LocationDetailDrawer";
 interface MapCanvasStepProps {
   selectedLocationId: string | null;
   onSelectLocation: (id: string | null) => void;
+  uploadedImage?: string | null;
 }
 
-const MapCanvasStep = ({ selectedLocationId, onSelectLocation }: MapCanvasStepProps) => {
+const MapCanvasStep = ({ selectedLocationId, onSelectLocation, uploadedImage }: MapCanvasStepProps) => {
   const [view, setView] = useState<"map" | "satellite">("map");
   const [pinDropMode, setPinDropMode] = useState(false);
   const [title, setTitle] = useState("Isla Serrano");
@@ -97,17 +98,13 @@ const MapCanvasStep = ({ selectedLocationId, onSelectLocation }: MapCanvasStepPr
           ) : (
             <div className="w-full flex justify-center py-6">
               <div className="max-w-[500px] w-full border border-border rounded-lg overflow-hidden">
-                <svg viewBox="0 0 400 300" className="w-full">
-                  <rect width="400" height="300" fill="#d4e4f0" />
-                  <path
-                    d="M 180 25 Q 210 18, 228 38 Q 245 60, 238 100 Q 245 140, 233 175 Q 228 205, 218 235 Q 208 260, 200 280 Q 192 260, 182 235 Q 172 205, 167 175 Q 155 140, 162 100 Q 155 60, 172 38 Q 190 18, 180 25 Z"
-                    fill="#c8d4a0"
-                    stroke="#8a9a6a"
-                    strokeWidth="1"
-                  />
-                  <line x1="200" y1="0" x2="200" y2="28" stroke="#888" strokeWidth="2" />
-                  <text x="200" y="160" textAnchor="middle" fontSize="11" fill="#555" fontWeight="500">Key Biscayne</text>
-                </svg>
+                {uploadedImage ? (
+                  <img src={uploadedImage} alt="Satellite reference" className="w-full object-contain bg-muted/30" />
+                ) : (
+                  <div className="h-[300px] bg-muted/50 flex items-center justify-center text-sm text-muted-foreground">
+                    No reference image
+                  </div>
+                )}
               </div>
             </div>
           )}
