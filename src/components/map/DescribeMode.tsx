@@ -21,7 +21,7 @@ const projectPrompts: Record<string, string> = {
 
 const DescribeMode = ({ selectedLocationId, onSelectLocation }: DescribeModeProps) => {
   const { currentProject } = useProject();
-  const defaultPrompt = projectPrompts[currentProject.id] || `Describe your world or location and Figment will sketch it...`;
+  const defaultPrompt = projectPrompts[currentProject.id] || `Describe your world or location and Seenery will sketch it...`;
   const [prompt, setPrompt] = useState(defaultPrompt);
   const [generated, setGenerated] = useState(true);
   const [showMain, setShowMain] = useState(true);
@@ -53,7 +53,7 @@ const DescribeMode = ({ selectedLocationId, onSelectLocation }: DescribeModeProp
         <Textarea
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          placeholder="Describe your world or location and Figment will sketch it..."
+          placeholder="Describe your world or location and Seenery will sketch it..."
           className="min-h-[80px] text-sm border-border bg-card resize-none"
         />
         <Button
