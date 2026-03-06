@@ -187,7 +187,7 @@ function PricingCard({ name, price, period, features, cta, popular }: {
 export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"render" | "place" | "track">("render");
+  const [activeTab, setActiveTab] = useState<"create" | "place" | "track">("create");
 
   useEffect(() => {
     const el = document.getElementById("landing-scroll");
@@ -383,7 +383,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto">
           {/* Tab buttons */}
           <div className="flex items-center justify-center gap-1 mb-12">
-            {(["render", "place", "track"] as const).map((tab) => (
+            {(["create", "place", "track"] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
