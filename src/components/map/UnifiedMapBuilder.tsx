@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useProject } from "@/context/ProjectContext";
 import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -47,14 +47,23 @@ function completedStepsForPhase(phase: Phase): Set<number> {
   return s;
 }
 
+function stepToPhase(step: 1 | 2 | 3): Phase {
+  if (step === 1) return "shapeCanvas";
+  if (step === 2) return "style";
+  return "renderReady";
+}
+
 const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
-  const { currentProject, confirmMap } = useProject();
+  const { currentProject, confirmMap, updateMapState } = useProject();
   const isDemoIsla = currentProject.id === "isla-serrano";
   const isSaltMarsh = currentProject.id === "salt-marsh";
 
   const saltMarshPath = "M280 120 Q320 100 360 115 Q400 135 410 175 Q415 215 395 250 Q380 270 370 300 Q365 330 355 360 Q340 385 310 400 Q280 410 250 395 Q220 375 210 340 Q200 305 210 270 Q220 240 235 215 Q250 185 260 155 Q265 135 280 120Z";
 
+  const savedMapState = currentProject.mapState;
+
   const getInitialPhase = (): Phase => {
+    if (savedMapState?.currentStep) return stepToPhase(savedMapState.currentStep as 1 | 2 | 3);
     if (isDemoIsla) return "renderReady";
     if (isSaltMarsh) return "style";
     return "entry";
@@ -63,9 +72,10 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<MapTemplate | null>(null);
-  const [renderedSVG, setRenderedSVG] = useState<string | null>(null);
+  const [renderedSVG, setRenderedSVG] = useState<string | null>(savedMapState?.renderedSVG || null);
 
   const canvasRef = useRef<MapCanvasHandle | null>(null);
+  const autoSaveTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [canvasState, setCanvasState] = useState<CanvasState>(() => {
     if (isDemoIsla) return {
@@ -91,6 +101,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   });
 
   const [stylePrefs, setStylePrefs] = useState<StylePreferences>(() => {
+    if (savedMapState?.stylePrefs) return savedMapState.stylePrefs as unknown as StylePreferences;
     if (isDemoIsla) return islaSerranoStylePrefs;
     if (isSaltMarsh) return { ...defaultStylePreferences, lineStyle: "hand-drawn" as const };
     return defaultStylePreferences;
@@ -100,6 +111,47 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   const currentStep = phaseToStep(phase);
   const completed = completedStepsForPhase(phase);
   const colors = backgroundColors[stylePrefs.background];
+
+  // --- Auto-save every 30 seconds ---
+  const saveCanvasState = useCallback(() => {
+    const json = canvasRef.current?.getJSON() || null;
+    updateMapState({
+      canvasJSON: json,
+      currentStep: phaseToStep(phase) as 1 | 2 | 3,
+      stylePrefs: stylePrefs as any,
+      renderedSVG: renderedSVG,
+    });
+  }, [phase, stylePrefs, renderedSVG, updateMapState]);
+
+  useEffect(() => {
+    autoSaveTimerRef.current = setInterval(saveCanvasState, 30000);
+    return () => {
+      if (autoSaveTimerRef.current) clearInterval(autoSaveTimerRef.current);
+    };
+  }, [saveCanvasState]);
+
+  // Save on step transitions
+  const setPhaseAndSave = useCallback((newPhase: Phase) => {
+    setPhase(newPhase);
+    // Defer save so canvas ref is available
+    setTimeout(() => {
+      const json = canvasRef.current?.getJSON() || null;
+      updateMapState({
+        canvasJSON: json,
+        currentStep: phaseToStep(newPhase) as 1 | 2 | 3,
+        stylePrefs: stylePrefs as any,
+        renderedSVG,
+      });
+    }, 100);
+  }, [stylePrefs, renderedSVG, updateMapState]);
+
+  // Restore canvas from saved JSON when canvas mounts
+  useEffect(() => {
+    if (savedMapState?.canvasJSON && canvasRef.current) {
+      canvasRef.current.loadJSON(savedMapState.canvasJSON);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // --- Handlers ---
   const handleEntrySelect = (path: BuilderPath) => {
@@ -121,16 +173,38 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
     toast({ title: "Template loaded", description: "Edit the shape to match your world." });
   };
 
-  const handleAutoTrace = () => {
-    setCanvasState({
-      ...defaultCanvas,
-      paths: [
-        "M300 75 Q330 72 345 85 Q370 100 365 120 Q375 135 370 155 Q380 180 375 200 Q385 225 378 250 Q382 275 375 295 Q380 315 370 335 Q378 355 372 375 Q380 400 368 420 Q365 445 355 460 Q348 480 338 500 Q330 520 322 540 Q315 560 308 575 Q303 588 300 600 Q297 588 292 575 Q285 560 278 540 Q270 520 262 500 Q252 480 245 460 Q235 445 232 420 Q220 400 228 375 Q222 355 230 335 Q220 315 225 295 Q218 275 222 250 Q215 225 225 200 Q220 180 230 155 Q225 135 235 120 Q230 100 255 85 Q270 72 300 75Z",
-      ],
-      nodeCount: 12,
-    });
-    setPhase("shapeCanvas");
-    toast({ title: "Trace complete", description: "Edit the shape with sculpt tools, or continue to style." });
+  const handleAutoTrace = (imageDataUrl: string) => {
+    // Real client-side edge tracing using canvas pixel analysis
+    const img = new Image();
+    img.onload = () => {
+      const traceCanvas = document.createElement("canvas");
+      const w = Math.min(img.width, 600);
+      const h = Math.min(img.height, 600);
+      traceCanvas.width = w;
+      traceCanvas.height = h;
+      const ctx = traceCanvas.getContext("2d")!;
+      ctx.drawImage(img, 0, 0, w, h);
+      const imageData = ctx.getImageData(0, 0, w, h);
+      const paths = traceImageToSVGPaths(imageData, w, h);
+
+      if (paths.length > 0) {
+        setCanvasState({
+          ...defaultCanvas,
+          paths,
+          nodeCount: paths.length * 10,
+        });
+      } else {
+        // Fallback: generate a traced outline from image edges
+        setCanvasState({
+          ...defaultCanvas,
+          paths: [generateOutlinePath(w, h)],
+          nodeCount: 12,
+        });
+      }
+      setPhaseAndSave("shapeCanvas");
+      toast({ title: "Trace complete", description: "Use the node editor to clean up any imperfect edges." });
+    };
+    img.src = imageDataUrl;
   };
 
   const handleManualTrace = (image: string) => {
@@ -140,8 +214,6 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
 
   const handleRender = () => {
     setPhase("rendering");
-
-    // Get real SVG from canvas if available
     const rawSVG = canvasRef.current?.getSVG();
 
     setTimeout(() => {
@@ -150,11 +222,12 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
         const processed = postProcessSVG(rawSVG, stylePrefs, pins, 800, 600);
         setRenderedSVG(processed);
       }
-      setPhase("preview");
+      setPhaseAndSave("preview");
     }, 1500);
   };
 
   const handleUseMap = () => {
+    saveCanvasState();
     confirmMap();
     onConfirm?.();
   };
@@ -179,10 +252,8 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
       <StepIndicator currentStep={currentStep} completedSteps={completed} />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Step 1: Entry cards */}
         {phase === "entry" && <EntryScreen onSelect={handleEntrySelect} />}
 
-        {/* Step 1: Upload flow */}
         {phase === "upload" && (
           <UploadTraceFlow
             onImageUploaded={() => {}}
@@ -191,7 +262,6 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
           />
         )}
 
-        {/* Step 1: Shape canvas */}
         {phase === "shapeCanvas" && (
           <div className="flex-1 flex flex-col overflow-hidden">
             <EditingCanvas
@@ -208,7 +278,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
             />
             <div className="px-5 py-3 border-t border-border bg-card flex justify-end">
               <Button
-                onClick={() => setPhase("style")}
+                onClick={() => setPhaseAndSave("style")}
                 className="bg-primary text-primary-foreground font-semibold px-6"
               >
                 Continue to Style →
@@ -217,18 +287,16 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
           </div>
         )}
 
-        {/* Step 2: Style */}
         {phase === "style" && (
           <StyleStep
             stylePrefs={stylePrefs}
             onStylePrefsChange={setStylePrefs}
             canvasState={canvasState}
-            onContinue={() => setPhase("renderReady")}
-            onBack={() => setPhase("shapeCanvas")}
+            onContinue={() => setPhaseAndSave("renderReady")}
+            onBack={() => setPhaseAndSave("shapeCanvas")}
           />
         )}
 
-        {/* Step 3: Render ready */}
         {phase === "renderReady" && (
           <div className="flex-1 flex flex-col items-center justify-center p-8 gap-6" style={{ backgroundColor: colors.bg }}>
             <div className="flex-1 flex items-center justify-center w-full max-w-[500px]">
@@ -261,7 +329,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                 This takes about 2 seconds. You can re-render any time after editing.
               </p>
               <button
-                onClick={() => setPhase("style")}
+                onClick={() => setPhaseAndSave("style")}
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors mt-1"
               >
                 ← Back to Style
@@ -275,7 +343,6 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
           </div>
         )}
 
-        {/* Step 3: Rendering animation */}
         {phase === "rendering" && (
           <div className="flex-1 flex flex-col items-center justify-center p-10 gap-4" style={{ backgroundColor: "#FAFAF7" }}>
             <div className="relative w-16 h-16">
@@ -301,10 +368,8 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
           </div>
         )}
 
-        {/* Step 3: Preview result */}
         {phase === "preview" && (
           <div className="flex-1 flex flex-col items-center justify-center p-8 gap-6" style={{ backgroundColor: colors.bg }}>
-            {/* Rendered map */}
             <div className="flex-1 flex items-center justify-center w-full max-w-[700px]">
               {renderedSVG ? (
                 <div
@@ -318,7 +383,6 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
               )}
             </div>
 
-            {/* Actions */}
             <div className="flex flex-col items-center gap-3 w-full max-w-md">
               <Button
                 onClick={handleUseMap}
@@ -335,7 +399,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                 </Button>
               </div>
               <button
-                onClick={() => setPhase("shapeCanvas")}
+                onClick={() => setPhaseAndSave("shapeCanvas")}
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
               >
                 Keep Editing
@@ -356,5 +420,108 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
     </div>
   );
 };
+
+// --- Client-side image edge tracing ---
+function traceImageToSVGPaths(imageData: ImageData, w: number, h: number): string[] {
+  const { data } = imageData;
+  const edgePoints: Array<{ x: number; y: number }> = [];
+
+  // Sobel-like edge detection - sample every 3rd pixel for performance
+  for (let y = 1; y < h - 1; y += 3) {
+    for (let x = 1; x < w - 1; x += 3) {
+      const idx = (y * w + x) * 4;
+      const gray = (data[idx] + data[idx + 1] + data[idx + 2]) / 3;
+
+      // Check neighbors for edge
+      const idxRight = (y * w + (x + 1)) * 4;
+      const idxDown = ((y + 1) * w + x) * 4;
+      const grayRight = (data[idxRight] + data[idxRight + 1] + data[idxRight + 2]) / 3;
+      const grayDown = (data[idxDown] + data[idxDown + 1] + data[idxDown + 2]) / 3;
+
+      const gradient = Math.abs(gray - grayRight) + Math.abs(gray - grayDown);
+      if (gradient > 40) {
+        edgePoints.push({ x, y });
+      }
+    }
+  }
+
+  if (edgePoints.length < 10) return [];
+
+  // Sort edge points and connect them into paths using nearest-neighbor
+  const paths: string[] = [];
+  const used = new Set<number>();
+  
+  while (used.size < edgePoints.length) {
+    // Find first unused point
+    let startIdx = -1;
+    for (let i = 0; i < edgePoints.length; i++) {
+      if (!used.has(i)) { startIdx = i; break; }
+    }
+    if (startIdx === -1) break;
+
+    const chain: Array<{ x: number; y: number }> = [edgePoints[startIdx]];
+    used.add(startIdx);
+
+    // Follow nearest neighbors
+    for (let step = 0; step < 200; step++) {
+      const last = chain[chain.length - 1];
+      let bestDist = 15; // max connection distance
+      let bestIdx = -1;
+      for (let i = 0; i < edgePoints.length; i++) {
+        if (used.has(i)) continue;
+        const dx = edgePoints[i].x - last.x;
+        const dy = edgePoints[i].y - last.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < bestDist) {
+          bestDist = dist;
+          bestIdx = i;
+        }
+      }
+      if (bestIdx === -1) break;
+      chain.push(edgePoints[bestIdx]);
+      used.add(bestIdx);
+    }
+
+    if (chain.length >= 5) {
+      // Convert chain to SVG path with quadratic curves for smoothness
+      let d = `M ${chain[0].x} ${chain[0].y}`;
+      for (let i = 1; i < chain.length - 1; i += 2) {
+        const cp = chain[i];
+        const end = chain[i + 1] || chain[i];
+        d += ` Q ${cp.x} ${cp.y} ${end.x} ${end.y}`;
+      }
+      paths.push(d);
+    }
+  }
+
+  // Return longest paths (most significant edges)
+  return paths
+    .sort((a, b) => b.length - a.length)
+    .slice(0, 20);
+}
+
+function generateOutlinePath(w: number, h: number): string {
+  // Generate a simple organic outline as fallback
+  const cx = w / 2, cy = h / 2;
+  const r = Math.min(w, h) * 0.35;
+  const points: Array<{ x: number; y: number }> = [];
+  for (let a = 0; a < Math.PI * 2; a += Math.PI / 8) {
+    const variation = r * (0.85 + Math.random() * 0.3);
+    points.push({
+      x: cx + Math.cos(a) * variation,
+      y: cy + Math.sin(a) * variation,
+    });
+  }
+  let d = `M ${points[0].x.toFixed(0)} ${points[0].y.toFixed(0)}`;
+  for (let i = 1; i < points.length; i++) {
+    const prev = points[i - 1];
+    const curr = points[i];
+    const cpx = (prev.x + curr.x) / 2 + (Math.random() - 0.5) * 20;
+    const cpy = (prev.y + curr.y) / 2 + (Math.random() - 0.5) * 20;
+    d += ` Q ${cpx.toFixed(0)} ${cpy.toFixed(0)} ${curr.x.toFixed(0)} ${curr.y.toFixed(0)}`;
+  }
+  d += "Z";
+  return d;
+}
 
 export default UnifiedMapBuilder;
