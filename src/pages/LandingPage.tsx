@@ -59,8 +59,8 @@ const PrythianSketch = () => (
 /* ───── Feature Tab Illustrations ───── */
 const RenderIllustration = () => (
   <svg viewBox="0 0 400 260" className="w-full h-full" fill="none">
-    {/* Cape Cod silhouette - accurate arm/hook shape */}
-    <path d="M60 155 C65 160 80 172 105 178 C130 184 160 186 190 182 C215 178 238 170 258 158 C275 148 288 135 296 120 C304 105 308 88 306 72 C304 58 298 48 290 42 C282 36 272 38 265 44 C258 52 255 62 256 74 C257 85 260 96 260 108 C260 120 256 132 248 142 C238 152 222 158 200 160 C178 162 155 158 132 154 C110 150 88 148 72 150 C62 152 58 154 60 155Z" stroke="currentColor" strokeWidth="1.2" fill="none" />
+    {/* Cape Cod silhouette */}
+    <path d="M60 150 C55 160 48 178 50 198 C52 212 72 212 98 200 C120 190 150 186 180 187 C210 188 240 185 268 188 C290 186 302 176 308 160 C312 145 310 125 306 105 C302 82 296 62 288 48 C278 36 266 28 252 26 C240 24 230 30 226 38 C224 46 230 48 240 46 C254 42 268 50 276 62 C286 78 290 100 290 122 C290 138 280 146 262 150 C235 156 200 154 170 150 C135 146 100 142 75 146 C62 148 58 149 60 150Z" stroke="currentColor" strokeWidth="1.2" fill="none" />
     {/* Rendering effect - dotted partial overlay */}
     <path d="M90 180 Q95 160 110 145 Q130 125 150 118" stroke="currentColor" strokeWidth="1" strokeDasharray="4 3" fill="none" opacity="0.3" />
     {/* Interior details appearing */}
