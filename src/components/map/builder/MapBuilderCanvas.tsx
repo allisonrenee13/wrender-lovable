@@ -99,44 +99,73 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
     useEffect(() => {
       if (!canvasElRef.current || fabricRef.current) return;
 
-      const container = canvasElRef.current.parentElement;
-      const actualWidth = container
-        ? Math.min(container.clientWidth, canvasWidth)
-        : canvasWidth;
-      const actualHeight = Math.round(actualWidth * (canvasHeight / canvasWidth));
+      const initCanvas = (containerWidth: number) => {
+        if (fabricRef.current) return;
 
-      const canvas = new Canvas(canvasElRef.current, {
-        isDrawingMode: false,
-        backgroundColor: colors.bg,
-        width: actualWidth,
-        height: actualHeight,
-        selection: false,
-      });
+        const actualWidth = Math.max(containerWidth, 400);
+        const actualHeight = Math.round(actualWidth * (canvasHeight / canvasWidth));
 
-      fabricRef.current = canvas;
+        const canvas = new Canvas(canvasElRef.current!, {
+          isDrawingMode: false,
+          backgroundColor: colors.bg,
+          width: actualWidth,
+          height: actualHeight,
+          selection: false,
+        });
 
-      // Dot grid
-      for (let x = 20; x < actualWidth; x += 20) {
-        for (let y = 20; y < actualHeight; y += 20) {
-          const dot = new Circle({
-            left: x - 0.5,
-            top: y - 0.5,
-            radius: 0.5,
-            fill: colors.stroke,
-            opacity: 0.08,
-            selectable: false,
-            evented: false,
-            excludeFromExport: true,
-          });
-          canvas.add(dot);
+        fabricRef.current = canvas;
+
+        // Dot grid
+        for (let x = 20; x < actualWidth; x += 20) {
+          for (let y = 20; y < actualHeight; y += 20) {
+            const dot = new Circle({
+              left: x - 0.5,
+              top: y - 0.5,
+              radius: 0.5,
+              fill: colors.stroke,
+              opacity: 0.08,
+              selectable: false,
+              evented: false,
+              excludeFromExport: true,
+            });
+            canvas.add(dot);
+          }
         }
+
+        canvas.on("path:created", () => saveState());
+        saveState();
+      };
+
+      // Use ResizeObserver to wait for actual rendered width
+      const parent = canvasElRef.current.closest(".flex-1") as HTMLElement
+        || canvasElRef.current.parentElement?.parentElement
+        || canvasElRef.current.parentElement;
+
+      if (parent && parent.clientWidth > 100) {
+        initCanvas(parent.clientWidth - 40);
+      } else {
+        // Wait one frame for layout to settle
+        const ro = new ResizeObserver((entries) => {
+          for (const entry of entries) {
+            const w = entry.contentRect.width;
+            if (w > 100) {
+              ro.disconnect();
+              initCanvas(w - 40);
+              break;
+            }
+          }
+        });
+        const target = parent || document.body;
+        ro.observe(target);
+        return () => {
+          ro.disconnect();
+          fabricRef.current?.dispose();
+          fabricRef.current = null;
+        };
       }
 
-      canvas.on("path:created", () => saveState());
-      saveState();
-
       return () => {
-        canvas.dispose();
+        fabricRef.current?.dispose();
         fabricRef.current = null;
       };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -575,7 +604,10 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
     }), [doUndo, doRedo, saveState, colors.bg, colors.stroke, sw, canvasWidth, canvasHeight]);
 
     return (
-      <div ref={containerRef} style={{ width: "100%", maxWidth: canvasWidth }}>
+      <div
+        ref={containerRef}
+        style={{ width: "100%", flex: 1, minHeight: 400 }}
+      >
         <canvas ref={canvasElRef} style={{ display: "block" }} />
       </div>
     );
