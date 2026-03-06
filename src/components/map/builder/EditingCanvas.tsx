@@ -53,11 +53,28 @@ const EditingCanvas = ({
 
   const handleStateChange = useCallback(() => {
     const handle = canvasHandle.current;
-    if (handle) {
-      setNodeCount(handle.getNodeCount());
-      setObjectCount(handle.getObjectCount());
+    if (!handle) return;
+
+    setNodeCount(handle.getNodeCount());
+    setObjectCount(handle.getObjectCount());
+
+    // Extract current SVG paths and save back to parent
+    const svg = handle.getSVG();
+    if (svg) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(svg, "image/svg+xml");
+      const pathElements = Array.from(doc.querySelectorAll("path"));
+      const paths = pathElements
+        .map((el) => el.getAttribute("d"))
+        .filter(Boolean) as string[];
+
+      onCanvasChange({
+        ...canvasState,
+        paths,
+        nodeCount: handle.getNodeCount(),
+      });
     }
-  }, [canvasHandle]);
+  }, [canvasHandle, canvasState, onCanvasChange]);
 
   // Load template SVG once canvas is ready
   const handleCanvasReady = useCallback(() => {
