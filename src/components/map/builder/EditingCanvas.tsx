@@ -157,7 +157,7 @@ const EditingCanvas = ({
         {/* Canvas area */}
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="flex-1 overflow-auto flex items-center justify-center p-4 bg-muted/20 relative">
-            <div className="border border-border rounded shadow-sm overflow-hidden relative" style={{ maxWidth: 800 }}>
+            <div className="border border-border rounded shadow-sm overflow-hidden relative w-full" style={{ maxWidth: 800 }}>
               <MapBuilderCanvas
                 ref={(handle) => {
                   if (externalCanvasRef) {

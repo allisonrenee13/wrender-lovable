@@ -102,7 +102,7 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
       const initCanvas = (containerWidth: number) => {
         if (fabricRef.current) return;
 
-        const actualWidth = Math.max(containerWidth, 400);
+        const actualWidth = Math.min(Math.max(containerWidth, 400), canvasWidth);
         const actualHeight = Math.round(actualWidth * (canvasHeight / canvasWidth));
 
         const canvas = new Canvas(canvasElRef.current!, {
@@ -136,35 +136,38 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
         saveState();
       };
 
-      // Use ResizeObserver to wait for actual rendered width
-      const parent = canvasElRef.current.closest(".flex-1") as HTMLElement
-        || canvasElRef.current.parentElement?.parentElement
-        || canvasElRef.current.parentElement;
+      // Use the containerRef div (our own wrapper) to get width
+      const container = containerRef.current;
 
-      if (parent && parent.clientWidth > 100) {
-        initCanvas(parent.clientWidth - 40);
-      } else {
-        // Wait one frame for layout to settle
-        const ro = new ResizeObserver((entries) => {
-          for (const entry of entries) {
-            const w = entry.contentRect.width;
-            if (w > 100) {
-              ro.disconnect();
-              initCanvas(w - 40);
-              break;
-            }
-          }
-        });
-        const target = parent || document.body;
-        ro.observe(target);
+      const tryInit = () => {
+        const el = container || canvasElRef.current?.parentElement;
+        const w = el?.clientWidth || 0;
+        if (w > 100) {
+          initCanvas(w);
+          return true;
+        }
+        return false;
+      };
+
+      // Try immediately
+      if (tryInit()) {
         return () => {
-          ro.disconnect();
           fabricRef.current?.dispose();
           fabricRef.current = null;
         };
       }
 
+      // Otherwise use ResizeObserver to wait for layout
+      const target = container || canvasElRef.current.parentElement || document.body;
+      const ro = new ResizeObserver(() => {
+        if (tryInit()) {
+          ro.disconnect();
+        }
+      });
+      ro.observe(target);
+
       return () => {
+        ro.disconnect();
         fabricRef.current?.dispose();
         fabricRef.current = null;
       };
