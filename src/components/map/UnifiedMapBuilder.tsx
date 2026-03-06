@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useProject } from "@/context/ProjectContext";
 import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -8,11 +8,8 @@ import TemplatePicker from "./builder/TemplatePicker";
 import UploadTraceFlow from "./builder/UploadTraceFlow";
 import EditingCanvas from "./builder/EditingCanvas";
 import StyleStep from "./builder/StyleStep";
-import RenderPreview from "./builder/RenderPreview";
-import IslaSerranoMap from "./IslaSerranoMap";
-import CapeCodeMap from "./CapeCodeMap";
-import CommunityMap from "./CommunityMap";
-import PrythianMap from "./PrythianMap";
+import type { MapCanvasHandle } from "./builder/MapBuilderCanvas";
+import { postProcessSVG, exportSVG, exportPNG } from "./builder/svgPostProcess";
 import type { BuilderPath, MapTemplate, StylePreferences, CanvasState } from "./builder/types";
 import { defaultStylePreferences, lineStyleLabels, backgroundColors } from "./builder/types";
 
@@ -55,7 +52,6 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   const isDemoIsla = currentProject.id === "isla-serrano";
   const isSaltMarsh = currentProject.id === "salt-marsh";
 
-  // Salt Marsh starts at step 2 with a pre-loaded tidal island shape
   const saltMarshPath = "M280 120 Q320 100 360 115 Q400 135 410 175 Q415 215 395 250 Q380 270 370 300 Q365 330 355 360 Q340 385 310 400 Q280 410 250 395 Q220 375 210 340 Q200 305 210 270 Q220 240 235 215 Q250 185 260 155 Q265 135 280 120Z";
 
   const getInitialPhase = (): Phase => {
@@ -67,7 +63,9 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<MapTemplate | null>(null);
-  const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
+  const [renderedSVG, setRenderedSVG] = useState<string | null>(null);
+
+  const canvasRef = useRef<MapCanvasHandle | null>(null);
 
   const [canvasState, setCanvasState] = useState<CanvasState>(() => {
     if (isDemoIsla) return {
@@ -101,6 +99,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   const hasShape = canvasState.paths.length > 0 || selectedTemplate !== null;
   const currentStep = phaseToStep(phase);
   const completed = completedStepsForPhase(phase);
+  const colors = backgroundColors[stylePrefs.background];
 
   // --- Handlers ---
   const handleEntrySelect = (path: BuilderPath) => {
@@ -141,7 +140,18 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
 
   const handleRender = () => {
     setPhase("rendering");
-    setTimeout(() => setPhase("preview"), 1500);
+
+    // Get real SVG from canvas if available
+    const rawSVG = canvasRef.current?.getSVG();
+
+    setTimeout(() => {
+      if (rawSVG) {
+        const pins = currentProject.pins.map((p) => ({ title: p.title, x: p.x * 1.33, y: p.y * 0.86 }));
+        const processed = postProcessSVG(rawSVG, stylePrefs, pins, 800, 600);
+        setRenderedSVG(processed);
+      }
+      setPhase("preview");
+    }, 1500);
   };
 
   const handleUseMap = () => {
@@ -149,29 +159,26 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
     onConfirm?.();
   };
 
-  const renderProjectMap = () => {
-    switch (currentProject.id) {
-      case "paper-palace":
-        return <CapeCodeMap selectedLocationId={selectedLocationId} onSelectLocation={setSelectedLocationId} pins={currentProject.pins} />;
-      case "the-giver":
-        return <CommunityMap selectedLocationId={selectedLocationId} onSelectLocation={setSelectedLocationId} pins={currentProject.pins} />;
-      case "acotar":
-        return <PrythianMap selectedLocationId={selectedLocationId} onSelectLocation={setSelectedLocationId} pins={currentProject.pins} />;
-      default:
-        return <IslaSerranoMap selectedLocationId={selectedLocationId} onSelectLocation={setSelectedLocationId} />;
+  const handleExportSVG = () => {
+    if (renderedSVG) {
+      exportSVG(renderedSVG, currentProject.title.replace(/\s+/g, "-").toLowerCase());
+      toast({ title: "SVG exported", description: `${currentProject.title} map downloaded.` });
     }
   };
 
-  const colors = backgroundColors[stylePrefs.background];
+  const handleExportPNG = () => {
+    const dataUrl = canvasRef.current?.getPNG();
+    if (dataUrl) {
+      exportPNG(dataUrl, currentProject.title.replace(/\s+/g, "-").toLowerCase());
+      toast({ title: "PNG exported", description: `${currentProject.title} map downloaded.` });
+    }
+  };
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden">
-      {/* Step Indicator — always visible */}
       <StepIndicator currentStep={currentStep} completedSteps={completed} />
 
-      {/* Phase content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-
         {/* Step 1: Entry cards */}
         {phase === "entry" && <EntryScreen onSelect={handleEntrySelect} />}
 
@@ -194,22 +201,19 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
               onCanvasChange={setCanvasState}
               stylePrefs={stylePrefs}
               onStylePrefsChange={setStylePrefs}
-              onRenderPreview={() => {}} // disabled in step flow
-              demoMode={false}
+              onRenderPreview={() => {}}
               hideStylePanel
               hideRenderButton
+              canvasRef={canvasRef}
             />
-            {/* Continue button */}
-            {hasShape && (
-              <div className="px-5 py-3 border-t border-border bg-card flex justify-end">
-                <Button
-                  onClick={() => setPhase("style")}
-                  className="bg-primary text-primary-foreground font-semibold px-6"
-                >
-                  Continue to Style →
-                </Button>
-              </div>
-            )}
+            <div className="px-5 py-3 border-t border-border bg-card flex justify-end">
+              <Button
+                onClick={() => setPhase("style")}
+                className="bg-primary text-primary-foreground font-semibold px-6"
+              >
+                Continue to Style →
+              </Button>
+            </div>
           </div>
         )}
 
@@ -227,7 +231,6 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
         {/* Step 3: Render ready */}
         {phase === "renderReady" && (
           <div className="flex-1 flex flex-col items-center justify-center p-8 gap-6" style={{ backgroundColor: colors.bg }}>
-            {/* Preview of styled outline */}
             <div className="flex-1 flex items-center justify-center w-full max-w-[500px]">
               <svg viewBox="0 0 600 600" className="w-full h-auto">
                 <rect width="600" height="600" fill={colors.bg} />
@@ -244,7 +247,6 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                 ))}
               </svg>
             </div>
-
             <div className="flex flex-col items-center gap-3 w-full max-w-sm">
               <Button
                 onClick={handleRender}
@@ -265,11 +267,9 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                 ← Back to Style
               </button>
             </div>
-
-            {/* Status bar */}
             <div className="w-full text-center">
               <span className="text-[11px] text-muted-foreground">
-                {canvasState.nodeCount || canvasState.paths.length > 0 ? "12" : "0"} path nodes · {canvasState.features.length} features placed · Style: {lineStyleLabels[stylePrefs.lineStyle]} · Ready to render
+                Style: {lineStyleLabels[stylePrefs.lineStyle]} · Ready to render
               </span>
             </div>
           </div>
@@ -303,18 +303,51 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
 
         {/* Step 3: Preview result */}
         {phase === "preview" && (
-          <RenderPreview
-            projectId={currentProject.id}
-            onUseMap={handleUseMap}
-            onKeepEditing={() => setPhase("shapeCanvas")}
-            selectedLocationId={selectedLocationId}
-            onSelectLocation={setSelectedLocationId}
-            pins={currentProject.pins}
-          />
+          <div className="flex-1 flex flex-col items-center justify-center p-8 gap-6" style={{ backgroundColor: colors.bg }}>
+            {/* Rendered map */}
+            <div className="flex-1 flex items-center justify-center w-full max-w-[700px]">
+              {renderedSVG ? (
+                <div
+                  className="w-full border border-border rounded-lg overflow-hidden shadow-md"
+                  dangerouslySetInnerHTML={{ __html: renderedSVG }}
+                />
+              ) : (
+                <div className="w-full h-[400px] bg-muted/30 rounded-lg flex items-center justify-center text-muted-foreground">
+                  Map rendered
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-col items-center gap-3 w-full max-w-md">
+              <Button
+                onClick={handleUseMap}
+                className="w-full bg-primary text-primary-foreground font-semibold h-12 text-sm"
+              >
+                Use This Map
+              </Button>
+              <div className="flex gap-3">
+                <Button variant="outline" size="sm" onClick={handleExportSVG} className="text-xs">
+                  Export SVG
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleExportPNG} className="text-xs">
+                  Export PNG
+                </Button>
+              </div>
+              <button
+                onClick={() => setPhase("shapeCanvas")}
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
+              >
+                Keep Editing
+              </button>
+              <p className="text-[11px] text-muted-foreground/60 italic text-center">
+                Your map looks exactly like what you drew — just finished and consistent. Edit the shape anytime and re-render instantly.
+              </p>
+            </div>
+          </div>
         )}
       </div>
 
-      {/* Template Picker Modal */}
       <TemplatePicker
         open={templatePickerOpen}
         onClose={() => setTemplatePickerOpen(false)}
