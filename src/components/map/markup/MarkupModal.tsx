@@ -172,6 +172,17 @@ const MarkupModal = ({ open, onClose, images, onSave, initialSelectedId }: Marku
     }
   };
 
+  const handleViewModeChange = (mode: "single" | "side-by-side") => {
+    setViewMode(mode);
+    if (mode === "side-by-side") {
+      // Ensure the two panels show different images
+      if (secondSelectedId === selectedId || !secondSelectedId) {
+        const other = localImages.find(i => i.id !== selectedId);
+        if (other) setSecondSelectedId(other.id);
+      }
+    }
+  };
+
   const activeImage = localImages.find((img) => img.id === activeCanvasId);
 
   const updateImageMarkups = (imageId: string, markups: MarkupElement[]) => {
@@ -296,7 +307,7 @@ const MarkupModal = ({ open, onClose, images, onSave, initialSelectedId }: Marku
             {localImages.length > 1 && (
               <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
                 <button
-                  onClick={() => setViewMode("single")}
+                  onClick={() => handleViewModeChange("single")}
                   className={cn(
                     "px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
                     viewMode === "single"
@@ -307,7 +318,7 @@ const MarkupModal = ({ open, onClose, images, onSave, initialSelectedId }: Marku
                   Single
                 </button>
                 <button
-                  onClick={() => setViewMode("side-by-side")}
+                  onClick={() => handleViewModeChange("side-by-side")}
                   className={cn(
                     "px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
                     viewMode === "side-by-side"
