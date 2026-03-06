@@ -537,11 +537,10 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
               strokeWidth: 1.5,
               selectable: false,
               evented: false,
-            });
-          (river as any)._isRiver = true;
-          (river as any)._isFeature = true;
             }
           );
+          (river as any)._isRiver = true;
+          (river as any)._isFeature = true;
           canvas.add(river);
           break;
         }
