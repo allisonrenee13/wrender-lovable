@@ -112,7 +112,7 @@ export function SeeneryLogo({ variant = "sidebar", className = "", animate = fal
           className="font-serif text-2xl font-semibold tracking-tight text-foreground"
           style={{ opacity: phase >= 5 ? 1 : 0, transition: "opacity 0.3s ease" }}
         >
-          Seenery
+        Figment
         </span>
         <span
           className="text-xs text-muted-foreground"
