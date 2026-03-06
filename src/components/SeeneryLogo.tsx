@@ -7,19 +7,20 @@ interface SeeneryLogoProps {
 }
 
 /**
- * Seenery logo mark: An open book with a map sketch on the page.
- * The book is open, and on the right page you can see a tiny island line drawing.
+ * Wrender logo mark: An open book with a hand-drawn map on the right page.
+ * Left page has faint ruled lines. Right page shows a small organic island
+ * outline with a single navy dot and a tiny compass rose. Thin delicate lines.
  */
 export function SeeneryLogo({ variant = "sidebar", className = "", animate = false }: SeeneryLogoProps) {
   const [phase, setPhase] = useState(animate ? 0 : 5);
 
   useEffect(() => {
     if (!animate) return;
-    const t1 = setTimeout(() => setPhase(1), 100);   // book spine
-    const t2 = setTimeout(() => setPhase(2), 400);   // pages
-    const t3 = setTimeout(() => setPhase(3), 700);   // map on page
-    const t4 = setTimeout(() => setPhase(4), 1000);  // pin dot
-    const t5 = setTimeout(() => setPhase(5), 1200);  // wordmark
+    const t1 = setTimeout(() => setPhase(1), 100);
+    const t2 = setTimeout(() => setPhase(2), 400);
+    const t3 = setTimeout(() => setPhase(3), 700);
+    const t4 = setTimeout(() => setPhase(4), 1000);
+    const t5 = setTimeout(() => setPhase(5), 1200);
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); clearTimeout(t5); };
   }, [animate]);
 
@@ -34,11 +35,11 @@ export function SeeneryLogo({ variant = "sidebar", className = "", animate = fal
       xmlns="http://www.w3.org/2000/svg"
       className="flex-shrink-0"
     >
-      {/* Book spine — centre vertical */}
+      {/* Book spine */}
       <line
         x1="16" y1="6" x2="16" y2="26"
         stroke="currentColor"
-        strokeWidth="1.6"
+        strokeWidth="1.2"
         opacity={phase >= 1 ? 1 : 0}
         style={{ transition: "opacity 0.3s ease" }}
       />
@@ -47,7 +48,7 @@ export function SeeneryLogo({ variant = "sidebar", className = "", animate = fal
       <path
         d="M16 6 Q14 5 6 7 L6 25 Q14 23 16 24"
         stroke="currentColor"
-        strokeWidth="1.3"
+        strokeWidth="1"
         fill="none"
         opacity={phase >= 2 ? 1 : 0}
         style={{ transition: "opacity 0.3s ease" }}
@@ -57,45 +58,55 @@ export function SeeneryLogo({ variant = "sidebar", className = "", animate = fal
       <path
         d="M16 6 Q18 5 26 7 L26 25 Q18 23 16 24"
         stroke="currentColor"
-        strokeWidth="1.3"
+        strokeWidth="1"
         fill="none"
         opacity={phase >= 2 ? 1 : 0}
         style={{ transition: "opacity 0.3s ease" }}
       />
 
-      {/* Map on right page — tiny island outline */}
+      {/* Left page faint ruled lines */}
+      <g
+        opacity={phase >= 3 ? 0.15 : 0}
+        style={{ transition: "opacity 0.3s ease" }}
+      >
+        <line x1="8" y1="11" x2="14" y2="10" stroke="currentColor" strokeWidth="0.4" />
+        <line x1="8" y1="13.5" x2="14" y2="12.5" stroke="currentColor" strokeWidth="0.4" />
+        <line x1="8" y1="16" x2="13" y2="15" stroke="currentColor" strokeWidth="0.4" />
+        <line x1="8" y1="18.5" x2="14" y2="17.5" stroke="currentColor" strokeWidth="0.4" />
+      </g>
+
+      {/* Right page: organic island outline */}
       <g
         opacity={phase >= 3 ? 1 : 0}
         style={{ transition: "opacity 0.4s ease" }}
       >
         <path
-          d="M18.5 13 Q19.5 11 21 10.8 Q22.5 10.5 23.5 11.5 Q24.2 12.5 24 13.5 Q23 14.5 21.5 14.8 Q19.5 15 18.5 13 Z"
+          d="M18.5 13 Q19.2 11.2 20.8 10.8 Q22.2 10.4 23.3 11.2 Q24 12.2 23.8 13.2 Q23 14.2 21.5 14.6 Q19.8 14.8 18.5 13Z"
           stroke="currentColor"
-          strokeWidth="0.8"
+          strokeWidth="0.7"
           fill="none"
         />
         {/* Tiny water lines */}
-        <line x1="18" y1="16" x2="25" y2="16" stroke="currentColor" strokeWidth="0.4" opacity="0.15" />
-        <line x1="18.5" y1="17.5" x2="24.5" y2="17.5" stroke="currentColor" strokeWidth="0.4" opacity="0.1" />
+        <line x1="18.2" y1="16" x2="24.8" y2="16" stroke="currentColor" strokeWidth="0.3" opacity="0.12" />
+        <line x1="18.8" y1="17.3" x2="24.2" y2="17.3" stroke="currentColor" strokeWidth="0.3" opacity="0.08" />
       </g>
 
-      {/* Location pin dot on the island */}
+      {/* Navy location dot on the island */}
       <circle
-        cx="21.5" cy="12.5" r="0.9"
+        cx="21.2" cy="12.3" r="0.7"
         className="fill-primary"
         opacity={phase >= 4 ? 1 : 0}
         style={{ transition: "opacity 0.3s ease" }}
       />
 
-      {/* Left page — faint text lines */}
+      {/* Tiny compass rose */}
       <g
-        opacity={phase >= 3 ? 0.2 : 0}
+        opacity={phase >= 4 ? 0.35 : 0}
         style={{ transition: "opacity 0.3s ease" }}
       >
-        <line x1="8" y1="11" x2="14" y2="10" stroke="currentColor" strokeWidth="0.5" />
-        <line x1="8" y1="13.5" x2="14" y2="12.5" stroke="currentColor" strokeWidth="0.5" />
-        <line x1="8" y1="16" x2="13" y2="15" stroke="currentColor" strokeWidth="0.5" />
-        <line x1="8" y1="18.5" x2="14" y2="17.5" stroke="currentColor" strokeWidth="0.5" />
+        <line x1="24.5" y1="18.5" x2="24.5" y2="21.5" stroke="currentColor" strokeWidth="0.35" />
+        <line x1="23" y1="20" x2="26" y2="20" stroke="currentColor" strokeWidth="0.35" />
+        <text x="24.5" y="18.2" textAnchor="middle" fill="currentColor" fontSize="1.8" fontFamily="serif" opacity="0.6">N</text>
       </g>
     </svg>
   );

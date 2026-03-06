@@ -6,60 +6,65 @@ import { ChevronDown, Check, Menu, X } from "lucide-react";
 /* ───── SVG Icons (architectural / drafting style) ───── */
 const IconSketchSetting = () => (
   <svg width="48" height="48" viewBox="0 0 48 48" fill="none" className="mx-auto mb-4">
-    <path d="M12 28 Q14 20 20 18 Q24 16 30 18 Q36 21 38 28 Q34 30 30 31 Q24 33 20 31 Q14 30 12 28Z" stroke="currentColor" strokeWidth="1.2" fill="none" />
-    <line x1="8" y1="34" x2="40" y2="34" stroke="currentColor" strokeWidth="0.6" opacity="0.15" />
-    <line x1="10" y1="37" x2="38" y2="37" stroke="currentColor" strokeWidth="0.6" opacity="0.1" />
-    <circle cx="24" cy="23" r="1.5" className="fill-secondary" />
+    {/* Detailed island with coastline, roads, terrain */}
+    <path d="M10 28 Q12 18 18 15 Q22 12 28 14 Q34 12 38 18 Q42 24 40 30 Q36 34 30 35 Q22 37 16 34 Q11 32 10 28Z" stroke="currentColor" strokeWidth="0.8" fill="none" />
+    <path d="M14 26 Q18 24 22 25 Q26 24 30 26" stroke="currentColor" strokeWidth="0.4" opacity="0.3" />
+    <path d="M18 20 L18 28" stroke="currentColor" strokeWidth="0.3" opacity="0.25" />
+    <path d="M28 18 L28 30" stroke="currentColor" strokeWidth="0.3" opacity="0.25" />
+    <rect x="20" y="22" width="4" height="3" rx="0.3" stroke="currentColor" strokeWidth="0.4" fill="none" opacity="0.4" />
+    <circle cx="24" cy="20" r="1.2" className="fill-secondary" />
+    <line x1="6" y1="36" x2="42" y2="36" stroke="currentColor" strokeWidth="0.4" opacity="0.1" />
+    <line x1="8" y1="38" x2="40" y2="38" stroke="currentColor" strokeWidth="0.4" opacity="0.07" />
   </svg>
 );
 
 const IconPlaceStory = () => (
   <svg width="48" height="48" viewBox="0 0 48 48" fill="none" className="mx-auto mb-4">
-    <path d="M24 10 C24 10 18 18 18 23 C18 27 21 29 24 29 C27 29 30 27 30 23 C30 18 24 10 24 10Z" stroke="currentColor" strokeWidth="1.2" fill="none" />
-    <circle cx="24" cy="22" r="2" className="fill-secondary" />
-    <line x1="16" y1="34" x2="32" y2="34" stroke="currentColor" strokeWidth="0.6" opacity="0.2" />
-    <line x1="18" y1="37" x2="30" y2="37" stroke="currentColor" strokeWidth="0.6" opacity="0.15" />
+    <path d="M24 10 C24 10 18 18 18 23 C18 27 21 29 24 29 C27 29 30 27 30 23 C30 18 24 10 24 10Z" stroke="currentColor" strokeWidth="0.8" fill="none" />
+    <circle cx="24" cy="22" r="1.5" className="fill-secondary" />
+    <line x1="16" y1="34" x2="32" y2="34" stroke="currentColor" strokeWidth="0.4" opacity="0.15" />
+    <line x1="18" y1="36" x2="30" y2="36" stroke="currentColor" strokeWidth="0.4" opacity="0.1" />
   </svg>
 );
 
 const IconTrackChars = () => (
   <svg width="48" height="48" viewBox="0 0 48 48" fill="none" className="mx-auto mb-4">
-    <circle cx="24" cy="16" r="5" stroke="currentColor" strokeWidth="1.2" fill="none" />
-    <path d="M15 36 C15 28 19 25 24 25 C29 25 33 28 33 36" stroke="currentColor" strokeWidth="1.2" fill="none" />
+    <circle cx="24" cy="16" r="5" stroke="currentColor" strokeWidth="0.8" fill="none" />
+    <path d="M15 36 C15 28 19 25 24 25 C29 25 33 28 33 36" stroke="currentColor" strokeWidth="0.8" fill="none" />
     <circle cx="30" cy="20" r="1" className="fill-secondary" />
-    <path d="M30 22 L30 25" stroke="currentColor" strokeWidth="0.6" strokeDasharray="1.5 1.5" opacity="0.4" />
+    <path d="M30 22 L30 25" stroke="currentColor" strokeWidth="0.5" strokeDasharray="1.5 1.5" opacity="0.4" />
   </svg>
 );
 
 /* ───── Step icons ───── */
 const StepIcon1 = () => (
   <svg width="32" height="32" viewBox="0 0 32 32" fill="none" className="mx-auto mb-2">
-    <rect x="4" y="6" width="24" height="20" rx="1" stroke="currentColor" strokeWidth="1" fill="none" />
-    <line x1="8" y1="12" x2="24" y2="12" stroke="currentColor" strokeWidth="0.6" opacity="0.3" />
-    <line x1="8" y1="15" x2="20" y2="15" stroke="currentColor" strokeWidth="0.6" opacity="0.3" />
-    <line x1="8" y1="18" x2="22" y2="18" stroke="currentColor" strokeWidth="0.6" opacity="0.3" />
+    <rect x="4" y="6" width="24" height="20" rx="1" stroke="currentColor" strokeWidth="0.7" fill="none" opacity="0.6" />
+    <line x1="8" y1="12" x2="24" y2="12" stroke="currentColor" strokeWidth="0.5" opacity="0.25" />
+    <line x1="8" y1="15" x2="20" y2="15" stroke="currentColor" strokeWidth="0.5" opacity="0.25" />
+    <line x1="8" y1="18" x2="22" y2="18" stroke="currentColor" strokeWidth="0.5" opacity="0.25" />
   </svg>
 );
 const StepIcon2 = () => (
   <svg width="32" height="32" viewBox="0 0 32 32" fill="none" className="mx-auto mb-2">
-    <circle cx="16" cy="16" r="10" stroke="currentColor" strokeWidth="1" strokeDasharray="3 3" fill="none" />
-    <path d="M12 14 L20 14 L18 20 L10 20 Z" stroke="currentColor" strokeWidth="0.8" fill="none" />
+    <circle cx="16" cy="16" r="10" stroke="currentColor" strokeWidth="0.7" strokeDasharray="3 3" fill="none" opacity="0.5" />
+    <path d="M12 14 L20 14 L18 20 L10 20 Z" stroke="currentColor" strokeWidth="0.6" fill="none" opacity="0.5" />
   </svg>
 );
 const StepIcon3 = () => (
   <svg width="32" height="32" viewBox="0 0 32 32" fill="none" className="mx-auto mb-2">
-    <path d="M8 20 Q10 14 14 12 Q18 10 22 12 Q26 15 26 20" stroke="currentColor" strokeWidth="1" fill="none" />
+    <path d="M8 20 Q10 14 14 12 Q18 10 22 12 Q26 15 26 20" stroke="currentColor" strokeWidth="0.7" fill="none" opacity="0.6" />
     <circle cx="16" cy="15" r="1" className="fill-secondary" />
-    <line x1="6" y1="22" x2="28" y2="22" stroke="currentColor" strokeWidth="0.5" opacity="0.2" />
+    <line x1="6" y1="22" x2="28" y2="22" stroke="currentColor" strokeWidth="0.4" opacity="0.15" />
   </svg>
 );
 const StepIcon4 = () => (
   <svg width="32" height="32" viewBox="0 0 32 32" fill="none" className="mx-auto mb-2">
-    <rect x="4" y="4" width="11" height="24" rx="1" stroke="currentColor" strokeWidth="0.8" fill="none" />
-    <rect x="17" y="4" width="11" height="24" rx="1" stroke="currentColor" strokeWidth="0.8" fill="none" />
-    <line x1="6" y1="10" x2="13" y2="10" stroke="currentColor" strokeWidth="0.5" opacity="0.3" />
-    <line x1="6" y1="13" x2="12" y2="13" stroke="currentColor" strokeWidth="0.5" opacity="0.3" />
-    <path d="M19 14 Q21 11 23 12 Q25 13 25 15" stroke="currentColor" strokeWidth="0.6" fill="none" />
+    <rect x="4" y="4" width="11" height="24" rx="1" stroke="currentColor" strokeWidth="0.6" fill="none" opacity="0.5" />
+    <rect x="17" y="4" width="11" height="24" rx="1" stroke="currentColor" strokeWidth="0.6" fill="none" opacity="0.5" />
+    <line x1="6" y1="10" x2="13" y2="10" stroke="currentColor" strokeWidth="0.4" opacity="0.25" />
+    <line x1="6" y1="13" x2="12" y2="13" stroke="currentColor" strokeWidth="0.4" opacity="0.25" />
+    <path d="M19 14 Q21 11 23 12 Q25 13 25 15" stroke="currentColor" strokeWidth="0.5" fill="none" opacity="0.5" />
     <circle cx="22" cy="13" r="0.7" className="fill-secondary" />
   </svg>
 );
@@ -120,7 +125,7 @@ function Step({ num, title, desc, icon }: { num: number; title: string; desc: st
   return (
     <div className="flex flex-col items-center text-center relative">
       {icon}
-      <div className="w-8 h-8 rounded-full border-2 border-primary flex items-center justify-center text-xs font-serif font-bold text-primary mb-2">
+      <div className="w-8 h-8 rounded-full border border-foreground/30 flex items-center justify-center text-xs text-foreground/60 mb-2">
         {num}
       </div>
       <h4 className="font-serif font-semibold text-foreground mb-1">{title}</h4>
@@ -132,34 +137,81 @@ function Step({ num, title, desc, icon }: { num: number; title: string; desc: st
 /* ───── Mini map sketches for demo cards ───── */
 const CapeCodSketch = () => (
   <svg viewBox="0 0 200 120" className="w-full h-full" fill="none">
-    <rect x="60" y="30" width="30" height="25" rx="1" stroke="currentColor" strokeWidth="0.8" fill="none" />
-    <ellipse cx="140" cy="60" rx="25" ry="15" stroke="currentColor" strokeWidth="0.8" fill="none" />
-    <path d="M30 80 Q50 70 80 75 Q110 80 130 70 Q150 65 170 75" stroke="currentColor" strokeWidth="0.6" fill="none" />
-    <circle cx="75" cy="42" r="1.5" className="fill-secondary" />
-    <circle cx="140" cy="58" r="1.5" className="fill-secondary" />
-    <line x1="20" y1="95" x2="180" y2="95" stroke="currentColor" strokeWidth="0.3" opacity="0.15" />
+    {/* Coastline */}
+    <path d="M20 85 Q40 78 60 82 Q80 75 100 80 Q130 72 160 78 Q180 82 195 75" stroke="currentColor" strokeWidth="0.7" fill="none" />
+    {/* House */}
+    <rect x="55" y="35" width="22" height="18" rx="0.5" stroke="currentColor" strokeWidth="0.7" fill="none" />
+    <path d="M53 35 L66 25 L79 35" stroke="currentColor" strokeWidth="0.6" fill="none" />
+    {/* Pond */}
+    <path d="M120 40 Q130 32 145 35 Q155 38 152 48 Q148 55 135 56 Q122 54 120 45Z" stroke="currentColor" strokeWidth="0.7" fill="none" />
+    {/* Woods / trees */}
+    <path d="M30 50 L33 38 L36 50" stroke="currentColor" strokeWidth="0.5" fill="none" opacity="0.4" />
+    <path d="M38 52 L41 40 L44 52" stroke="currentColor" strokeWidth="0.5" fill="none" opacity="0.4" />
+    <path d="M34 54 L37 42 L40 54" stroke="currentColor" strokeWidth="0.5" fill="none" opacity="0.35" />
+    {/* Road */}
+    <path d="M66 53 Q80 60 100 58 Q120 55 135 56" stroke="currentColor" strokeWidth="0.4" strokeDasharray="3 2" opacity="0.3" />
+    {/* Pins */}
+    <circle cx="66" cy="42" r="1.8" className="fill-secondary" />
+    <circle cx="135" cy="45" r="1.8" className="fill-secondary" />
+    {/* Labels */}
+    <text x="66" y="30" textAnchor="middle" fill="currentColor" fontSize="5" fontFamily="serif" opacity="0.4">The House</text>
+    <text x="137" y="30" textAnchor="middle" fill="currentColor" fontSize="5" fontFamily="serif" opacity="0.4">The Pond</text>
+    <line x1="10" y1="100" x2="190" y2="100" stroke="currentColor" strokeWidth="0.3" opacity="0.08" />
   </svg>
 );
 
 const CommunitySketch = () => (
   <svg viewBox="0 0 200 120" className="w-full h-full" fill="none">
-    <circle cx="100" cy="60" r="40" stroke="currentColor" strokeWidth="0.8" fill="none" />
-    <circle cx="100" cy="60" r="25" stroke="currentColor" strokeWidth="0.5" strokeDasharray="3 3" fill="none" />
-    <line x1="60" y1="60" x2="140" y2="60" stroke="currentColor" strokeWidth="0.4" opacity="0.3" />
-    <line x1="100" y1="20" x2="100" y2="100" stroke="currentColor" strokeWidth="0.4" opacity="0.3" />
-    <rect x="90" y="50" width="20" height="20" rx="1" stroke="currentColor" strokeWidth="0.5" fill="none" />
-    <circle cx="100" cy="60" r="1.5" className="fill-secondary" />
+    {/* Outer boundary */}
+    <circle cx="100" cy="60" r="42" stroke="currentColor" strokeWidth="0.7" fill="none" />
+    {/* Inner ring */}
+    <circle cx="100" cy="60" r="28" stroke="currentColor" strokeWidth="0.5" strokeDasharray="3 3" fill="none" opacity="0.4" />
+    {/* Grid streets */}
+    <line x1="70" y1="40" x2="70" y2="80" stroke="currentColor" strokeWidth="0.35" opacity="0.25" />
+    <line x1="100" y1="32" x2="100" y2="88" stroke="currentColor" strokeWidth="0.35" opacity="0.25" />
+    <line x1="130" y1="40" x2="130" y2="80" stroke="currentColor" strokeWidth="0.35" opacity="0.25" />
+    <line x1="65" y1="50" x2="135" y2="50" stroke="currentColor" strokeWidth="0.35" opacity="0.25" />
+    <line x1="60" y1="60" x2="140" y2="60" stroke="currentColor" strokeWidth="0.35" opacity="0.25" />
+    <line x1="65" y1="70" x2="135" y2="70" stroke="currentColor" strokeWidth="0.35" opacity="0.25" />
+    {/* Buildings */}
+    <rect x="88" y="52" width="10" height="8" rx="0.5" stroke="currentColor" strokeWidth="0.5" fill="none" opacity="0.5" />
+    <rect x="103" y="52" width="8" height="6" rx="0.5" stroke="currentColor" strokeWidth="0.5" fill="none" opacity="0.5" />
+    <rect x="75" y="62" width="8" height="6" rx="0.5" stroke="currentColor" strokeWidth="0.5" fill="none" opacity="0.4" />
+    {/* Centre pin */}
+    <circle cx="100" cy="60" r="1.8" className="fill-secondary" />
+    {/* Label */}
+    <text x="100" y="108" textAnchor="middle" fill="currentColor" fontSize="5" fontFamily="serif" opacity="0.3">The Community</text>
   </svg>
 );
 
 const PrythianSketch = () => (
   <svg viewBox="0 0 200 120" className="w-full h-full" fill="none">
-    <line x1="100" y1="10" x2="100" y2="110" stroke="currentColor" strokeWidth="1" />
-    <path d="M20 30 Q40 25 60 35 Q80 45 90 40 L90 100 Q70 95 50 85 Q30 80 20 90 Z" stroke="currentColor" strokeWidth="0.6" fill="none" />
-    <path d="M110 30 Q130 20 150 35 Q170 45 180 40 L180 100 Q160 90 140 85 Q120 80 110 90 Z" stroke="currentColor" strokeWidth="0.6" fill="none" />
-    <circle cx="60" cy="55" r="1.5" className="fill-secondary" />
-    <circle cx="150" cy="50" r="1.5" className="fill-secondary" />
-    <path d="M130 60 Q140 55 150 65 Q160 70 170 65" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 2" fill="none" opacity="0.4" />
+    {/* The Wall */}
+    <line x1="100" y1="8" x2="100" y2="112" stroke="currentColor" strokeWidth="1" />
+    <text x="100" y="6" textAnchor="middle" fill="currentColor" fontSize="4.5" fontFamily="serif" opacity="0.35">The Wall</text>
+    {/* Mortal Lands (left) with terrain */}
+    <path d="M15 25 Q30 20 50 30 Q65 38 85 35 L85 95 Q60 90 40 80 Q25 75 15 85Z" stroke="currentColor" strokeWidth="0.6" fill="none" />
+    <path d="M25 50 Q35 45 45 52" stroke="currentColor" strokeWidth="0.4" opacity="0.3" />
+    <path d="M30 65 Q40 60 55 68" stroke="currentColor" strokeWidth="0.4" opacity="0.25" />
+    {/* Trees on mortal side */}
+    <path d="M35 40 L37 33 L39 40" stroke="currentColor" strokeWidth="0.4" fill="none" opacity="0.3" />
+    <path d="M42 42 L44 35 L46 42" stroke="currentColor" strokeWidth="0.4" fill="none" opacity="0.3" />
+    {/* Fae Lands (right) with wilder terrain */}
+    <path d="M115 25 Q130 18 150 28 Q168 35 180 30 L180 95 Q165 88 145 82 Q125 78 115 88Z" stroke="currentColor" strokeWidth="0.6" fill="none" />
+    <path d="M120 50 Q135 42 150 55 Q160 60 170 52" stroke="currentColor" strokeWidth="0.4" opacity="0.3" />
+    <path d="M125 70 Q140 62 155 72" stroke="currentColor" strokeWidth="0.4" opacity="0.25" />
+    {/* Wild forest on fae side */}
+    <path d="M130 38 L133 28 L136 38" stroke="currentColor" strokeWidth="0.4" fill="none" opacity="0.35" />
+    <path d="M140 35 L143 25 L146 35" stroke="currentColor" strokeWidth="0.4" fill="none" opacity="0.35" />
+    <path d="M150 40 L153 30 L156 40" stroke="currentColor" strokeWidth="0.4" fill="none" opacity="0.3" />
+    {/* Pins */}
+    <circle cx="55" cy="55" r="1.8" className="fill-secondary" />
+    <circle cx="150" cy="50" r="1.8" className="fill-secondary" />
+    {/* Path through wall */}
+    <path d="M85 60 Q92 58 100 60 Q108 62 115 60" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 2" fill="none" opacity="0.35" />
+    {/* Labels */}
+    <text x="50" y="100" textAnchor="middle" fill="currentColor" fontSize="4.5" fontFamily="serif" opacity="0.3">Mortal Lands</text>
+    <text x="150" y="100" textAnchor="middle" fill="currentColor" fontSize="4.5" fontFamily="serif" opacity="0.3">Prythian</text>
   </svg>
 );
 
@@ -213,17 +265,65 @@ export default function LandingPage() {
           See your story's world.
         </h1>
 
+        <p className="text-muted-foreground text-base md:text-lg max-w-xl mb-10 leading-relaxed">
+          Your visual companion while you write. Render your story's setting as a clean line drawing, see what's in your head, plan where everything happens, and write with clarity.
+        </p>
+
+        {/* Hero app preview */}
+        <div className="w-full max-w-4xl border border-border rounded-xl shadow-lg overflow-hidden bg-card mb-8">
+          <div className="flex items-center gap-1.5 px-4 py-2.5 bg-muted/50 border-b border-border">
+            <span className="w-2.5 h-2.5 rounded-full bg-destructive/40" />
+            <span className="w-2.5 h-2.5 rounded-full bg-secondary/40" />
+            <span className="w-2.5 h-2.5 rounded-full bg-green-400/40" />
+            <span className="ml-3 text-[10px] text-muted-foreground">Wrender &mdash; Isla Serrano</span>
+          </div>
+          <div className="h-64 md:h-96 bg-[hsl(40,20%,97%)] flex items-center justify-center relative overflow-hidden">
+            <svg viewBox="0 0 600 300" className="w-full h-full" fill="none">
+              {/* Water lines */}
+              <line x1="0" y1="210" x2="600" y2="210" stroke="currentColor" strokeWidth="0.3" opacity="0.06" />
+              <line x1="0" y1="225" x2="600" y2="225" stroke="currentColor" strokeWidth="0.3" opacity="0.04" />
+              <line x1="0" y1="240" x2="600" y2="240" stroke="currentColor" strokeWidth="0.3" opacity="0.03" />
+              {/* Island outline with coastline detail */}
+              <path
+                d="M140 160 Q150 120 185 102 Q215 88 260 82 Q300 75 340 80 Q380 72 420 98 Q450 115 465 148 Q470 168 455 182 Q430 195 395 198 Q360 205 320 200 Q280 210 240 200 Q200 195 170 182 Q148 175 142 168Z"
+                stroke="currentColor" strokeWidth="1.2" fill="none"
+              />
+              {/* Interior coastline details */}
+              <path d="M180 150 Q200 142 220 148" stroke="currentColor" strokeWidth="0.4" opacity="0.2" />
+              <path d="M350 150 Q370 142 400 155" stroke="currentColor" strokeWidth="0.4" opacity="0.2" />
+              {/* Roads */}
+              <path d="M200 130 Q250 125 300 128 Q350 125 400 135" stroke="currentColor" strokeWidth="0.4" strokeDasharray="4 3" opacity="0.2" />
+              <path d="M250 105 L250 170" stroke="currentColor" strokeWidth="0.3" strokeDasharray="3 3" opacity="0.15" />
+              <path d="M350 95 L350 180" stroke="currentColor" strokeWidth="0.3" strokeDasharray="3 3" opacity="0.15" />
+              {/* Building outlines */}
+              <rect x="225" y="115" width="12" height="8" rx="0.5" stroke="currentColor" strokeWidth="0.4" fill="none" opacity="0.3" />
+              <rect x="340" y="108" width="14" height="10" rx="0.5" stroke="currentColor" strokeWidth="0.4" fill="none" opacity="0.3" />
+              <rect x="380" y="140" width="10" height="7" rx="0.5" stroke="currentColor" strokeWidth="0.4" fill="none" opacity="0.25" />
+              {/* Pins with labels */}
+              <circle cx="250" cy="128" r="5" className="fill-secondary" />
+              <text x="250" y="108" textAnchor="middle" fill="currentColor" fontSize="8" fontFamily="Playfair Display, serif" opacity="0.6">Lighthouse</text>
+              <circle cx="350" cy="110" r="5" className="fill-secondary" />
+              <text x="350" y="98" textAnchor="middle" fill="currentColor" fontSize="8" fontFamily="Playfair Display, serif" opacity="0.6">Hotel</text>
+              <circle cx="400" cy="145" r="4" className="fill-primary" />
+              <text x="415" y="142" fill="currentColor" fontSize="7" opacity="0.45">Police Station</text>
+              <circle cx="200" cy="150" r="4" className="fill-primary" />
+              <text x="200" y="142" textAnchor="middle" fill="currentColor" fontSize="7" opacity="0.45">Ferry Dock</text>
+              {/* Compass */}
+              <line x1="540" y1="55" x2="540" y2="80" stroke="currentColor" strokeWidth="0.5" opacity="0.2" />
+              <line x1="530" y1="67" x2="550" y2="67" stroke="currentColor" strokeWidth="0.4" opacity="0.15" />
+              <text x="540" y="52" textAnchor="middle" fill="currentColor" fontSize="9" fontFamily="Playfair Display, serif" opacity="0.25">N</text>
+            </svg>
+          </div>
+        </div>
+
         <div className="flex flex-col items-center gap-3 mb-6">
           <div className="w-10 h-px bg-secondary" />
           <p className="font-serif italic text-foreground/50 text-sm md:text-base">
-            From the world in your head — to something you can actually see.
+            From the world in your head to something you can actually see.
           </p>
           <div className="w-10 h-px bg-secondary" />
         </div>
 
-        <p className="text-muted-foreground text-base md:text-lg max-w-xl mb-8 leading-relaxed">
-          Wrender is the visual companion writers use while writing. Sketch your story's setting as a clean line drawing — see what's in your head, plan where everything happens, and write with clarity.
-        </p>
         <div className="flex flex-col sm:flex-row items-center gap-3 mb-4">
           <Button className="bg-primary text-secondary font-medium rounded-full px-8 h-11 text-base">
             Start Free
@@ -232,42 +332,7 @@ export default function LandingPage() {
             See How It Works <ChevronDown className="h-3.5 w-3.5" />
           </button>
         </div>
-        <p className="text-xs text-muted-foreground/60">14-day free trial · No credit card required</p>
-
-        {/* Hero app preview */}
-        <div className="mt-12 w-full max-w-4xl border border-border rounded-xl shadow-lg overflow-hidden bg-card">
-          <div className="flex items-center gap-1.5 px-4 py-2.5 bg-muted/50 border-b border-border">
-            <span className="w-2.5 h-2.5 rounded-full bg-destructive/40" />
-            <span className="w-2.5 h-2.5 rounded-full bg-secondary/40" />
-            <span className="w-2.5 h-2.5 rounded-full bg-green-400/40" />
-            <span className="ml-3 text-[10px] text-muted-foreground">Wrender — Isla Serrano</span>
-          </div>
-          <div className="h-64 md:h-96 bg-[hsl(40,20%,97%)] flex items-center justify-center relative overflow-hidden">
-            <svg viewBox="0 0 600 300" className="w-full h-full" fill="none">
-              <line x1="0" y1="200" x2="600" y2="200" stroke="currentColor" strokeWidth="0.3" opacity="0.08" />
-              <line x1="0" y1="220" x2="600" y2="220" stroke="currentColor" strokeWidth="0.3" opacity="0.06" />
-              <line x1="0" y1="240" x2="600" y2="240" stroke="currentColor" strokeWidth="0.3" opacity="0.04" />
-              <path
-                d="M150 160 Q165 110 210 95 Q260 78 310 82 Q360 72 410 100 Q450 120 465 155 Q458 178 430 188 Q390 202 340 196 Q290 208 240 196 Q195 192 168 180 Q148 174 150 160Z"
-                stroke="currentColor" strokeWidth="1.5" fill="none"
-              />
-              <line x1="200" y1="100" x2="200" y2="190" stroke="currentColor" strokeWidth="0.3" opacity="0.08" />
-              <line x1="260" y1="85" x2="260" y2="200" stroke="currentColor" strokeWidth="0.3" opacity="0.08" />
-              <line x1="340" y1="80" x2="340" y2="195" stroke="currentColor" strokeWidth="0.3" opacity="0.08" />
-              <line x1="400" y1="95" x2="400" y2="185" stroke="currentColor" strokeWidth="0.3" opacity="0.08" />
-              <circle cx="250" cy="130" r="5" className="fill-secondary" />
-              <text x="250" y="120" textAnchor="middle" fill="currentColor" fontSize="8" fontFamily="Playfair Display, serif" opacity="0.7">Lighthouse</text>
-              <circle cx="350" cy="110" r="5" className="fill-secondary" />
-              <text x="350" y="100" textAnchor="middle" fill="currentColor" fontSize="8" fontFamily="Playfair Display, serif" opacity="0.7">Hotel</text>
-              <circle cx="400" cy="145" r="4" className="fill-primary" />
-              <text x="400" y="138" textAnchor="middle" fill="currentColor" fontSize="7" opacity="0.5">Police Station</text>
-              <circle cx="200" cy="155" r="4" className="fill-primary" />
-              <text x="200" y="148" textAnchor="middle" fill="currentColor" fontSize="7" opacity="0.5">Ferry Dock</text>
-              <text x="540" y="60" textAnchor="middle" fill="currentColor" fontSize="10" fontFamily="Playfair Display, serif" opacity="0.25">N</text>
-              <line x1="540" y1="62" x2="540" y2="80" stroke="currentColor" strokeWidth="0.5" opacity="0.2" />
-            </svg>
-          </div>
-        </div>
+        <p className="text-xs text-muted-foreground/60">14-day free trial. No credit card required.</p>
       </section>
 
       {/* ══ Section 2 — From Imagination to Reality ══ */}
@@ -277,18 +342,20 @@ export default function LandingPage() {
           <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground leading-tight mb-2">You imagined it.</h2>
           <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground leading-tight mb-6">Now you can see it.</h2>
           <p className="text-muted-foreground max-w-xl mx-auto leading-relaxed">
-            Your story's world is vivid, detailed, fully formed — but invisible to everyone else. Wrender takes the world you've been carrying in your head and turns it into something you can see, plan, and build on.
+            Your story's world is vivid, detailed, fully formed, but invisible to everyone else. Wrender takes the world you've been carrying in your head and turns it into something you can see, plan, and build on.
           </p>
         </div>
 
         <div className="max-w-3xl mx-auto flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10">
           <div className="flex flex-col items-center">
             <svg width="160" height="120" viewBox="0 0 160 120" fill="none" className="mb-3">
+              {/* Dotted island with coastline shape */}
               <path
-                d="M30 65 Q35 40 55 33 Q75 26 95 30 Q115 25 130 45 Q140 55 138 68 Q130 78 110 82 Q85 88 65 82 Q42 78 32 72 Q28 70 30 65Z"
-                stroke="currentColor" strokeWidth="1" strokeDasharray="3 3" fill="none" opacity="0.4"
+                d="M28 62 Q32 38 50 30 Q65 22 82 26 Q100 20 118 32 Q132 42 135 58 Q138 72 128 80 Q115 88 95 90 Q75 94 55 88 Q38 82 30 72Z"
+                stroke="currentColor" strokeWidth="0.8" strokeDasharray="2.5 2.5" fill="none" opacity="0.35"
               />
-              <circle cx="80" cy="52" r="2" stroke="currentColor" strokeWidth="0.8" strokeDasharray="2 2" fill="none" opacity="0.3" />
+              <path d="M50 55 Q65 48 80 54" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 2" fill="none" opacity="0.2" />
+              <circle cx="80" cy="50" r="1.5" stroke="currentColor" strokeWidth="0.6" strokeDasharray="1.5 1.5" fill="none" opacity="0.25" />
             </svg>
             <p className="text-xs italic text-muted-foreground">Your world</p>
           </div>
@@ -307,14 +374,20 @@ export default function LandingPage() {
 
           <div className="flex flex-col items-center">
             <svg width="160" height="120" viewBox="0 0 160 120" fill="none" className="mb-3">
+              {/* Solid island with coastline detail, roads, buildings */}
               <path
-                d="M30 65 Q35 40 55 33 Q75 26 95 30 Q115 25 130 45 Q140 55 138 68 Q130 78 110 82 Q85 88 65 82 Q42 78 32 72 Q28 70 30 65Z"
-                stroke="currentColor" strokeWidth="1.5" fill="none"
+                d="M28 62 Q32 38 50 30 Q65 22 82 26 Q100 20 118 32 Q132 42 135 58 Q138 72 128 80 Q115 88 95 90 Q75 94 55 88 Q38 82 30 72Z"
+                stroke="currentColor" strokeWidth="1.2" fill="none"
               />
-              <circle cx="80" cy="52" r="2.5" className="fill-primary" />
-              <line x1="50" y1="55" x2="70" y2="50" stroke="currentColor" strokeWidth="0.5" opacity="0.3" />
-              <line x1="90" y1="48" x2="115" y2="52" stroke="currentColor" strokeWidth="0.5" opacity="0.3" />
-              <path d="M60 65 Q70 60 80 63" stroke="currentColor" strokeWidth="0.4" opacity="0.2" />
+              {/* Interior roads */}
+              <path d="M50 55 Q65 48 85 52 Q105 48 120 55" stroke="currentColor" strokeWidth="0.4" strokeDasharray="3 2" opacity="0.25" />
+              <path d="M75 35 L75 75" stroke="currentColor" strokeWidth="0.3" strokeDasharray="2 2" opacity="0.2" />
+              {/* Building outlines */}
+              <rect x="68" y="48" width="6" height="5" rx="0.3" stroke="currentColor" strokeWidth="0.4" fill="none" opacity="0.35" />
+              <rect x="90" y="45" width="8" height="5" rx="0.3" stroke="currentColor" strokeWidth="0.4" fill="none" opacity="0.35" />
+              {/* Terrain */}
+              <path d="M45 65 Q55 60 65 66" stroke="currentColor" strokeWidth="0.35" opacity="0.2" />
+              <circle cx="80" cy="50" r="2" className="fill-primary" />
             </svg>
             <p className="text-xs italic text-muted-foreground">Your setting</p>
           </div>
@@ -330,9 +403,9 @@ export default function LandingPage() {
               Sometimes seeing what's in your head helps you write what comes next.
             </h2>
             <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
-              <p>You're mid-chapter. Your characters are at the yacht club and split up — but you can't quite picture where everyone goes. You know the lighthouse is north and the hotel is south, but is the timing right? Does the geography work?</p>
-              <p>Wrender sits alongside your writing. Open it when you need to think visually — see your setting as a clean line sketch, place your events on the map, and figure out what happens next before you write it.</p>
-              <p className="font-medium text-foreground">Not after you finish your book. While you're writing it.</p>
+              <p>You are mid-chapter. Two of your characters split up and head in different directions across your story's world. You know roughly where they go, but is the timing right? Does the geography hold up?</p>
+              <p>Wrender sits alongside your writing. Open it when you need to think visually, place your events on the map, and figure out what happens next before you write it.</p>
+              <p className="font-medium text-foreground">Not after you finish your book. While you are writing it.</p>
             </div>
           </div>
 
@@ -361,6 +434,7 @@ export default function LandingPage() {
               <div className="flex-1 bg-[hsl(40,20%,97%)] flex items-center justify-center">
                 <svg viewBox="0 0 160 120" className="w-4/5 h-4/5" fill="none">
                   <path d="M30 60 Q40 35 60 30 Q80 25 100 30 Q120 40 130 60 Q120 70 100 75 Q80 80 60 75 Q40 70 30 60Z" stroke="currentColor" strokeWidth="0.8" fill="none" />
+                  <path d="M50 55 Q65 48 80 54 Q95 48 110 55" stroke="currentColor" strokeWidth="0.35" strokeDasharray="2 2" opacity="0.2" />
                   <circle cx="70" cy="48" r="2.5" className="fill-secondary" />
                   <circle cx="100" cy="45" r="2.5" className="fill-secondary" />
                   <circle cx="85" cy="55" r="2" className="fill-primary" />
@@ -393,7 +467,7 @@ export default function LandingPage() {
           <div>
             <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-4 font-medium">With Wrender</h3>
             <ul className="space-y-3">
-              {["A precise line sketch of your setting — always open beside your writing","Every location planned before you write the scene","Characters tracked across your world — you always know where everyone is","Plot events pinned to the sketch so you can see the story spatially","Clarity on what happens next — before you write a single word"].map((t) => (
+              {["A precise line sketch of your setting, always open beside your writing","Every location planned before you write the scene","Characters tracked across your world so you always know where everyone is","Plot events pinned to the sketch so you can see the story spatially","Clarity on what happens next, before you write a single word"].map((t) => (
                 <li key={t} className="flex items-start gap-2.5 text-sm text-foreground">
                   <span className="w-1.5 h-1.5 rounded-full bg-secondary mt-1.5 flex-shrink-0" />
                   {t}
@@ -411,17 +485,17 @@ export default function LandingPage() {
             <div className="text-center p-6">
               <IconSketchSetting />
               <h3 className="font-serif font-semibold text-lg mb-2">Render Your Setting</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">Describe your world or upload a reference — Wrender generates a precise architectural line sketch of your setting. Like a floor plan for your story.</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">Describe your world or upload a reference. Wrender generates a precise architectural line sketch of your setting, like a location sketch for your story.</p>
             </div>
             <div className="text-center p-6">
               <IconPlaceStory />
               <h3 className="font-serif font-semibold text-lg mb-2">Place Your Story</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">Pin plot events and scenes directly onto your sketch. See exactly where everything happens — and whether your story's geography actually works.</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">Pin plot events and scenes directly onto your sketch. See exactly where everything happens, and whether your story's geography actually works.</p>
             </div>
             <div className="text-center p-6">
               <IconTrackChars />
               <h3 className="font-serif font-semibold text-lg mb-2">Track Your Characters</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">Track your characters across your setting. Know where everyone is at every moment — especially when your scenes get complex.</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">Track your characters across your setting. Know where everyone is at every moment, especially when your scenes get complex.</p>
             </div>
           </div>
           <div className="text-center mt-8">
@@ -434,8 +508,8 @@ export default function LandingPage() {
       <section className="py-20 px-6 md:px-12">
         <div className="max-w-5xl mx-auto text-center mb-12">
           <span className="text-xs font-medium text-secondary uppercase tracking-widest mb-3 block">Works for every kind of story</span>
-          <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-3">If setting matters to your story — Wrender is for you.</h2>
-          <p className="text-muted-foreground max-w-lg mx-auto">Whether your world is a fantasy kingdom, a controlled dystopia, or a sun-bleached island — if place shapes your story, you need to see it.</p>
+          <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-3">If setting matters to your story, Wrender is for you.</h2>
+          <p className="text-muted-foreground max-w-lg mx-auto">Whether your world is a fantasy kingdom, a controlled dystopia, or a sun-bleached island, if place shapes your story, you need to see it.</p>
         </div>
         <div className="max-w-5xl mx-auto flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4 md:grid md:grid-cols-3 md:overflow-visible">
           <BookCard title="The Paper Palace" genre="Literary Fiction" setting="Cape Cod, Massachusetts" quote="The lake, the house, the woods. Every scene lives in a specific place." sketch={<CapeCodSketch />} />
@@ -448,13 +522,13 @@ export default function LandingPage() {
       <section id="how-it-works" className="py-20 px-6 md:px-12 bg-[hsl(40,20%,97%)]">
         <div className="max-w-5xl mx-auto text-center mb-14">
           <span className="text-xs font-medium text-secondary uppercase tracking-widest mb-3 block">How it works</span>
-          <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground">From the world in your head — to a floor plan in minutes.</h2>
+          <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground">From the world in your head to a precise line sketch in minutes.</h2>
         </div>
         <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 relative">
-          <div className="hidden md:block absolute top-16 left-[12.5%] right-[12.5%] border-t-2 border-dashed border-border" />
+          <div className="hidden md:block absolute top-16 left-[12.5%] right-[12.5%] border-t border-dashed border-foreground/20" />
           <Step num={1} title="Describe what you imagined" desc="Type a description of your setting or upload reference images of real places that inspired your world." icon={<StepIcon1 />} />
           <Step num={2} title="Mark it up" desc="Circle what to keep, exclude, or adapt. Guide Wrender toward your exact vision using the markup tool." icon={<StepIcon2 />} />
-          <Step num={3} title="Render your sketch" desc="Wrender draws a precise black line sketch of your setting — like an architectural floor plan or a director's location map." icon={<StepIcon3 />} />
+          <Step num={3} title="Render your sketch" desc="Wrender draws a precise black line sketch of your setting, like an architectural drawing or a director's location map." icon={<StepIcon3 />} />
           <Step num={4} title="Write alongside it" desc="Keep Wrender open while you write. Drop pins, track characters, plan scenes. Your sketch grows as your story does." icon={<StepIcon4 />} />
         </div>
       </section>
@@ -463,7 +537,7 @@ export default function LandingPage() {
       <section className="py-20 px-6 md:px-12">
         <div className="max-w-3xl mx-auto text-center">
           <p className="font-serif text-xl md:text-2xl italic text-foreground leading-relaxed mb-6">
-            "I always knew what the island looked like. I just couldn't see it — until I rendered it out in Wrender. Now I visualise every scene before I write it."
+            "I always knew what the island looked like. I just couldn't see it until I rendered it out in Wrender. Now I visualise every scene before I write it."
           </p>
           <div className="flex items-center justify-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary/10 border border-border" />
@@ -484,7 +558,7 @@ export default function LandingPage() {
         </div>
         <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
           <PricingCard name="Free" price="$0" features={["1 project","Up to 10 map pins","5 characters","Basic line sketch generation","Watermarked export"]} cta="Start Free" />
-          <PricingCard name="Storyteller" price="$9/month" period="$7/month billed annually" popular features={["Unlimited projects","Unlimited pins & characters","AI sketch generation","Upload & adapt real locations","Clean export — print ready","Location sketch mood boards"]} cta="Start Free Trial" />
+          <PricingCard name="Storyteller" price="$9/month" period="$7/month billed annually" popular features={["Unlimited projects","Unlimited pins & characters","AI sketch generation","Upload & adapt real locations","Clean export, print ready","Location sketch mood boards"]} cta="Start Free Trial" />
           <PricingCard name="Worldbuilder" price="$15/month" period="$12/month billed annually" features={["Everything in Storyteller","Character movement mapping","Advanced timeline view","Co-authoring","Priority generation","Full version history"]} cta="Start Free Trial" />
         </div>
         <p className="text-center text-xs text-muted-foreground/60 mt-8">All plans include a 14-day free trial. No credit card required.</p>
@@ -496,7 +570,7 @@ export default function LandingPage() {
         <h2 className="font-serif text-3xl md:text-5xl font-bold text-foreground leading-tight max-w-2xl mx-auto mb-8">Now you can see it.</h2>
         <p className="text-muted-foreground mb-8">Join writers who visualise their world in Wrender.</p>
         <Button className="bg-primary text-secondary font-medium rounded-full px-10 h-12 text-base mb-3">Start Visualising Your World</Button>
-        <p className="text-xs text-muted-foreground/60">Free to start · No credit card · 14-day trial</p>
+        <p className="text-xs text-muted-foreground/60">Free to start. No credit card. 14-day trial.</p>
       </section>
 
       {/* ══ Section 11 — Footer ══ */}
@@ -511,7 +585,7 @@ export default function LandingPage() {
             <a href="#" className="hover:text-foreground transition-colors font-medium text-foreground">Start Free</a>
           </div>
         </div>
-        <p className="text-center text-[10px] text-muted-foreground/40 mt-6">© 2025 Wrender · Built for fiction writers</p>
+        <p className="text-center text-[10px] text-muted-foreground/40 mt-6">© 2025 Wrender. Built for fiction writers.</p>
       </footer>
     </div>
   );
