@@ -59,25 +59,29 @@ const PrythianSketch = () => (
 /* ───── Feature Tab Illustrations ───── */
 const RenderIllustration = () => (
   <svg viewBox="0 0 400 260" className="w-full h-full" fill="none">
-    {/* Cape Cod silhouette */}
-    <path d="M60 150 C55 160 48 178 50 198 C52 212 72 212 98 200 C120 190 150 186 180 187 C210 188 240 185 268 188 C290 186 302 176 308 160 C312 145 310 125 306 105 C302 82 296 62 288 48 C278 36 266 28 252 26 C240 24 230 30 226 38 C224 46 230 48 240 46 C254 42 268 50 276 62 C286 78 290 100 290 122 C290 138 280 146 262 150 C235 156 200 154 170 150 C135 146 100 142 75 146 C62 148 58 149 60 150Z" stroke="currentColor" strokeWidth="1.2" fill="none" />
-    {/* Rendering effect - dotted partial overlay */}
-    <path d="M90 180 Q95 160 110 145 Q130 125 150 118" stroke="currentColor" strokeWidth="1" strokeDasharray="4 3" fill="none" opacity="0.3" />
-    {/* Interior details appearing */}
-    <path d="M140 140 Q170 132 200 138 Q230 132 250 120" stroke="currentColor" strokeWidth="0.5" strokeDasharray="3 2" opacity="0.25" />
-    <path d="M180 125 L195 170" stroke="currentColor" strokeWidth="0.3" strokeDasharray="2 2" opacity="0.15" />
-    <path d="M240 105 L245 155" stroke="currentColor" strokeWidth="0.3" strokeDasharray="2 2" opacity="0.15" />
-    <rect x="165" y="135" width="16" height="12" rx="0.5" stroke="currentColor" strokeWidth="0.5" fill="none" opacity="0.35" />
-    <rect x="230" y="120" width="18" height="14" rx="0.5" stroke="currentColor" strokeWidth="0.5" fill="none" opacity="0.35" />
-    <circle cx="185" cy="145" r="3.5" className="fill-secondary" />
-    <circle cx="248" cy="128" r="3.5" className="fill-secondary" />
-    {/* Compass */}
-    <line x1="350" y1="40" x2="350" y2="65" stroke="currentColor" strokeWidth="0.5" opacity="0.2" />
-    <line x1="340" y1="52" x2="360" y2="52" stroke="currentColor" strokeWidth="0.4" opacity="0.15" />
-    <text x="350" y="37" textAnchor="middle" fill="currentColor" fontSize="8" fontFamily="serif" opacity="0.25">N</text>
-    {/* Water lines */}
-    <line x1="50" y1="220" x2="370" y2="220" stroke="currentColor" strokeWidth="0.3" opacity="0.06" />
-    <line x1="60" y1="235" x2="360" y2="235" stroke="currentColor" strokeWidth="0.3" opacity="0.04" />
+    {/* Outer boundary */}
+    <circle cx="200" cy="125" r="95" stroke="currentColor" strokeWidth="1" fill="none" />
+    {/* Inner rings */}
+    <circle cx="200" cy="125" r="65" stroke="currentColor" strokeWidth="0.5" strokeDasharray="5 3" fill="none" opacity="0.35" />
+    <circle cx="200" cy="125" r="35" stroke="currentColor" strokeWidth="0.5" strokeDasharray="3 3" fill="none" opacity="0.25" />
+    {/* Grid lines */}
+    <line x1="200" y1="30" x2="200" y2="220" stroke="currentColor" strokeWidth="0.3" opacity="0.12" />
+    <line x1="105" y1="125" x2="295" y2="125" stroke="currentColor" strokeWidth="0.3" opacity="0.12" />
+    {/* Central plaza */}
+    <rect x="188" y="113" width="24" height="24" stroke="currentColor" strokeWidth="0.6" fill="none" rx="1" opacity="0.4" />
+    {/* Dwelling units */}
+    <rect x="170" y="85" width="10" height="7" stroke="currentColor" strokeWidth="0.4" fill="none" opacity="0.3" />
+    <rect x="220" y="85" width="10" height="7" stroke="currentColor" strokeWidth="0.4" fill="none" opacity="0.3" />
+    <rect x="170" y="160" width="10" height="7" stroke="currentColor" strokeWidth="0.4" fill="none" opacity="0.3" />
+    <rect x="220" y="160" width="10" height="7" stroke="currentColor" strokeWidth="0.4" fill="none" opacity="0.3" />
+    {/* Rendering effect - dashed partial lines */}
+    <path d="M140 80 Q160 60 200 55" stroke="currentColor" strokeWidth="0.8" strokeDasharray="4 3" fill="none" opacity="0.2" />
+    <path d="M260 170 Q280 190 270 210" stroke="currentColor" strokeWidth="0.8" strokeDasharray="4 3" fill="none" opacity="0.2" />
+    {/* Pins */}
+    <circle cx="200" cy="125" r="3.5" className="fill-secondary" />
+    <circle cx="200" cy="72" r="3" className="fill-primary" />
+    {/* Label */}
+    <text x="200" y="245" textAnchor="middle" fill="currentColor" fontSize="7" fontFamily="serif" opacity="0.25" fontStyle="italic">The Community</text>
   </svg>
 );
 
@@ -279,52 +283,44 @@ export default function LandingPage() {
               <span className="w-2.5 h-2.5 rounded-full bg-destructive/40" />
               <span className="w-2.5 h-2.5 rounded-full bg-secondary/40" />
               <span className="w-2.5 h-2.5 rounded-full bg-green-400/40" />
-              <span className="ml-3 text-[10px] text-muted-foreground">wrender &mdash; Isla Serrano</span>
+              <span className="ml-3 text-[10px] text-muted-foreground">wrender &mdash; The Community</span>
             </div>
             <div className="h-72 md:h-[28rem] bg-[hsl(40,20%,97%)] flex items-center justify-center relative overflow-hidden">
-              <svg viewBox="0 0 700 340" className="w-full h-full" fill="none">
-                {/* Water */}
-                <line x1="0" y1="250" x2="700" y2="250" stroke="currentColor" strokeWidth="0.3" opacity="0.05" />
-                <line x1="0" y1="270" x2="700" y2="270" stroke="currentColor" strokeWidth="0.3" opacity="0.03" />
-                {/* Cape Cod silhouette - larger version */}
-                <path
-                  d="M100 200 C92 215 82 245 85 278 C88 298 118 298 162 280 C195 268 240 262 300 264 C350 266 395 260 440 265 C475 262 498 248 508 225 C515 205 512 178 506 150 C500 118 490 90 478 70 C464 52 448 42 430 38 C414 36 400 42 394 52 C390 62 398 66 412 62 C430 58 448 68 460 85 C474 108 480 140 480 170 C480 192 466 202 440 208 C400 216 350 212 300 206 C245 200 190 195 145 200 C112 204 98 202 100 200Z"
-                  stroke="currentColor" strokeWidth="1.2" fill="none"
-                />
-                {/* Coastline details */}
-                <path d="M230 200 Q260 190 290 198" stroke="currentColor" strokeWidth="0.4" opacity="0.2" />
-                <path d="M380 195 Q405 185 430 195" stroke="currentColor" strokeWidth="0.4" opacity="0.2" />
-                {/* Roads */}
-                <path d="M210 185 Q290 175 370 180 Q420 172 450 140" stroke="currentColor" strokeWidth="0.4" strokeDasharray="4 3" opacity="0.18" />
-                <path d="M310 155 L320 235" stroke="currentColor" strokeWidth="0.3" strokeDasharray="3 3" opacity="0.12" />
-                <path d="M400 130 L410 225" stroke="currentColor" strokeWidth="0.3" strokeDasharray="3 3" opacity="0.12" />
-                {/* Buildings */}
-                <rect x="285" y="170" width="14" height="10" rx="0.5" stroke="currentColor" strokeWidth="0.4" fill="none" opacity="0.3" />
-                <rect x="390" y="150" width="16" height="12" rx="0.5" stroke="currentColor" strokeWidth="0.4" fill="none" opacity="0.3" />
-                <rect x="430" y="185" width="12" height="9" rx="0.5" stroke="currentColor" strokeWidth="0.4" fill="none" opacity="0.25" />
-                <rect x="215" y="195" width="10" height="8" rx="0.5" stroke="currentColor" strokeWidth="0.4" fill="none" opacity="0.25" />
+              <svg viewBox="0 0 600 400" className="w-full h-full" fill="none">
+                {/* Outer boundary */}
+                <circle cx="300" cy="200" r="150" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                {/* Inner rings */}
+                <circle cx="300" cy="200" r="105" stroke="currentColor" strokeWidth="0.5" strokeDasharray="6 4" fill="none" opacity="0.4" />
+                <circle cx="300" cy="200" r="58" stroke="currentColor" strokeWidth="0.5" strokeDasharray="4 3" fill="none" opacity="0.3" />
+                {/* Grid lines */}
+                <line x1="300" y1="50" x2="300" y2="350" stroke="currentColor" strokeWidth="0.35" opacity="0.15" />
+                <line x1="150" y1="200" x2="450" y2="200" stroke="currentColor" strokeWidth="0.35" opacity="0.15" />
+                <line x1="195" y1="95" x2="405" y2="305" stroke="currentColor" strokeWidth="0.25" opacity="0.1" />
+                <line x1="405" y1="95" x2="195" y2="305" stroke="currentColor" strokeWidth="0.25" opacity="0.1" />
+                {/* Central plaza */}
+                <rect x="283" y="183" width="34" height="34" stroke="currentColor" strokeWidth="0.7" fill="none" rx="1.5" opacity="0.5" />
+                {/* Dwelling units */}
+                {[
+                  { x: 260, y: 150 }, { x: 285, y: 150 }, { x: 315, y: 150 }, { x: 340, y: 150 },
+                  { x: 260, y: 235 }, { x: 285, y: 235 }, { x: 315, y: 235 }, { x: 340, y: 235 },
+                ].map((pos, i) => (
+                  <rect key={`dw-${i}`} x={pos.x} y={pos.y} width="14" height="10" stroke="currentColor" strokeWidth="0.5" fill="none" rx="0.5" opacity="0.35" />
+                ))}
                 {/* Pins */}
-                <circle cx="310" cy="175" r="5.5" className="fill-secondary" />
-                <text x="310" y="162" textAnchor="middle" fill="currentColor" fontSize="8" fontFamily="Playfair Display, serif" opacity="0.55">Lighthouse</text>
-                <circle cx="405" cy="155" r="5.5" className="fill-secondary" />
-                <text x="405" y="142" textAnchor="middle" fill="currentColor" fontSize="8" fontFamily="Playfair Display, serif" opacity="0.55">Hotel</text>
-                <circle cx="440" cy="192" r="4" className="fill-primary" />
-                <text x="458" y="189" fill="currentColor" fontSize="7" opacity="0.4">Police Station</text>
-                <circle cx="225" cy="200" r="4" className="fill-primary" />
-                <text x="225" y="192" textAnchor="middle" fill="currentColor" fontSize="7" opacity="0.4">Ferry Dock</text>
-                <circle cx="360" cy="145" r="4" className="fill-primary" />
-                <text x="360" y="137" textAnchor="middle" fill="currentColor" fontSize="7" opacity="0.4">Town Square</text>
-                {/* Compass */}
-                <line x1="620" y1="50" x2="620" y2="78" stroke="currentColor" strokeWidth="0.5" opacity="0.2" />
-                <line x1="608" y1="64" x2="632" y2="64" stroke="currentColor" strokeWidth="0.4" opacity="0.15" />
-                <text x="620" y="46" textAnchor="middle" fill="currentColor" fontSize="10" fontFamily="Playfair Display, serif" opacity="0.2">N</text>
-                {/* Scale bar */}
-                <line x1="580" y1="290" x2="640" y2="290" stroke="currentColor" strokeWidth="0.5" opacity="0.15" />
-                <text x="610" y="300" textAnchor="middle" fill="currentColor" fontSize="6" opacity="0.15">500m</text>
+                <circle cx="300" cy="200" r="5" className="fill-secondary" />
+                <text x="300" y="225" textAnchor="middle" fill="currentColor" fontSize="8" fontFamily="Playfair Display, serif" opacity="0.5">Hall of Records</text>
+                <circle cx="300" cy="135" r="4" className="fill-primary" />
+                <text x="300" y="128" textAnchor="middle" fill="currentColor" fontSize="7" opacity="0.4">Auditorium</text>
+                <circle cx="370" cy="190" r="4" className="fill-primary" />
+                <text x="385" y="187" fill="currentColor" fontSize="7" opacity="0.4">The Annex</text>
+                <circle cx="240" cy="190" r="4" className="fill-primary" />
+                <text x="218" y="187" textAnchor="end" fill="currentColor" fontSize="7" opacity="0.4">Nurturing</text>
+                {/* Label */}
+                <text x="300" y="375" textAnchor="middle" fill="currentColor" fontSize="10" fontFamily="Playfair Display, serif" opacity="0.25" fontStyle="italic">The Community</text>
               </svg>
             </div>
           </div>
-          <p className="text-center text-xs italic font-serif text-muted-foreground/50 mt-4">Isla Serrano. A fictional island. Rendered in Wrender.</p>
+          <p className="text-center text-xs italic font-serif text-muted-foreground/50 mt-4">The Community. From Lois Lowry's The Giver. Rendered in Wrender.</p>
         </div>
       </section>
 
