@@ -17,9 +17,9 @@ import {
 const navItems = [
   { title: "Home", url: "/", icon: Home },
   { title: "Map", url: "/map", icon: Map },
-  { title: "Characters", url: "/characters", icon: Users },
-  { title: "Timeline", url: "/timeline", icon: Clock },
   { title: "Locations", url: "/locations", icon: MapPin },
+  { title: "Timeline", url: "/timeline", icon: Clock },
+  { title: "Characters", url: "/characters", icon: Users },
 ];
 
 export function AppSidebar() {
