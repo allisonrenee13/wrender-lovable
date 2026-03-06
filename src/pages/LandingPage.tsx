@@ -286,7 +286,7 @@ export default function LandingPage() {
       {/* ══ Section 3: Live Stat ══ */}
       <section className="py-12 px-6 bg-[hsl(40,20%,97%)]">
         <div className="max-w-md mx-auto text-center">
-          <p className="text-xs font-medium text-secondary uppercase tracking-widest mb-4">Worlds rendered in Wrender</p>
+          <p className="text-xs font-medium text-secondary uppercase tracking-widest mb-4">Worlds created in Wrender</p>
           <div className="flex items-center justify-center gap-12">
             <div>
               <p className="font-serif text-4xl font-normal text-foreground">312</p>
