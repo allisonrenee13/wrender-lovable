@@ -59,9 +59,8 @@ const PrythianSketch = () => (
 /* ───── Feature Tab Illustrations ───── */
 const RenderIllustration = () => (
   <svg viewBox="0 0 400 260" className="w-full h-full" fill="none">
-    {/* Peninsula outline - Cape-like hook shape */}
-    <path d="M90 180 Q95 160 110 145 Q130 125 160 115 Q190 108 220 112 Q250 108 270 100 Q290 92 300 80 Q310 68 312 55 Q314 45 308 38 Q300 32 290 35 Q280 40 275 50 Q270 62 268 75 Q265 85 258 90" stroke="currentColor" strokeWidth="1.2" fill="none" />
-    <path d="M90 180 Q100 190 120 195 Q145 198 170 194 Q200 188 225 185 Q250 182 260 178 Q268 170 265 155 Q262 140 258 130 Q255 115 258 90" stroke="currentColor" strokeWidth="1.2" fill="none" />
+    {/* Cape Cod silhouette - accurate arm/hook shape */}
+    <path d="M60 155 C65 160 80 172 105 178 C130 184 160 186 190 182 C215 178 238 170 258 158 C275 148 288 135 296 120 C304 105 308 88 306 72 C304 58 298 48 290 42 C282 36 272 38 265 44 C258 52 255 62 256 74 C257 85 260 96 260 108 C260 120 256 132 248 142 C238 152 222 158 200 160 C178 162 155 158 132 154 C110 150 88 148 72 150 C62 152 58 154 60 155Z" stroke="currentColor" strokeWidth="1.2" fill="none" />
     {/* Rendering effect - dotted partial overlay */}
     <path d="M90 180 Q95 160 110 145 Q130 125 150 118" stroke="currentColor" strokeWidth="1" strokeDasharray="4 3" fill="none" opacity="0.3" />
     {/* Interior details appearing */}
@@ -84,9 +83,8 @@ const RenderIllustration = () => (
 
 const PlaceIllustration = () => (
   <svg viewBox="0 0 400 260" className="w-full h-full" fill="none">
-    {/* Peninsula outline - Cape-like hook shape */}
-    <path d="M90 180 Q95 160 110 145 Q130 125 160 115 Q190 108 220 112 Q250 108 270 100 Q290 92 300 80 Q310 68 312 55 Q314 45 308 38 Q300 32 290 35 Q280 40 275 50 Q270 62 268 75 Q265 85 258 90" stroke="currentColor" strokeWidth="1" fill="none" />
-    <path d="M90 180 Q100 190 120 195 Q145 198 170 194 Q200 188 225 185 Q250 182 260 178 Q268 170 265 155 Q262 140 258 130 Q255 115 258 90" stroke="currentColor" strokeWidth="1" fill="none" />
+    {/* Cape Cod silhouette */}
+    <path d="M60 155 C65 160 80 172 105 178 C130 184 160 186 190 182 C215 178 238 170 258 158 C275 148 288 135 296 120 C304 105 308 88 306 72 C304 58 298 48 290 42 C282 36 272 38 265 44 C258 52 255 62 256 74 C257 85 260 96 260 108 C260 120 256 132 248 142 C238 152 222 158 200 160 C178 162 155 158 132 154 C110 150 88 148 72 150 C62 152 58 154 60 155Z" stroke="currentColor" strokeWidth="1" fill="none" />
     {/* Roads */}
     <path d="M130 155 Q170 145 210 150 Q240 140 260 125" stroke="currentColor" strokeWidth="0.4" strokeDasharray="3 2" opacity="0.2" />
     {/* Plot event pins with labels */}
@@ -113,9 +111,8 @@ const PlaceIllustration = () => (
 
 const TrackIllustration = () => (
   <svg viewBox="0 0 400 260" className="w-full h-full" fill="none">
-    {/* Peninsula outline - Cape-like hook shape */}
-    <path d="M90 180 Q95 160 110 145 Q130 125 160 115 Q190 108 220 112 Q250 108 270 100 Q290 92 300 80 Q310 68 312 55 Q314 45 308 38 Q300 32 290 35 Q280 40 275 50 Q270 62 268 75 Q265 85 258 90" stroke="currentColor" strokeWidth="1" fill="none" />
-    <path d="M90 180 Q100 190 120 195 Q145 198 170 194 Q200 188 225 185 Q250 182 260 178 Q268 170 265 155 Q262 140 258 130 Q255 115 258 90" stroke="currentColor" strokeWidth="1" fill="none" />
+    {/* Cape Cod silhouette */}
+    <path d="M60 155 C65 160 80 172 105 178 C130 184 160 186 190 182 C215 178 238 170 258 158 C275 148 288 135 296 120 C304 105 308 88 306 72 C304 58 298 48 290 42 C282 36 272 38 265 44 C258 52 255 62 256 74 C257 85 260 96 260 108 C260 120 256 132 248 142 C238 152 222 158 200 160 C178 162 155 158 132 154 C110 150 88 148 72 150 C62 152 58 154 60 155Z" stroke="currentColor" strokeWidth="1" fill="none" />
     {/* Character A path */}
     <path d="M130 165 Q150 150 175 142 Q200 135 220 140 Q240 135 255 120" stroke="hsl(var(--secondary))" strokeWidth="1" strokeDasharray="4 3" fill="none" opacity="0.6" />
     <circle cx="130" cy="165" r="4" className="fill-secondary" />
@@ -289,13 +286,9 @@ export default function LandingPage() {
                 {/* Water */}
                 <line x1="0" y1="250" x2="700" y2="250" stroke="currentColor" strokeWidth="0.3" opacity="0.05" />
                 <line x1="0" y1="270" x2="700" y2="270" stroke="currentColor" strokeWidth="0.3" opacity="0.03" />
-                {/* Peninsula - Cape-like hook shape */}
+                {/* Cape Cod silhouette - larger version */}
                 <path
-                  d="M150 230 Q160 200 185 180 Q215 155 260 140 Q310 128 360 135 Q410 128 445 115 Q480 100 500 80 Q518 60 522 42 Q524 28 515 20 Q505 14 492 18 Q480 25 474 38 Q468 55 465 72 Q462 85 455 92"
-                  stroke="currentColor" strokeWidth="1.2" fill="none"
-                />
-                <path
-                  d="M150 230 Q165 245 195 252 Q230 258 270 250 Q315 242 360 238 Q405 234 430 228 Q448 218 444 198 Q440 178 435 165 Q430 148 435 125 Q442 108 455 92"
+                  d="M120 210 C130 218 155 232 195 240 C235 248 280 250 325 244 C365 238 400 226 432 210 C460 196 482 178 498 156 C514 134 522 110 518 88 C514 68 504 54 492 46 C480 38 466 40 456 48 C446 58 440 72 442 88 C444 104 448 118 448 134 C448 150 442 166 430 178 C416 192 392 200 360 204 C328 208 295 204 262 198 C230 192 198 190 170 194 C148 196 132 200 120 210Z"
                   stroke="currentColor" strokeWidth="1.2" fill="none"
                 />
                 {/* Coastline details */}
