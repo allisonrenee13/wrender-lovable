@@ -350,7 +350,7 @@ export default function LandingPage() {
       {/* ══ Section 5: The Problem ══ */}
       <section className="py-20 px-6 md:px-12 bg-[hsl(40,20%,97%)]">
         <div className="max-w-4xl mx-auto text-center mb-12">
-          <h2 className="font-serif text-3xl md:text-4xl font-normal text-foreground">Visualising your story's world is harder than it should be.</h2>
+          <h2 className="font-serif text-3xl md:text-4xl font-semibold text-foreground">Visualising your story's world is harder than it should be.</h2>
         </div>
         <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
@@ -421,7 +421,7 @@ export default function LandingPage() {
       {/* ══ Section 7: Three Books ══ */}
       <section className="py-20 px-6 md:px-12 bg-[hsl(40,20%,97%)]">
         <div className="max-w-5xl mx-auto text-center mb-12">
-          <h2 className="font-serif text-3xl md:text-4xl font-normal text-foreground mb-3">If setting matters to your story, Wrender is for you.</h2>
+          <h2 className="font-serif text-3xl md:text-4xl font-semibold text-foreground mb-3">If setting matters to your story, Wrender is for you.</h2>
           <p className="text-muted-foreground max-w-lg mx-auto">Whether your world is a fantasy kingdom, a controlled dystopia, or a sun-bleached island, if place shapes your story, you need to see it.</p>
         </div>
         <div className="max-w-5xl mx-auto flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4 md:grid md:grid-cols-3 md:overflow-visible">
@@ -435,7 +435,7 @@ export default function LandingPage() {
       <section id="how-it-works" className="py-20 px-6 md:px-12">
         <div className="max-w-5xl mx-auto text-center mb-14">
           <span className="text-xs font-medium text-secondary uppercase tracking-widest mb-3 block">How it works</span>
-          <h2 className="font-serif text-3xl md:text-4xl font-normal text-foreground">From the world in your head to a line sketch in minutes.</h2>
+          <h2 className="font-serif text-3xl md:text-4xl font-semibold text-foreground">From the world in your head to a line sketch in minutes.</h2>
         </div>
         <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 relative">
           <div className="hidden md:block absolute top-6 left-[12.5%] right-[12.5%] border-t border-dashed border-foreground/20" />
@@ -457,7 +457,7 @@ export default function LandingPage() {
       {/* ══ Section 9: Founder Note ══ */}
       <section id="about" className="py-20 px-6 md:px-12 bg-[hsl(40,20%,97%)]">
         <div className="max-w-2xl mx-auto text-center">
-          <h2 className="font-serif text-3xl md:text-4xl font-normal text-foreground mb-8">Built by a writer, for writers.</h2>
+          <h2 className="font-serif text-3xl md:text-4xl font-semibold text-foreground mb-8">Built by a writer, for writers.</h2>
           <div className="space-y-4 text-muted-foreground leading-relaxed italic">
             <p>"I was writing my novel, set on an island I know well, and I kept stopping to scribble maps on paper. I knew exactly what the island looked like. I knew where the lighthouse was, where the hotel sat, where the path wound down to the beach. But I could not see it all at once."</p>
             <p>"I wanted a tool that would let me render my story's world the way an architect renders a building or a director scouts a location. Precise. Clear. Useful. Not art. A working sketch."</p>
@@ -477,7 +477,7 @@ export default function LandingPage() {
       <section id="pricing" className="py-20 px-6 md:px-12">
         <div className="max-w-5xl mx-auto text-center mb-12">
           <span className="text-xs font-medium text-secondary uppercase tracking-widest mb-3 block">Pricing</span>
-          <h2 className="font-serif text-3xl md:text-4xl font-normal text-foreground mb-3">Starting at just $9 a month.</h2>
+          <h2 className="font-serif text-3xl md:text-4xl font-semibold text-foreground mb-3">Starting at just $9 a month.</h2>
           <p className="text-muted-foreground">Start visualising your world with a 14-day free trial.</p>
         </div>
         <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -490,7 +490,7 @@ export default function LandingPage() {
 
       {/* ══ Section 11: Final CTA ══ */}
       <section className="py-24 px-6 text-center bg-[hsl(40,20%,97%)]">
-        <h2 className="font-serif text-3xl md:text-5xl font-normal text-foreground mb-4">Ready to Wrender?</h2>
+        <h2 className="font-serif text-3xl md:text-5xl font-semibold text-foreground mb-4">Ready to Wrender?</h2>
         <p className="text-muted-foreground mb-6">See your story's world. Render your setting. Write with clarity.</p>
         <div className="flex items-center justify-center gap-4 mb-8 flex-wrap">
           <span className="text-xs text-muted-foreground bg-background px-3 py-1.5 rounded-full border border-border">Line sketch generation</span>
