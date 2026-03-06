@@ -14,6 +14,7 @@ const LocationsPage = () => {
   const { currentProject, addLocation, removeLocation } = useProject();
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showAllEvents, setShowAllEvents] = useState(false);
   const [form, setForm] = useState({ name: "", type: "Landmark", description: "", firstAppears: 1 });
 
   const handleAdd = () => {
@@ -31,6 +32,14 @@ const LocationsPage = () => {
   };
 
   const locs = currentProject.locations;
+
+  // Get events at selected location
+  const eventsAtLocation = selectedLocation
+    ? currentProject.pins
+        .filter((p) => p.location === selectedLocation.name || selectedLocation.name.includes(p.location))
+        .sort((a, b) => a.chapter - b.chapter)
+    : [];
+  const filteredEvents = showAllEvents ? eventsAtLocation : eventsAtLocation.filter((e) => e.tier === "main");
 
   return (
     <div className="p-6 md:p-10">
@@ -57,7 +66,7 @@ const LocationsPage = () => {
           {locs.map((loc) => (
             <button
               key={loc.id}
-              onClick={() => setSelectedLocation(loc)}
+              onClick={() => { setSelectedLocation(loc); setShowAllEvents(false); }}
               className="text-left border border-border rounded-lg overflow-hidden bg-card hover:shadow-md transition-shadow"
             >
               <div className="h-36 bg-muted flex items-center justify-center">
@@ -74,7 +83,7 @@ const LocationsPage = () => {
                   <Badge variant="outline" className="text-[10px] px-1.5 py-0">{loc.type}</Badge>
                   <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
                     <MapPin className="h-2.5 w-2.5" />
-                    {loc.eventCount} events
+                    {currentProject.pins.filter((p) => p.location === loc.name || loc.name.includes(p.location)).length} events
                   </span>
                 </div>
               </div>
@@ -111,18 +120,34 @@ const LocationsPage = () => {
             ))}
           </div>
 
-          <h3 className="text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wider">Story Pins Here</h3>
+          {/* Story events here — with tier system */}
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Story Events Here</h3>
+            {eventsAtLocation.some((e) => e.tier === "minor") && (
+              <button
+                onClick={() => setShowAllEvents(!showAllEvents)}
+                className="text-[10px] text-secondary hover:underline font-medium"
+              >
+                {showAllEvents ? "Main only" : "Show all"}
+              </button>
+            )}
+          </div>
           <div className="space-y-2 mb-6">
-            {currentProject.pins
-              .filter((p) => p.location === selectedLocation.name || selectedLocation.name.includes(p.location))
-              .map((pin) => (
-                <div key={pin.id} className="flex items-center gap-2 text-sm p-2 rounded bg-muted/50">
-                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${pin.type === "plot" ? "bg-destructive" : pin.type === "character" ? "bg-primary" : "bg-secondary"}`} />
-                  <span>{pin.title}</span>
-                </div>
-              ))}
-            {currentProject.pins.filter((p) => p.location === selectedLocation.name).length === 0 && (
-              <p className="text-xs text-muted-foreground italic">No story pins linked to this location yet.</p>
+            {filteredEvents.map((pin) => (
+              <div key={pin.id} className={`flex items-center gap-2 text-sm p-2 rounded ${
+                pin.tier === "main" ? "bg-muted/50" : "bg-muted/20"
+              }`}>
+                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                  pin.tier === "main" ? "bg-destructive" : "bg-muted-foreground/40"
+                }`} />
+                <span className={pin.tier === "main" ? "font-medium" : "text-muted-foreground text-xs"}>
+                  {pin.title}
+                </span>
+                <span className="ml-auto text-[10px] text-muted-foreground">Ch. {pin.chapter}</span>
+              </div>
+            ))}
+            {eventsAtLocation.length === 0 && (
+              <p className="text-xs text-muted-foreground italic">No story events linked to this location yet.</p>
             )}
           </div>
 

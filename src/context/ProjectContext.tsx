@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from "react";
-import { projects as initialProjects, Project, Pin, Character, Location, TimelineEvent, PinType } from "@/data/projects";
+import { projects as initialProjects, Project, Pin, Character, Location, TimelineEvent, PinType, EventTier } from "@/data/projects";
 import { toast } from "@/hooks/use-toast";
 
 interface ProjectContextType {
@@ -74,7 +74,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const addPin = useCallback((pin: Omit<Pin, "id">) => {
     const id = genId();
     updateCurrentProject((p) => ({ ...p, pins: [...p.pins, { ...pin, id }] }));
-    logActivity(`Added pin: ${pin.title} — Ch. ${pin.chapter}`);
+    const tierLabel = pin.tier === "minor" ? " (minor)" : "";
+    logActivity(`Added pin: ${pin.title}${tierLabel} — Ch. ${pin.chapter}`);
     toast({ title: "Pin added", description: pin.title });
   }, [updateCurrentProject, logActivity]);
 
@@ -143,7 +144,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const addTimelineEvent = useCallback((event: Omit<TimelineEvent, "id">) => {
     const id = genId();
     updateCurrentProject((p) => ({ ...p, timeline: [...p.timeline, { ...event, id }] }));
-    logActivity(`Event added: ${event.title} — Ch. ${event.chapter}`);
+    const tierLabel = event.tier === "minor" ? " (minor)" : "";
+    logActivity(`Event added: ${event.title}${tierLabel} — Ch. ${event.chapter}`);
     toast({ title: "Event added to timeline", description: event.title });
   }, [updateCurrentProject, logActivity]);
 
