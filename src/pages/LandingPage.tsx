@@ -217,7 +217,7 @@ export default function LandingPage() {
     },
     track: {
       heading: "Track your characters across your world.",
-      body: "Know where every character is at every moment in your story. See who is where, when, and whether their movements make narrative sense. Especially when your scenes get complex.",
+      body: "Know where every character is at key moments and events in your story. See who is where, when, and whether their movements make narrative sense. Especially when your scenes get complex.",
       tags: ["Character profiles", "Location tracking", "Scene choreography", "Coming soon: movement mapping"],
       illustration: <TrackIllustration />,
     },
