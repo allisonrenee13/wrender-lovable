@@ -474,7 +474,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto text-center mb-12">
           <span className="text-xs font-medium text-secondary uppercase tracking-widest mb-3 block">Pricing</span>
           <h2 className="font-serif text-3xl md:text-4xl font-semibold text-foreground mb-3">Start free. Upgrade when your world grows.</h2>
-          <p className="text-muted-foreground">Start visualising your world with a 14-day free trial.</p>
+          
         </div>
         <div className="max-w-2xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
           <PricingCard name="Free" price="$0" features={["1 project","1 map per project","Watermarked export"]} cta="Start free" />
@@ -488,7 +488,7 @@ export default function LandingPage() {
         <h2 className="font-serif text-3xl md:text-5xl font-semibold text-foreground mb-4">Ready to Wrender?</h2>
         <p className="text-muted-foreground mb-8 max-w-xl mx-auto">Depict your story's location as a clean line drawing, see what is in your head, plan where everything happens, and write with clarity.</p>
         <Button className="bg-primary text-secondary font-medium rounded-full px-10 h-12 text-base mb-3">Start visualising your world</Button>
-        <p className="text-xs text-muted-foreground/60">No credit card required. 14-day free trial.</p>
+        
       </section>
 
       {/* ══ Section 12: Footer ══ */}
