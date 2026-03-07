@@ -528,7 +528,7 @@ export default function LandingPage() {
         </div>
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 pt-6 border-t border-border">
           <SeeneryLogo variant="sidebar" />
-          <p className="text-xs italic font-serif text-muted-foreground/50">Render your world. Write your story.</p>
+          <p className="text-xs italic font-serif text-muted-foreground/50">Wrender your world. Write your story.</p>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <a href="#" className="hover:text-foreground transition-colors">Privacy Policy</a>
             <a href="#" className="hover:text-foreground transition-colors">Terms</a>
