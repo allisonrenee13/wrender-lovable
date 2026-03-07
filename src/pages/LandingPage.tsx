@@ -480,7 +480,7 @@ export default function LandingPage() {
           <PricingCard name="Free" price="$0" features={["1 project","1 map per project","Watermarked export"]} cta="Start free" />
           <PricingCard name="Premium" price="$11/month" period="$9/month billed annually" popular features={["Multiple projects","Multiple maps per project","Clean export, no watermark","Events and timeline","AI manuscript scanner (coming soon)","Character movement mapping (coming soon)"]} cta="Start free trial" />
         </div>
-        <p className="text-center text-xs text-muted-foreground/60 mt-8">All plans include a 14-day free trial. No credit card required.</p>
+        
       </section>
 
       {/* ══ Section 11: Final CTA ══ */}
