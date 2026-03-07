@@ -484,8 +484,8 @@ export default function LandingPage() {
           
         </div>
         <div className="max-w-2xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
-          <PricingCard name="Free" price="$0" features={["Up to 3 projects","1 map per project","Watermarked export"]} cta="Start free" />
-          <PricingCard name="Premium" price="$11/month" period="$9/month billed annually" popular features={["Many projects","Many maps per project","Clean export, no watermark","Events and timeline","AI manuscript scanner (coming soon)","Character movement mapping (coming soon)"]} cta="Start free trial" />
+          <PricingCard name="Free" price="$0" features={["Up to 3 projects","1 map per project","Location and event pins","Watermarked export"]} cta="Start free" />
+          <PricingCard name="Premium" price="$11/month" period="$9/month billed annually" popular features={["Many projects","Many maps per project","Location and event pins","Location designs","Clean export, no watermark","Events and timeline","AI manuscript scanner (coming soon)","Character movement mapping (coming soon)"]} cta="Start free trial" />
         </div>
         
       </section>
