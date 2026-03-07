@@ -343,7 +343,7 @@ export default function LandingPage() {
       {/* ══ Section 5: The Problem ══ */}
       <section className="py-20 px-6 md:px-12 bg-[hsl(40,20%,97%)]">
         <div className="max-w-4xl mx-auto text-center mb-12">
-          <h2 className="font-serif text-3xl md:text-4xl font-semibold text-foreground">A tool for visual writers.</h2>
+          <h2 className="font-serif text-3xl md:text-4xl font-semibold text-foreground">A visual tool for writers.</h2>
         </div>
         <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
