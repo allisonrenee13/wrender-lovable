@@ -374,6 +374,43 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ══ Philosophy Section ══ */}
+      <section className="py-20 px-6 md:px-12">
+        <div className="max-w-3xl mx-auto">
+          <span className="text-xs font-medium text-secondary uppercase tracking-widest mb-4 block text-center">The Wrender Philosophy</span>
+          <h2 className="font-serif text-3xl md:text-4xl font-semibold text-foreground text-center mb-12 leading-snug">
+            You have a world in your head.<br />Rendering draws it out.
+          </h2>
+          <div className="space-y-8">
+            <div className="flex gap-6 items-start">
+              <span className="font-serif text-4xl text-secondary/30 leading-none flex-shrink-0 mt-1">1</span>
+              <div>
+                <h4 className="font-serif text-lg text-foreground mb-2">Draw the outline.</h4>
+                <p className="text-muted-foreground leading-relaxed">The shape of the land. The skeleton. Before anything else exists, the geography does.</p>
+              </div>
+            </div>
+            <div className="flex gap-6 items-start">
+              <span className="font-serif text-4xl text-secondary/30 leading-none flex-shrink-0 mt-1">2</span>
+              <div>
+                <h4 className="font-serif text-lg text-foreground mb-2">Place what you know.</h4>
+                <p className="text-muted-foreground leading-relaxed">Where the city is. Where the battle happened. Where your character grew up. The map starts to carry meaning. It is not just geography anymore. It is story.</p>
+              </div>
+            </div>
+            <div className="flex gap-6 items-start">
+              <span className="font-serif text-4xl text-secondary/30 leading-none flex-shrink-0 mt-1">3</span>
+              <div>
+                <h4 className="font-serif text-lg text-foreground mb-2">Keep going.</h4>
+                <p className="text-muted-foreground leading-relaxed">More detail. More texture. Eventually richer visual styles. But every step is the same act — taking what exists in your imagination and giving it a form someone else can see.</p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-14 pt-10 border-t border-border text-center">
+            <p className="font-serif text-xl text-foreground mb-2">You are not getting a basic map.</p>
+            <p className="font-serif text-xl text-muted-foreground">You are beginning a render.</p>
+          </div>
+        </div>
+      </section>
+
       {/* ══ Section 6: Feature Tabs ══ */}
       <section id="features" className="py-20 px-6 md:px-12">
         <div className="max-w-5xl mx-auto">
@@ -525,6 +562,11 @@ export default function LandingPage() {
               <li><a href="#" className="hover:text-foreground transition-colors">Request a feature</a></li>
             </ul>
           </div>
+        </div>
+        <div className="max-w-5xl mx-auto text-center pt-6">
+          <p className="font-serif text-sm italic text-muted-foreground/50">
+            Wrender = Write + Render. It's a writer's render.
+          </p>
         </div>
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 pt-6 border-t border-border">
           <SeeneryLogo variant="sidebar" />
