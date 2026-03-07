@@ -240,9 +240,9 @@ export default function LandingPage() {
       >
         <SeeneryLogo variant="sidebar" />
         <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
+          <button onClick={() => scrollTo("about")} className="hover:text-foreground transition-colors">About</button>
           <button onClick={() => scrollTo("features")} className="hover:text-foreground transition-colors">Features</button>
           <button onClick={() => scrollTo("pricing")} className="hover:text-foreground transition-colors">Pricing</button>
-          <button onClick={() => scrollTo("about")} className="hover:text-foreground transition-colors">About</button>
         </div>
         <div className="hidden sm:flex items-center gap-4">
           <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Sign in</a>
@@ -255,9 +255,9 @@ export default function LandingPage() {
 
       {mobileMenuOpen && (
         <div className="sm:hidden fixed inset-x-0 top-[60px] z-40 bg-background border-b border-border px-6 py-4 flex flex-col gap-3">
+          <button onClick={() => scrollTo("about")} className="text-sm text-muted-foreground text-left">About</button>
           <button onClick={() => scrollTo("features")} className="text-sm text-muted-foreground text-left">Features</button>
           <button onClick={() => scrollTo("pricing")} className="text-sm text-muted-foreground text-left">Pricing</button>
-          <button onClick={() => scrollTo("about")} className="text-sm text-muted-foreground text-left">About</button>
           <a href="#" className="text-sm text-muted-foreground">Sign in</a>
           <Button className="bg-primary text-primary-foreground text-sm rounded-full w-full h-9">Start free</Button>
         </div>
@@ -342,7 +342,7 @@ export default function LandingPage() {
       </section>
 
       {/* ══ Section 5: The Problem ══ */}
-      <section className="py-20 px-6 md:px-12 bg-[hsl(40,20%,97%)]">
+      <section id="about" className="py-20 px-6 md:px-12 bg-[hsl(40,20%,97%)]">
         <div className="max-w-4xl mx-auto text-center mb-12">
           <h2 className="font-serif text-3xl md:text-4xl font-semibold text-foreground">A visual tool for writers.</h2>
         </div>
@@ -455,7 +455,7 @@ export default function LandingPage() {
       </section>
 
       {/* ══ Section 9: Founder Note ══ */}
-      <section id="about" className="py-20 px-6 md:px-12 bg-[hsl(40,20%,97%)]">
+      <section className="py-20 px-6 md:px-12 bg-[hsl(40,20%,97%)]">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="font-serif text-3xl md:text-4xl font-semibold text-foreground mb-8">Built by a writer, for writers.</h2>
           <div className="space-y-4 text-muted-foreground leading-relaxed italic">
