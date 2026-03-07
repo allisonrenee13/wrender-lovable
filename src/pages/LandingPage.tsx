@@ -473,13 +473,12 @@ export default function LandingPage() {
       <section id="pricing" className="py-20 px-6 md:px-12">
         <div className="max-w-5xl mx-auto text-center mb-12">
           <span className="text-xs font-medium text-secondary uppercase tracking-widest mb-3 block">Pricing</span>
-          <h2 className="font-serif text-3xl md:text-4xl font-semibold text-foreground mb-3">Starting at just $9 a month.</h2>
+          <h2 className="font-serif text-3xl md:text-4xl font-semibold text-foreground mb-3">Start free. Upgrade when your world grows.</h2>
           <p className="text-muted-foreground">Start visualising your world with a 14-day free trial.</p>
         </div>
-        <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-          <PricingCard name="Free" price="$0" features={["1 project","Up to 10 map pins","5 characters","Basic line sketch generation","Watermarked export"]} cta="Start free" />
-          <PricingCard name="Storyteller" price="$9/month" period="$7/month billed annually" popular features={["Unlimited projects","Unlimited pins and characters","AI sketch generation","Upload and adapt real locations","Clean export, print ready","Location sketch mood boards"]} cta="Start free trial" />
-          <PricingCard name="Worldbuilder" price="$15/month" period="$12/month billed annually" features={["Everything in Storyteller","Character movement mapping","Advanced timeline view","Co-authoring","Priority generation","Full version history"]} cta="Start free trial" />
+        <div className="max-w-2xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+          <PricingCard name="Free" price="$0" features={["1 project","1 map per project","Watermarked export"]} cta="Start free" />
+          <PricingCard name="Premium" price="$11/month" period="$9/month billed annually" popular features={["Multiple projects","Multiple maps per project","Clean export, no watermark","Events and timeline","AI manuscript scanner (coming soon)","Character movement mapping (coming soon)"]} cta="Start free trial" />
         </div>
         <p className="text-center text-xs text-muted-foreground/60 mt-8">All plans include a 14-day free trial. No credit card required.</p>
       </section>
