@@ -208,9 +208,9 @@ export default function LandingPage() {
 
   const tabContent = {
     create: {
-      heading: "Create your map.",
-      body: "Describe your world, upload reference images, and mark up what you want to keep or change. Wrender generates a precise line sketch of your setting. Like an architectural drawing of the world your story lives in.",
-      tags: ["Line sketch generation", "Reference image upload", "Markup tool", "Version history"],
+      heading: "Shape your world.",
+      body: "Draw your map from scratch, trace over a reference image, or start from a template. You control every outline, every boundary, every shape. Wrender applies clean architectural line styling to exactly what you drew.",
+      tags: ["Freehand drawing", "Reference image trace", "Starter templates", "Version history"],
       illustration: <RenderIllustration />,
     },
     place: {
