@@ -520,11 +520,6 @@ export default function LandingPage() {
             </ul>
           </div>
         </div>
-        <div className="max-w-5xl mx-auto text-center pt-6">
-          <p className="font-serif text-sm italic text-muted-foreground/50">
-            Wrender = Write + Render. It's a writer's render.
-          </p>
-        </div>
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 pt-6 border-t border-border">
           <SeeneryLogo variant="sidebar" />
           <p className="text-xs italic font-serif text-muted-foreground/50">Wrender your world. Write your story.</p>
