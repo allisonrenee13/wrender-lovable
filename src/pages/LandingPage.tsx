@@ -492,43 +492,16 @@ export default function LandingPage() {
       </section>
 
       {/* ══ Section 12: Footer ══ */}
-      <footer className="border-t border-border py-12 px-6 md:px-12">
-        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
-          <div>
-            <h4 className="text-xs uppercase tracking-widest text-muted-foreground font-medium mb-3">Get to know us</h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="#" className="hover:text-foreground transition-colors">About</a></li>
-              <li><a href="#" className="hover:text-foreground transition-colors">Reviews</a></li>
-              <li><a href="#" className="hover:text-foreground transition-colors">Press Kit</a></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-xs uppercase tracking-widest text-muted-foreground font-medium mb-3">For writers</h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="#" className="hover:text-foreground transition-colors">Features</a></li>
-              <li><a href="#" className="hover:text-foreground transition-colors">Pricing</a></li>
-              <li><a href="#" className="hover:text-foreground transition-colors">How it works</a></li>
-              <li><a href="#" className="hover:text-foreground transition-colors">Support</a></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-xs uppercase tracking-widest text-muted-foreground font-medium mb-3">Product</h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="#" className="hover:text-foreground transition-colors">Sign in</a></li>
-              <li><a href="#" className="hover:text-foreground transition-colors">Start free</a></li>
-              <li><a href="#" className="hover:text-foreground transition-colors">Request a feature</a></li>
-            </ul>
-          </div>
-        </div>
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 pt-6 border-t border-border">
+      <footer className="border-t border-border py-16 px-6 md:px-12">
+        <div className="max-w-5xl mx-auto flex flex-col items-center gap-6 text-center">
           <SeeneryLogo variant="sidebar" />
-          <p className="text-xs italic font-serif text-muted-foreground/50">Wrender your world. Write your story.</p>
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <p className="text-sm italic font-serif text-muted-foreground/60">Wrender your world. Write your story.</p>
+          <p className="text-[11px] text-muted-foreground/40">© 2025 Wrender. Built for fiction writers.</p>
+          <div className="flex items-center gap-4 text-[11px] text-muted-foreground/50 pt-2">
             <a href="#" className="hover:text-foreground transition-colors">Privacy Policy</a>
             <a href="#" className="hover:text-foreground transition-colors">Terms</a>
           </div>
         </div>
-        <p className="text-center text-[10px] text-muted-foreground/40 mt-6">© 2025 Wrender. Built for fiction writers.</p>
       </footer>
     </div>
   );
