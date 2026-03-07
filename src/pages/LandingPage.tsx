@@ -374,44 +374,39 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ══ Philosophy Section ══ */}
-      <section className="py-20 px-6 md:px-12">
-        <div className="max-w-3xl mx-auto">
-          <span className="text-xs font-medium text-secondary uppercase tracking-widest mb-4 block text-center">The Wrender Philosophy</span>
-          <div className="space-y-8">
-            <div className="flex gap-6 items-start">
-              <span className="font-serif text-4xl text-secondary/30 leading-none flex-shrink-0 mt-1">1</span>
-              <div>
-                <h4 className="font-serif text-lg text-foreground mb-2">Draw the outline.</h4>
-                <p className="text-muted-foreground leading-relaxed">The shape of the land. The skeleton. Before anything else exists, the geography does.</p>
-              </div>
+      {/* ══ How It Works ══ */}
+      <section id="how-it-works" className="py-20 px-6 md:px-12">
+        <div className="max-w-4xl mx-auto text-center mb-16">
+          <span className="text-xs font-medium text-secondary uppercase tracking-widest mb-4 block">How it works</span>
+          <h2 className="font-serif text-3xl md:text-4xl font-semibold text-foreground leading-snug">
+            A writer's render happens in layers.
+          </h2>
+        </div>
+
+        <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-0 mb-20 relative">
+          <div className="hidden md:block absolute top-8 left-[16.5%] right-[16.5%] border-t border-dashed border-foreground/15" />
+          {[
+            { num: "1", title: "Shape", desc: "Draw the outline. The skeleton of your world." },
+            { num: "2", title: "Place", desc: "Add locations, events, characters. Geography becomes story." },
+            { num: "3", title: "Render", desc: "Apply your style. Export a clean line drawing that is entirely yours." },
+          ].map((step) => (
+            <div key={step.num} className="flex flex-col items-center text-center px-6">
+              <span className="font-serif text-sm text-secondary/50 mb-4 relative z-10 bg-background px-3">{step.num}</span>
+              <h4 className="font-serif text-xl text-foreground mb-3">{step.title}</h4>
+              <p className="text-sm text-muted-foreground leading-relaxed max-w-[200px]">{step.desc}</p>
             </div>
-            <div className="flex gap-6 items-start">
-              <span className="font-serif text-4xl text-secondary/30 leading-none flex-shrink-0 mt-1">2</span>
-              <div>
-                <h4 className="font-serif text-lg text-foreground mb-2">Place what you know.</h4>
-                <p className="text-muted-foreground leading-relaxed">Where the city is. Where the battle happened. Where your character grew up. The map starts to carry meaning. It is not just geography anymore. It is story.</p>
-              </div>
-            </div>
-            <div className="flex gap-6 items-start">
-              <span className="font-serif text-4xl text-secondary/30 leading-none flex-shrink-0 mt-1">3</span>
-              <div>
-                <h4 className="font-serif text-lg text-foreground mb-2">Keep going.</h4>
-                <p className="text-muted-foreground leading-relaxed">More detail. More texture. Eventually richer visual styles. But every step is the same act — taking what exists in your imagination and giving it a form someone else can see.</p>
-              </div>
-            </div>
-          </div>
-          <div className="mt-14 pt-10 border-t border-border text-center">
-            <p className="font-serif text-xl text-foreground mb-2">You are not getting a basic map.</p>
-            <p className="font-serif text-xl text-muted-foreground">You are creating a writer's render.</p>
-          </div>
+          ))}
+        </div>
+
+        <div className="max-w-4xl mx-auto pt-10 border-t border-border text-center">
+          <p className="font-serif text-xl text-foreground mb-1">You are not getting a basic map.</p>
+          <p className="font-serif text-xl text-muted-foreground/70">You are beginning a render.</p>
         </div>
       </section>
 
-      {/* ══ Section 6: Feature Tabs ══ */}
+      {/* ══ Feature Tabs ══ */}
       <section id="features" className="py-20 px-6 md:px-12">
         <div className="max-w-5xl mx-auto">
-          {/* Tab buttons */}
           <div className="flex items-center justify-center gap-1 mb-12">
             {(["create", "place", "track"] as const).map((tab) => (
               <button
@@ -427,8 +422,6 @@ export default function LandingPage() {
               </button>
             ))}
           </div>
-
-          {/* Tab content */}
           <div className={`grid grid-cols-1 md:grid-cols-2 gap-12 items-center ${activeTab === "place" ? "md:direction-rtl" : ""}`}>
             <div className={activeTab === "place" ? "md:order-2" : ""}>
               <h3 className="font-serif text-2xl md:text-3xl font-semibold text-foreground mb-4">{current.heading}</h3>
@@ -448,7 +441,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ══ Section 7: Three Books ══ */}
+      {/* ══ Three Books ══ */}
       <section className="py-20 px-6 md:px-12 bg-[hsl(40,20%,97%)]">
         <div className="max-w-5xl mx-auto text-center mb-12">
           <h2 className="font-serif text-3xl md:text-4xl font-semibold text-foreground mb-3">Render your world.  Write your story.</h2>
@@ -458,29 +451,6 @@ export default function LandingPage() {
           <BookCard title="The Paper Palace" genre="Literary Fiction" setting="Cape Cod, Massachusetts" quote="The lake, the house, the woods. Every scene lives in a specific place." sketch={<CapeCodSketch />} />
           <BookCard title="The Giver" genre="Dystopian Fiction" setting="The Community" quote="The boundary between here and Elsewhere is everything." sketch={<CommunitySketch />} />
           <BookCard title="A Court of Thorns and Roses" genre="Fantasy" setting="Prythian" quote="You need to know where the Wall is before you can cross it." sketch={<PrythianSketch />} />
-        </div>
-      </section>
-
-      {/* ══ Section 8: How It Works ══ */}
-      <section id="how-it-works" className="py-20 px-6 md:px-12">
-        <div className="max-w-5xl mx-auto text-center mb-14">
-          <span className="text-xs font-medium text-secondary uppercase tracking-widest mb-3 block">How it works</span>
-          <h2 className="font-serif text-3xl md:text-4xl font-semibold text-foreground">From the world in your head to a line sketch in minutes.</h2>
-        </div>
-        <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 relative">
-          <div className="hidden md:block absolute top-6 left-[12.5%] right-[12.5%] border-t border-dashed border-foreground/20" />
-          {[
-            { num: 1, title: "Describe what you imagined", desc: "Type a description of your setting or upload reference images of real places that inspired your world." },
-            { num: 2, title: "Mark it up", desc: "Circle what to keep, exclude, or adapt. Guide Wrender toward your exact vision." },
-            { num: 3, title: "Render your sketch", desc: "Wrender draws a precise black line sketch of your setting, like an architectural drawing or a director's location map." },
-            { num: 4, title: "Write alongside it", desc: "Keep Wrender open while you write. Drop pins, track characters, plan scenes. Your sketch grows as your story does." },
-          ].map((step) => (
-            <div key={step.num} className="flex flex-col items-center text-center relative">
-              <span className="text-sm text-primary/60 font-sans mb-3 relative z-10 bg-background px-2">{step.num}</span>
-              <h4 className="font-serif font-normal text-foreground mb-1">{step.title}</h4>
-              <p className="text-sm text-muted-foreground max-w-[220px]">{step.desc}</p>
-            </div>
-          ))}
         </div>
       </section>
 
