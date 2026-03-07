@@ -191,7 +191,7 @@ function PricingCard({ name, price, period, features, cta, popular }: {
 export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"create" | "place" | "track">("create");
+  const [activeTab, setActiveTab] = useState<"create" | "place" | "plan">("create");
 
   useEffect(() => {
     const el = document.getElementById("landing-scroll");
@@ -219,7 +219,7 @@ export default function LandingPage() {
       tags: ["Location pins", "Major and minor events", "Location designs"],
       illustration: <PlaceIllustration />,
     },
-    track: {
+    plan: {
       heading: "Track your characters across your world.",
       body: "Know where every character is at key moments and events in your story. See who is where, when, and whether their movements make narrative sense. Especially when your scenes get complex.",
       tags: ["Character profiles", "Location tracking", "Scene choreography", "Coming soon: movement mapping"],
@@ -404,7 +404,7 @@ export default function LandingPage() {
       <section id="features" className="py-20 px-6 md:px-12">
         <div className="max-w-5xl mx-auto">
           <div className="flex items-center justify-center gap-1 mb-12">
-            {(["create", "place", "track"] as const).map((tab) => (
+            {(["create", "place", "plan"] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
