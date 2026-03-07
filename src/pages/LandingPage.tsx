@@ -202,6 +202,9 @@ export default function LandingPage() {
   }, []);
 
   const scrollTo = (id: string) => {
+    if (id === "features") {
+      setActiveTab("create");
+    }
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
     setMobileMenuOpen(false);
   };
