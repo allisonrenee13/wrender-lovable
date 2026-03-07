@@ -378,9 +378,6 @@ export default function LandingPage() {
       <section className="py-20 px-6 md:px-12">
         <div className="max-w-3xl mx-auto">
           <span className="text-xs font-medium text-secondary uppercase tracking-widest mb-4 block text-center">The Wrender Philosophy</span>
-          <h2 className="font-serif text-3xl md:text-4xl font-semibold text-foreground text-center mb-12 leading-snug">
-            You have a world in your head.<br />Rendering draws it out.
-          </h2>
           <div className="space-y-8">
             <div className="flex gap-6 items-start">
               <span className="font-serif text-4xl text-secondary/30 leading-none flex-shrink-0 mt-1">1</span>
