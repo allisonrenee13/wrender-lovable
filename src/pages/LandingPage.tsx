@@ -384,7 +384,7 @@ export default function LandingPage() {
           <div className="hidden md:block absolute top-8 left-[16.5%] right-[16.5%] border-t border-dashed border-foreground/15" />
           {[
             { num: "1", title: "Outline", desc: "Give your world a shape. The geography, the land, the skeleton." },
-            { num: "2", title: "Detail", desc: "Place your locations, events, and moments. Geography becomes story." },
+            { num: "2", title: "Detail", desc: "Place your locations, events, and moments." },
             { num: "3", title: "Companion", desc: "Write with the map open. Play out where characters go, what they pass, what's possible." },
           ].map((step) => (
             <div key={step.num} className="flex flex-col items-center text-center px-6">
