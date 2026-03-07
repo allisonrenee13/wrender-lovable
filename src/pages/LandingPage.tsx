@@ -349,7 +349,7 @@ export default function LandingPage() {
           <div>
             <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-4 font-medium">Before Wrender</h3>
             <ul className="space-y-3">
-              {["Scribbled maps on notebook paper you keep losing","Stopping mid-scene because you cannot picture the geography","Characters whose locations you are constantly second-guessing","Plot events you know happen somewhere but cannot visualise","Staring at a blank page when you could be planning what comes next"].map((t) => (
+              {["Scribbled maps on notebook paper you keep losing","Stopping mid-scene because you cannot picture the geography","Plot events you know happen somewhere but cannot visualise","Characters whose locations you are constantly second-guessing","Staring at a blank page when you could be planning what comes next"].map((t) => (
                 <li key={t} className="flex items-start gap-2.5 text-sm text-muted-foreground">
                   <span className="w-1.5 h-1.5 rounded-full bg-destructive/50 mt-1.5 flex-shrink-0" />
                   {t}
