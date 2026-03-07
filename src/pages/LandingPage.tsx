@@ -491,12 +491,7 @@ export default function LandingPage() {
       {/* ══ Section 11: Final CTA ══ */}
       <section className="py-24 px-6 text-center bg-[hsl(40,20%,97%)]">
         <h2 className="font-serif text-3xl md:text-5xl font-semibold text-foreground mb-4">Ready to Wrender?</h2>
-        <p className="text-muted-foreground mb-6">See your story's world. Render your setting. Write with clarity.</p>
-        <div className="flex items-center justify-center gap-4 mb-8 flex-wrap">
-          <span className="text-xs text-muted-foreground bg-background px-3 py-1.5 rounded-full border border-border">Line sketch generation</span>
-          <span className="text-xs text-muted-foreground bg-background px-3 py-1.5 rounded-full border border-border">Write anywhere, any device</span>
-          <span className="text-xs text-muted-foreground bg-background px-3 py-1.5 rounded-full border border-border">14-day free trial</span>
-        </div>
+        <p className="text-muted-foreground mb-8 max-w-xl mx-auto">Render your story's location as a clean line drawing, see what is in your head, plan where everything happens, and write with clarity.</p>
         <Button className="bg-primary text-secondary font-medium rounded-full px-10 h-12 text-base mb-3">Start visualising your world</Button>
         <p className="text-xs text-muted-foreground/60">No credit card required. 14-day free trial.</p>
       </section>
