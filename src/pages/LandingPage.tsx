@@ -268,7 +268,7 @@ export default function LandingPage() {
           See your story's world.
         </h1>
         <p className="text-muted-foreground text-base md:text-lg max-w-[560px] mb-2 leading-relaxed">
-          Your visual companion while you write. Render your story's location as a clean line drawing, see what is in your head, plan where everything happens, and write with clarity.
+          Your visual writing companion.
         </p>
         <p className="text-muted-foreground text-base md:text-lg max-w-[560px] mb-0 leading-relaxed font-medium">
           Render your world. Write your story.
