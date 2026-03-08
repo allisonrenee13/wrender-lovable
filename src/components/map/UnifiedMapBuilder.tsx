@@ -297,9 +297,14 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   };
 
   // Trace review stats
-  const highCount = canvasState.paths.filter((p) => p.confidence > 0.65).length;
-  const lowCount = canvasState.paths.filter((p) => p.confidence < 0.35).length;
-
+  const pathCount = canvasState.paths.length;
+  const traceGuidance = pathCount === 0
+    ? "Nothing detected — try raising sensitivity or use a higher contrast image"
+    : pathCount <= 3
+    ? "Looks clean! Simple outlines work best."
+    : pathCount <= 15
+    ? "Good trace. Review the overlay and adjust if needed."
+    : "Lots of detail detected — lower sensitivity if the overlay looks noisy";
   const getConfidenceColor = (c: number) => {
     if (c > 0.65) return "#2EAA5E";
     if (c >= 0.35) return "#D4882A";
@@ -360,35 +365,16 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
               <div className="w-[320px] border-l border-border flex flex-col bg-card">
                 <div className="p-5 space-y-5 flex-1 overflow-y-auto">
                   <div>
-                    <h3 className="text-base font-serif font-semibold text-foreground mb-1">Review Trace</h3>
+                    <h3 className="text-base font-serif font-semibold text-foreground mb-1">Does this look right?</h3>
                     <p className="text-xs text-muted-foreground">
-                      Adjust sensitivity and review detected edges before continuing.
+                      The colored lines show what will be traced. Adjust sensitivity if anything looks off.
                     </p>
                   </div>
 
-                  {/* Legend */}
-                  <div className="space-y-1.5">
-                    <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Confidence</p>
-                    <div className="flex items-center gap-2 text-xs">
-                      <span className="w-3 h-3 rounded-full" style={{ backgroundColor: "#2EAA5E" }} />
-                      <span className="text-foreground">High (&gt; 0.65)</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs">
-                      <span className="w-3 h-3 rounded-full" style={{ backgroundColor: "#D4882A" }} />
-                      <span className="text-foreground">Medium (0.35–0.65)</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs">
-                      <span className="w-3 h-3 rounded-full" style={{ backgroundColor: "#D94040" }} />
-                      <span className="text-foreground">Low (&lt; 0.35)</span>
-                    </div>
-                  </div>
-
-                  {/* Stats */}
-                  <div className="bg-muted/40 rounded-lg p-3 space-y-1">
-                    <p className="text-sm text-foreground font-medium">{canvasState.paths.length} paths found</p>
-                    <p className="text-xs text-muted-foreground">
-                      {highCount} high · {canvasState.paths.length - highCount - lowCount} medium · {lowCount} low confidence
-                    </p>
+                  {/* Trace summary */}
+                  <div className="bg-muted/40 rounded-lg p-3 space-y-1.5">
+                    <p className="text-sm text-foreground font-medium">{pathCount} {pathCount === 1 ? "shape" : "shapes"} traced</p>
+                    <p className="text-xs text-muted-foreground">{traceGuidance}</p>
                   </div>
 
                   {/* Sensitivity slider */}
