@@ -4,7 +4,6 @@ import { Pin, PinType } from "@/data/projects";
 import { Pencil, Plus, Layers, X, GripVertical, MapPin, PenTool } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -91,28 +90,6 @@ const MapViewMode = ({ onEditMap }: MapViewModeProps) => {
 
   // Render the confirmed map — use the rendered SVG from mapState if available
   const renderedSVG = currentProject.mapState?.renderedSVG;
-
-  const renderMap = () => {
-    if (renderedSVG) {
-      return (
-        <div className="w-full flex justify-center py-6">
-          <div
-            className="w-full max-w-[700px]"
-            dangerouslySetInnerHTML={{ __html: renderedSVG }}
-          />
-        </div>
-      );
-    }
-
-    // Fallback: empty map placeholder
-    return (
-      <div className="w-full flex justify-center py-6">
-        <div className="w-full max-w-[700px] aspect-[4/3] bg-muted/30 rounded-lg flex items-center justify-center">
-          <p className="text-sm text-muted-foreground italic">Your rendered map will appear here</p>
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div className="h-full flex flex-col relative">
