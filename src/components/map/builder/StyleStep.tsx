@@ -1,5 +1,6 @@
 import StylePreferencesPanel from "./StylePreferencesPanel";
 import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 import type { StylePreferences } from "./types";
 import { backgroundColors } from "./types";
 
@@ -9,6 +10,8 @@ interface StyleStepProps {
   canvasState: { paths: Array<{ d: string; confidence: number }> };
   onContinue: () => void;
   onBack: () => void;
+  renderButtonLabel?: string;
+  isRendering?: boolean;
 }
 
 const StyleStep = ({ stylePrefs, onStylePrefsChange, canvasState, onContinue, onBack }: StyleStepProps) => {
