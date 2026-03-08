@@ -1,13 +1,9 @@
 import {
   Hand,
   PenTool,
-  CircleDot,
   Eraser,
-  MousePointer2,
   Undo2,
   Redo2,
-  ArrowDownFromLine,
-  ArrowUpFromLine,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { Slider } from "@/components/ui/slider";
@@ -30,13 +26,6 @@ const drawTools: Array<{ id: ShapeTool; icon: typeof Hand; label: string; hint: 
   { id: "pen", icon: PenTool, label: "Pen", hint: "Draw new lines freehand" },
   { id: "eraser", icon: Eraser, label: "Erase", hint: "Remove part of a line by clicking it" },
   { id: "pan", icon: Hand, label: "Pan", hint: "Click and drag to move around the canvas" },
-];
-
-const adjustTools: Array<{ id: ShapeTool; icon: typeof Hand; label: string; hint: string }> = [
-  { id: "smooth", icon: CircleDot, label: "Smooth", hint: "Drag to smooth out jagged edges" },
-  { id: "sculpt-in", icon: ArrowDownFromLine, label: "Push In", hint: "Push edges inward" },
-  { id: "sculpt-out", icon: ArrowUpFromLine, label: "Pull Out", hint: "Pull edges outward" },
-  { id: "node-editor", icon: MousePointer2, label: "Adjust", hint: "Drag points to fine-tune your shapes" },
 ];
 
 const CanvasToolbar = ({
