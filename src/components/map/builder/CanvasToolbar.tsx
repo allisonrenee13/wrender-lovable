@@ -10,19 +10,20 @@ import {
   ArrowUpFromLine,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
-import type { ShapeTool, ToolMode, FeatureStamp } from "./types";
+import { Slider } from "@/components/ui/slider";
+import type { ShapeTool, ToolMode } from "./types";
 
 interface CanvasToolbarProps {
   mode: ToolMode;
   onModeChange: (mode: ToolMode) => void;
   activeTool: ShapeTool;
   onToolChange: (tool: ShapeTool) => void;
-  activeStamp: FeatureStamp | null;
-  onStampChange: (stamp: FeatureStamp | null) => void;
   onUndo: () => void;
   onRedo: () => void;
   canUndo: boolean;
   canRedo: boolean;
+  brushSize: number;
+  onBrushSizeChange: (size: number) => void;
 }
 
 const drawTools: Array<{ id: ShapeTool; icon: typeof Hand; label: string; hint: string }> = [
@@ -38,26 +39,20 @@ const adjustTools: Array<{ id: ShapeTool; icon: typeof Hand; label: string; hint
   { id: "node-editor", icon: MousePointer2, label: "Adjust", hint: "Drag points to fine-tune your shapes" },
 ];
 
-const featureStamps: Array<{ id: FeatureStamp; label: string; icon: string; hint: string }> = [
-  { id: "road", label: "Road", icon: "┅", hint: "Add a road or path" },
-  { id: "river", label: "River", icon: "〰", hint: "Add a river or stream" },
-  { id: "building", label: "Building", icon: "▭", hint: "Mark a building or structure" },
-  { id: "forest", label: "Forest", icon: "🌲", hint: "Mark a forested area" },
-  { id: "elevation", label: "Hills", icon: "⌒", hint: "Mark hills or elevated terrain" },
-];
-
 const CanvasToolbar = ({
   mode,
   onModeChange,
   activeTool,
   onToolChange,
-  activeStamp,
-  onStampChange,
   onUndo,
   onRedo,
   canUndo,
   canRedo,
+  brushSize,
+  onBrushSizeChange,
 }: CanvasToolbarProps) => {
+
+  const showSizeSlider = activeTool === "pen" || activeTool === "eraser";
 
   const renderToolButton = (
     tool: { id: ShapeTool; icon: typeof Hand; label: string; hint: string },
@@ -118,10 +113,25 @@ const CanvasToolbar = ({
             {/* Draw section */}
             <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Draw</span>
             {drawTools.map((tool) =>
-              renderToolButton(tool, activeTool === tool.id && !activeStamp, () => {
+              renderToolButton(tool, activeTool === tool.id, () => {
                 onToolChange(tool.id);
-                onStampChange(null);
               })
+            )}
+
+            {/* Brush size slider — visible only for Pen/Erase */}
+            {showSizeSlider && (
+              <div className="w-[56px] flex flex-col items-center gap-1 mt-1 mb-1 px-0.5">
+                <span className="text-[9px] text-muted-foreground">Size {brushSize}px</span>
+                <Slider
+                  value={[brushSize]}
+                  onValueChange={([v]) => onBrushSizeChange(v)}
+                  min={1}
+                  max={40}
+                  step={1}
+                  orientation="horizontal"
+                  className="w-full"
+                />
+              </div>
             )}
 
             <div className="w-10 border-t border-border my-1.5" />
@@ -129,39 +139,10 @@ const CanvasToolbar = ({
             {/* Adjust section */}
             <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Adjust</span>
             {adjustTools.map((tool) =>
-              renderToolButton(tool, activeTool === tool.id && !activeStamp, () => {
+              renderToolButton(tool, activeTool === tool.id, () => {
                 onToolChange(tool.id);
-                onStampChange(null);
               })
             )}
-
-            {/* Feature stamps */}
-            <div className="w-10 border-t border-border my-1.5" />
-            <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Features</span>
-
-            {featureStamps.map((stamp) => {
-              const isActive = activeStamp === stamp.id;
-              return (
-                <Tooltip key={stamp.id}>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={() => onStampChange(isActive ? null : stamp.id)}
-                      className={`w-[56px] rounded flex flex-col items-center justify-center gap-0.5 py-2 transition-colors ${
-                        isActive
-                          ? "bg-secondary text-secondary-foreground"
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                      }`}
-                    >
-                      <span className="text-sm leading-none">{stamp.icon}</span>
-                      <span className="text-[10px] font-medium leading-tight">{stamp.label}</span>
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="right" className="text-xs max-w-[180px]">
-                    <p className="text-muted-foreground">{stamp.hint}</p>
-                  </TooltipContent>
-                </Tooltip>
-              );
-            })}
           </>
         )}
 
