@@ -8,9 +8,9 @@ interface StepIndicatorProps {
 }
 
 const steps = [
-  { num: 1, label: "Shape", activeDesc: "Define your world's shape. Choose a template, upload a reference, or draw from scratch." },
+  { num: 1, label: "Draw", activeDesc: "Define your world's shape. Choose a template, upload a reference, or draw from scratch." },
   { num: 2, label: "Style", activeDesc: "Choose how your map looks. You can change this any time." },
-  { num: 3, label: "Render", activeDesc: "Wrender will finish your map. Consistent strokes, compass, and labels." },
+  { num: 3, label: "Done", activeDesc: "Your map is ready. Export or keep editing." },
 ];
 
 const StepIndicator = ({ currentStep, completedSteps }: StepIndicatorProps) => {
@@ -23,7 +23,6 @@ const StepIndicator = ({ currentStep, completedSteps }: StepIndicatorProps) => {
         {steps.map((step, i) => {
           const isActive = step.num === currentStep;
           const isComplete = completedSteps.has(step.num);
-          const isUpcoming = !isActive && !isComplete;
 
           return (
             <div key={step.num} className="flex items-center">

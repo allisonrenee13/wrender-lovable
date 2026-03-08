@@ -1,5 +1,6 @@
 import StylePreferencesPanel from "./StylePreferencesPanel";
 import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 import type { StylePreferences } from "./types";
 import { backgroundColors } from "./types";
 
@@ -9,9 +10,11 @@ interface StyleStepProps {
   canvasState: { paths: Array<{ d: string; confidence: number }> };
   onContinue: () => void;
   onBack: () => void;
+  renderButtonLabel?: string;
+  isRendering?: boolean;
 }
 
-const StyleStep = ({ stylePrefs, onStylePrefsChange, canvasState, onContinue, onBack }: StyleStepProps) => {
+const StyleStep = ({ stylePrefs, onStylePrefsChange, canvasState, onContinue, onBack, renderButtonLabel, isRendering }: StyleStepProps) => {
   const colors = backgroundColors[stylePrefs.background];
 
   return (
@@ -105,10 +108,14 @@ const StyleStep = ({ stylePrefs, onStylePrefsChange, canvasState, onContinue, on
         {/* Footer buttons */}
         <div className="p-4 border-t border-border flex items-center justify-between">
           <button onClick={onBack} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-            ← Back to Shape
+            ← Back to Draw
           </button>
-          <Button onClick={onContinue} className="bg-primary text-primary-foreground font-semibold px-6">
-            Continue to Render →
+          <Button onClick={onContinue} disabled={isRendering} className="bg-primary text-primary-foreground font-semibold px-6">
+            {isRendering ? (
+              <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Rendering…</>
+            ) : (
+              renderButtonLabel || "Continue to Render →"
+            )}
           </Button>
         </div>
       </div>
