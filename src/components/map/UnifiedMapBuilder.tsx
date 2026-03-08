@@ -301,35 +301,13 @@ const UnifiedMapBuilder = ({ onConfirm, onRender, initialPhase: initialPhaseProp
     setPhase("rendering");
 
     setTimeout(() => {
-      const canvasSVG = canvasRef.current?.getSVG() || "";
-      let rawSVG: string;
-
-      if (canvasSVG && canvasSVG.length > 100) {
-        rawSVG = canvasSVG;
+      const svg = canvasRef.current?.getSVG() || "";
+      console.log("[render] svg length:", svg.length, "preview:", svg.slice(0, 100));
+      if (svg && svg.length > 100) {
+        onRender?.(svg);
       } else {
-        const sw = stylePrefs.strokeWeight === "fine" ? 1 : stylePrefs.strokeWeight === "bold" ? 2.5 : 1.8;
-        const pathMarkup = canvasState.paths
-          .map((p) => `<path d="${p.d}" fill="none" stroke="${colors.stroke}" stroke-width="${sw}" stroke-linejoin="round" stroke-linecap="round"/>`)
-          .join("\n");
-        rawSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600">
-          <rect width="600" height="600" fill="${colors.bg}"/>
-          ${pathMarkup}
-        </svg>`;
+        alert("Canvas was empty — please try again");
       }
-
-      const pins = currentProject?.pins.map((p) => ({ title: p.title, x: p.x * 1.33, y: p.y * 0.86 })) || [];
-      const processed = postProcessSVG(rawSVG, stylePrefs, pins, 600, 600);
-      setRenderedSVG(processed);
-
-      const json = canvasRef.current?.getJSON() || null;
-      updateMapState({
-        canvasJSON: json,
-        renderedSVG: processed,
-        currentStep: 3,
-        stylePrefs: stylePrefs as any,
-      });
-
-      onRender?.(processed);
     }, 1500);
   };
 
