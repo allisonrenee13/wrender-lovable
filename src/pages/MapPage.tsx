@@ -90,10 +90,10 @@ const MapPage = () => {
     );
   }
 
-  const displaySVG = savedSVG!.replace(
-    /<svg([^>]*)>/,
-    '<svg$1 style="width:100%;height:100%;display:block;">'
-  );
+  const displaySVG = savedSVG!
+    .replace(/<svg([^>]*?)width="[^"]*"/, '<svg$1width="100%"')
+    .replace(/height="[^"]*"/, 'height="auto"')
+    .replace(/<svg/, '<svg style="display:block;width:100%;height:auto;"');
 
   const isPlacing = addingPin || !!movingPinId;
 
@@ -140,12 +140,12 @@ const MapPage = () => {
       <div className="flex-1 flex items-center justify-center p-6 bg-muted/20">
         <div
           ref={mapContainerRef}
-          className="relative w-full max-w-[600px]"
-          style={{ aspectRatio: "1 / 1", cursor: isPlacing ? "crosshair" : "default" }}
+          className="relative w-full max-w-[600px] border border-border rounded-lg overflow-hidden shadow-md"
+          style={{ cursor: isPlacing ? "crosshair" : "default" }}
           onClick={handleMapClick}
         >
           <div
-            className="w-full h-full border border-border rounded-lg overflow-hidden shadow-md bg-background"
+            className="w-full"
             dangerouslySetInnerHTML={{ __html: displaySVG }}
           />
           {currentProject.pins?.map((pin) => (
