@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 const MapPage = () => {
   const { currentProject } = useProject();
   const [forceBuilder, setForceBuilder] = useState(false);
+  const [localRenderedSVG, setLocalRenderedSVG] = useState<string | null>(
+    currentProject?.mapState?.renderedSVG ?? null
+  );
 
   if (!currentProject) {
     return (
@@ -36,6 +39,10 @@ const MapPage = () => {
         <div className="flex-1 overflow-hidden">
           <UnifiedMapBuilder
             onConfirm={() => setForceBuilder(false)}
+            onRender={(svg: string) => {
+              setLocalRenderedSVG(svg);
+              setForceBuilder(false);
+            }}
             initialPhase={forceBuilder ? "shapeCanvas" : undefined}
           />
         </div>
@@ -57,17 +64,13 @@ const MapPage = () => {
         </div>
       </div>
       <div className="flex-1 relative overflow-hidden flex items-center justify-center p-6 bg-muted/20">
-        {currentProject.mapState?.renderedSVG ? (
+        {localRenderedSVG ? (
           <div
             className="w-full max-w-[600px] border border-border rounded-lg overflow-hidden shadow-md"
-            dangerouslySetInnerHTML={{ __html: currentProject.mapState.renderedSVG }}
+            dangerouslySetInnerHTML={{ __html: localRenderedSVG }}
           />
         ) : (
-          <div className="text-xs text-muted-foreground space-y-1 text-center">
-            <p>mapConfirmed: {String(currentProject.mapConfirmed)}</p>
-            <p>renderedSVG length: {currentProject.mapState?.renderedSVG?.length ?? 0}</p>
-            <p>renderedSVG preview: {currentProject.mapState?.renderedSVG?.slice(0, 50) ?? "null"}</p>
-          </div>
+          <p className="text-sm text-muted-foreground">Your rendered map will appear here.</p>
         )}
         {currentProject.pins?.map((pin) => (
           <div
