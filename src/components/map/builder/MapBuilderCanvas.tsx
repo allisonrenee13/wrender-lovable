@@ -308,7 +308,7 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
           // Assign brush BEFORE enabling drawing mode
           const brush = new PencilBrush(canvas);
           brush.color = colors.stroke;
-          brush.width = sw;
+          brush.width = brushWidth ?? sw;
           brush.decimate = 4;
           canvas.freeDrawingBrush = brush;
           canvas.isDrawingMode = true;
@@ -340,7 +340,7 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
             const pointer = canvas.getScenePoint(e.e);
             // Find nearest Path within 20px
             let nearestPath: Path | null = null;
-            let nearestDist = 20;
+            let nearestDist = eraserRadius ?? 20;
 
             canvas.getObjects().forEach((obj) => {
               if (!(obj instanceof Path) || obj.excludeFromExport) return;
