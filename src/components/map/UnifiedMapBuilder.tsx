@@ -335,7 +335,7 @@ const UnifiedMapBuilder = ({ onConfirm, initialPhase: initialPhaseProp }: Unifie
       console.log("[render] processed preview:", processed?.slice(0, 300));
       setPhaseAndSave("preview");
       saveCanvasState();
-      confirmMap();
+      confirmMap(processed);
       onConfirm?.();
     }, 1500);
   };

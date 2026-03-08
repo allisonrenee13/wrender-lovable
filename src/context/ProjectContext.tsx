@@ -9,7 +9,7 @@ interface ProjectContextType {
   allProjects: Project[];
   createProject: (data: { title: string; genre: string; setting: string; wordCount: string }) => string;
   updateProjectTitle: (title: string) => void;
-  confirmMap: () => void;
+  confirmMap: (renderedSVG?: string) => void;
   addPin: (pin: Omit<Pin, "id">) => void;
   removePin: (id: string) => void;
   updatePin: (id: string, updates: Partial<Pin>) => void;
@@ -85,7 +85,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     updateCurrentProject((p) => ({ ...p, [field]: value }));
   }, [updateCurrentProject]);
 
-  const confirmMap = useCallback(() => {
+  const confirmMap = useCallback((renderedSVG?: string) => {
     updateCurrentProject((p) => {
       const version: MapVersion = {
         id: genId(),
@@ -95,7 +95,15 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
         mapImage: p.mapImage,
       };
-      return { ...p, mapConfirmed: true, mapVersions: [version] };
+      return {
+        ...p,
+        mapConfirmed: true,
+        mapVersions: [version],
+        mapState: {
+          ...p.mapState,
+          ...(renderedSVG ? { renderedSVG } : {}),
+        },
+      };
     });
     logActivity("Map confirmed");
     toast({ title: "Map confirmed", description: "Your map is now in View Mode" });
