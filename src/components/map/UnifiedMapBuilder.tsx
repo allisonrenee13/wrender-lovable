@@ -780,7 +780,8 @@ function traceOutlineImage(
     const boundary = getBoundary(comp);
     if (boundary.length < 4) continue;
     const ordered = orderPoints(boundary);
-    const simplified = douglasPeucker(ordered, 1.2);
+    const eps = sensitivity > 0.75 ? 0.4 : 0.7;
+    const simplified = douglasPeucker(ordered, eps);
     if (simplified.length < 3) continue;
     let d = `M ${simplified[0][0]} ${simplified[0][1]}`;
     for (let i = 1; i < simplified.length; i++)
