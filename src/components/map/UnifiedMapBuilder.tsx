@@ -229,14 +229,29 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
 
   const handleRender = () => {
     setPhase("rendering");
-    const rawSVG = canvasRef.current?.getSVG();
 
     setTimeout(() => {
-      if (rawSVG && currentProject) {
-        const pins = currentProject.pins.map((p) => ({ title: p.title, x: p.x * 1.33, y: p.y * 0.86 }));
-        const processed = postProcessSVG(rawSVG, stylePrefs, pins, 800, 600);
-        setRenderedSVG(processed);
-      }
+      // Build SVG from canvasState paths + style prefs directly
+      const sw = stylePrefs.strokeWeight === "fine" ? 1 : stylePrefs.strokeWeight === "bold" ? 2.5 : 1.8;
+      const pathMarkup = canvasState.paths
+        .map((p) => `<path d="${p.d}" fill="none" stroke="${colors.stroke}" stroke-width="${sw}" stroke-linejoin="round" stroke-linecap="round"/>`)
+        .join("\n");
+      const rawSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600">
+        <rect width="600" height="600" fill="${colors.bg}"/>
+        ${pathMarkup}
+      </svg>`;
+
+      const pins = currentProject?.pins.map((p) => ({ title: p.title, x: p.x * 1.33, y: p.y * 0.86 })) || [];
+      const processed = postProcessSVG(rawSVG, stylePrefs, pins, 600, 600);
+      setRenderedSVG(processed);
+
+      // Save rendered SVG to project state
+      updateMapState({
+        renderedSVG: processed,
+        currentStep: 3,
+        stylePrefs: stylePrefs as any,
+      });
+
       setPhaseAndSave("preview");
     }, 1500);
   };
