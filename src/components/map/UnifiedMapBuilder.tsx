@@ -326,6 +326,9 @@ const UnifiedMapBuilder = ({ onConfirm, initialPhase: initialPhaseProp }: Unifie
       console.log("[render] processed length:", processed?.length);
       console.log("[render] processed preview:", processed?.slice(0, 300));
       setPhaseAndSave("preview");
+      saveCanvasState();
+      confirmMap();
+      onConfirm?.();
     }, 1500);
   };
 
@@ -551,33 +554,10 @@ const UnifiedMapBuilder = ({ onConfirm, initialPhase: initialPhaseProp }: Unifie
                     <p className="text-sm text-muted-foreground">Applying style and cleaning up strokes</p>
                   </div>
                 ) : renderedSVG ? (
-                  <div className="flex flex-col items-center gap-4">
-                    <div
-                      className="w-full max-w-[600px] border border-border rounded-lg overflow-hidden shadow-md"
-                      dangerouslySetInnerHTML={{ __html: renderedSVG }}
-                    />
-                    <div className="flex gap-3">
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setPhaseAndSave("shapeCanvas");
-                          setActiveTab("edit");
-                        }}
-                      >
-                        Keep Editing
-                      </Button>
-                      <Button
-                        className="bg-primary text-primary-foreground font-semibold"
-                        onClick={() => {
-                          saveCanvasState();
-                          confirmMap();
-                          onConfirm?.();
-                        }}
-                      >
-                        Save & Use Map
-                      </Button>
-                    </div>
-                  </div>
+                  <div
+                    className="w-full max-w-[600px] border border-border rounded-lg overflow-hidden shadow-md"
+                    dangerouslySetInnerHTML={{ __html: renderedSVG }}
+                  />
                 ) : (
                   /* renderReady — preview of raw shape */
                   <div className="w-full max-w-[500px]">
@@ -969,7 +949,7 @@ const UnifiedMapBuilder = ({ onConfirm, initialPhase: initialPhaseProp }: Unifie
                         }}
                         className="w-full bg-primary text-primary-foreground font-semibold h-11"
                       >
-                        Render & Save →
+                        Save to Wrender →
                       </Button>
                     </div>
                   </div>

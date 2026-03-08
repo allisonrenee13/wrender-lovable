@@ -640,23 +640,19 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
         const w = canvas.width || 800;
         const h = canvas.height || 600;
         let markup = "";
-        const objects = canvas.getObjects();
-        objects.forEach(obj => {
-          const asAny = obj as any;
-          if (asAny.data?.isMapStroke && typeof asAny.x1 === "number") {
-            const x1 = (asAny.x1 ?? 0) + (asAny.left ?? 0);
-            const y1 = (asAny.y1 ?? 0) + (asAny.top ?? 0);
-            const x2 = (asAny.x2 ?? 0) + (asAny.left ?? 0);
-            const y2 = (asAny.y2 ?? 0) + (asAny.top ?? 0);
+        canvas.getObjects().forEach((obj: any) => {
+          if (typeof obj.x1 === "number" && typeof obj.x2 === "number") {
+            const x1 = obj.x1 + (obj.left ?? 0);
+            const y1 = obj.y1 + (obj.top ?? 0);
+            const x2 = obj.x2 + (obj.left ?? 0);
+            const y2 = obj.y2 + (obj.top ?? 0);
             markup += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round"/>`;
-          } else if (!asAny.data?.isMapStroke && !obj.excludeFromExport) {
+          } else if (!obj.excludeFromExport) {
             markup += obj.toSVG();
           }
         });
-        console.log("[getSVG] objects:", objects.length, "markup length:", markup.length);
-        return markup.length > 0
-          ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}">${markup}</svg>`
-          : "";
+        if (!markup) return "";
+        return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}">${markup}</svg>`;
       },
       getPNG: () => fabricRef.current?.toDataURL({ format: "png", quality: 1, multiplier: 2 }) ?? "",
       loadSVG: async (svgString: string) => {
