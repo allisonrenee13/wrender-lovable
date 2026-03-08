@@ -33,6 +33,7 @@ export interface MapCanvasHandle {
   setReferenceOpacity: (opacity: number) => void;
   getNodeCount: () => number;
   getObjectCount: () => number;
+  setBrushWidth: (width: number) => void;
 }
 
 interface MapBuilderCanvasProps {
