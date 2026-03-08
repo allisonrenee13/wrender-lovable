@@ -77,7 +77,6 @@ const UnifiedMapBuilder = ({ onConfirm, initialPhase: initialPhaseProp }: Unifie
 
   const canvasRef = useRef<MapCanvasHandle | null>(null);
   const autoSaveTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const pendingConfirm = useRef(false);
 
   const [canvasState, setCanvasState] = useState<CanvasState>(defaultCanvas);
 
@@ -158,16 +157,6 @@ const UnifiedMapBuilder = ({ onConfirm, initialPhase: initialPhaseProp }: Unifie
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Auto-confirm after render completes
-  useEffect(() => {
-    if (pendingConfirm.current && renderedSVG) {
-      pendingConfirm.current = false;
-      saveCanvasState();
-      confirmMap();
-      onConfirm?.();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [renderedSVG]);
 
   // --- Handlers ---
   const handleEntrySelect = (path: BuilderPath) => {
@@ -562,10 +551,33 @@ const UnifiedMapBuilder = ({ onConfirm, initialPhase: initialPhaseProp }: Unifie
                     <p className="text-sm text-muted-foreground">Applying style and cleaning up strokes</p>
                   </div>
                 ) : renderedSVG ? (
-                  <div
-                    className="w-full max-w-[600px] border border-border rounded-lg overflow-hidden shadow-md"
-                    dangerouslySetInnerHTML={{ __html: renderedSVG }}
-                  />
+                  <div className="flex flex-col items-center gap-4">
+                    <div
+                      className="w-full max-w-[600px] border border-border rounded-lg overflow-hidden shadow-md"
+                      dangerouslySetInnerHTML={{ __html: renderedSVG }}
+                    />
+                    <div className="flex gap-3">
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setPhaseAndSave("shapeCanvas");
+                          setActiveTab("edit");
+                        }}
+                      >
+                        Keep Editing
+                      </Button>
+                      <Button
+                        className="bg-primary text-primary-foreground font-semibold"
+                        onClick={() => {
+                          saveCanvasState();
+                          confirmMap();
+                          onConfirm?.();
+                        }}
+                      >
+                        Save & Use Map
+                      </Button>
+                    </div>
+                  </div>
                 ) : (
                   /* renderReady — preview of raw shape */
                   <div className="w-full max-w-[500px]">
@@ -953,7 +965,6 @@ const UnifiedMapBuilder = ({ onConfirm, initialPhase: initialPhaseProp }: Unifie
                     <div className="p-4 border-t border-border">
                       <Button
                         onClick={() => {
-                          pendingConfirm.current = true;
                           handleRender();
                         }}
                         className="w-full bg-primary text-primary-foreground font-semibold h-11"
