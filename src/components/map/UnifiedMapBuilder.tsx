@@ -25,6 +25,7 @@ interface UnifiedMapBuilderProps {
   onConfirm?: () => void;
   onRender?: (svg: string) => void;
   initialPhase?: Phase;
+  initialSVG?: string | null;
 }
 
 const defaultCanvas: CanvasState = {
@@ -57,12 +58,13 @@ function reachedTabs(phase: Phase): Set<TabId> {
   return s;
 }
 
-const UnifiedMapBuilder = ({ onConfirm, onRender, initialPhase: initialPhaseProp }: UnifiedMapBuilderProps) => {
+const UnifiedMapBuilder = ({ onConfirm, onRender, initialPhase: initialPhaseProp, initialSVG }: UnifiedMapBuilderProps) => {
   const { currentProject, confirmMap, updateMapState, addPin } = useProject();
 
   const savedMapState = currentProject?.mapState;
 
   const getInitialPhase = (): Phase => {
+    if (initialSVG) return "shapeCanvas";
     if (initialPhaseProp) return initialPhaseProp;
     if (savedMapState?.currentStep === 2) return "style";
     if (savedMapState?.currentStep === 3) return "preview";
@@ -78,6 +80,21 @@ const UnifiedMapBuilder = ({ onConfirm, onRender, initialPhase: initialPhaseProp
 
   const canvasRef = useRef<MapCanvasHandle | null>(null);
   const autoSaveTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Load initialSVG into canvas when editing an existing map
+  const initialSVGLoaded = useRef(false);
+  useEffect(() => {
+    if (!initialSVG || initialSVGLoaded.current) return;
+    const tryLoad = () => {
+      if (canvasRef.current) {
+        initialSVGLoaded.current = true;
+        canvasRef.current.loadSVG(initialSVG);
+      } else {
+        setTimeout(tryLoad, 100);
+      }
+    };
+    tryLoad();
+  }, [initialSVG]);
 
   const [canvasState, setCanvasState] = useState<CanvasState>(defaultCanvas);
 
@@ -568,8 +585,8 @@ const UnifiedMapBuilder = ({ onConfirm, onRender, initialPhase: initialPhaseProp
           {showRightPanel && (
             <div className="w-[320px] border-l border-border flex flex-col bg-card shrink-0">
               {/* Edit banner when re-entering from view mode */}
-              {initialPhaseProp === "shapeCanvas" && (
-                <div className="px-4 py-2 bg-amber-50 border-b border-amber-200 text-xs text-amber-800 text-center">
+              {(initialPhaseProp === "shapeCanvas" || initialSVG) && (
+                <div className="px-4 py-2 bg-accent/50 border-b border-border text-xs text-accent-foreground text-center">
                   Editing — render again to update your saved map
                 </div>
               )}
