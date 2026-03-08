@@ -42,10 +42,11 @@ const MapPage = () => {
       title: pinName.trim(),
       x: pendingPin.x,
       y: pendingPin.y,
-      type: "location" as any,
-      tier: "major",
-      chapter: "",
-      notes: "",
+      type: "location",
+      tier: "main",
+      chapter: 0,
+      location: "",
+      note: "",
     });
     setPendingPin(null);
     setPinName("");
