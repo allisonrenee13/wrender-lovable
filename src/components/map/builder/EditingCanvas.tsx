@@ -144,9 +144,7 @@ const EditingCanvas = ({
       });
     }
 
-    if (referenceImage) {
-      handle.addReferenceImage(referenceImage, refOpacity);
-    }
+    // Reference image disabled — no longer shown on edit page
 
     if (canvasState.paths.length > 0 && !initialTemplate) {
       // Parse all path segments and compute bounding box
@@ -279,21 +277,7 @@ const EditingCanvas = ({
             </div>
           </div>
 
-          {/* Reference opacity slider */}
-          {referenceImage && (
-            <div className="flex items-center gap-3 px-5 py-2 border-t border-border bg-card">
-              <span className="text-[11px] text-muted-foreground whitespace-nowrap">Reference opacity</span>
-              <Slider
-                value={[refOpacity]}
-                onValueChange={([v]) => handleRefOpacityChange(v)}
-                min={20}
-                max={80}
-                step={5}
-                className="w-40"
-              />
-              <span className="text-[11px] text-muted-foreground w-8">{refOpacity}%</span>
-            </div>
-          )}
+          {/* Reference opacity slider removed */}
 
           {/* Contextual hint bar */}
           <div className="px-5 py-2.5 border-t border-border bg-card">
