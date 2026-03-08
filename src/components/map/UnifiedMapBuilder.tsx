@@ -709,8 +709,6 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                           >
                             Continue with this trace anyway
                           </Button>
-                            Continue with this trace anyway
-                          </Button>
                         </div>
                       ) : (
                         <Button
