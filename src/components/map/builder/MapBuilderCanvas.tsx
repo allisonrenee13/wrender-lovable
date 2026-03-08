@@ -638,15 +638,9 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
       getSVG: () => {
         const canvas = fabricRef.current;
         if (!canvas) return "";
-        const w = canvas.width || 800;
-        const h = canvas.height || 600;
-        let markup = "";
-        canvas.getObjects().forEach((obj: any) => {
-          if (obj.excludeFromExport) return;
-          markup += obj.toSVG();
-        });
-        if (!markup) return "";
-        return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}">${markup}</svg>`;
+        const svg = canvas.toSVG();
+        console.log("[getSVG] native svg length:", svg.length);
+        return svg;
       },
       getPNG: () => fabricRef.current?.toDataURL({ format: "png", quality: 1, multiplier: 2 }) ?? "",
       loadSVG: async (svgString: string) => {
