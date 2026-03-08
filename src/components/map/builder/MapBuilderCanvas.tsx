@@ -711,6 +711,7 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
                 canvas.add(obj);
               }
             });
+          console.log("[loadSVG segments] total objects after load:", canvas.getObjects().length);
           canvas.renderAll();
           // Reset history so undo never goes below the loaded state
           setTimeout(() => {
