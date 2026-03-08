@@ -1,5 +1,8 @@
-import { X } from "lucide-react";
-import type { MapTemplate } from "./types";
+import { useState } from "react";
+import { X, Trash2, Globe, Lock } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { MapTemplate, TracedPath } from "./types";
+import { getTemplates, togglePublic, deleteTemplate } from "@/lib/templateLibrary";
 
 const templates: MapTemplate[] = [
   // Row 1 — Islands and Coasts
@@ -50,9 +53,27 @@ interface TemplatePickerProps {
 }
 
 const TemplatePicker = ({ open, onClose, onSelect }: TemplatePickerProps) => {
+  const [tab, setTab] = useState<string>("library");
+  const [myTemplates, setMyTemplates] = useState(() => getTemplates());
+
   if (!open) return null;
 
   const categories = ["Islands & Coasts", "Inland", "Large Scale"];
+
+  const refreshMyTemplates = () => setMyTemplates(getTemplates());
+
+  const handleMyTemplateSelect = (tpl: { svgPaths: TracedPath[]; name: string }) => {
+    // Build a synthetic MapTemplate from saved paths
+    const combined = tpl.svgPaths.map((p) => p.d).join(" ");
+    onSelect({
+      id: `custom-${Date.now()}`,
+      name: tpl.name,
+      genre: "Custom",
+      category: "My Templates",
+      svgPath: combined,
+      viewBox: "0 0 600 600",
+    });
+  };
 
   return (
     <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex flex-col">
@@ -61,7 +82,7 @@ const TemplatePicker = ({ open, onClose, onSelect }: TemplatePickerProps) => {
         <div>
           <h2 className="text-xl font-serif font-semibold text-foreground">Choose a Template</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Pick a geography type. You'll edit it into your world on the canvas.
+            Pick a geography type or load one of your saved templates.
           </p>
         </div>
         <button onClick={onClose} className="p-2 hover:bg-muted rounded-lg transition-colors">
@@ -69,38 +90,114 @@ const TemplatePicker = ({ open, onClose, onSelect }: TemplatePickerProps) => {
         </button>
       </div>
 
-      {/* Grid */}
-      <div className="flex-1 overflow-y-auto px-8 py-6 space-y-8">
-        {categories.map((cat) => (
-          <div key={cat}>
-            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">{cat}</h3>
+      {/* Tabs */}
+      <Tabs value={tab} onValueChange={setTab} className="flex-1 flex flex-col overflow-hidden">
+        <div className="px-8 pt-4">
+          <TabsList className="bg-muted/50">
+            <TabsTrigger value="library">Library</TabsTrigger>
+            <TabsTrigger value="my-templates" onClick={refreshMyTemplates}>My Templates</TabsTrigger>
+          </TabsList>
+        </div>
+
+        <TabsContent value="library" className="flex-1 overflow-y-auto px-8 py-6 space-y-8 mt-0">
+          {categories.map((cat) => (
+            <div key={cat}>
+              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">{cat}</h3>
+              <div className="grid grid-cols-4 gap-4">
+                {templates.filter((t) => t.category === cat).map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => onSelect(t)}
+                    className="border border-border rounded-lg p-4 bg-card hover:border-secondary/50 hover:shadow-sm transition-all group flex flex-col items-center gap-3"
+                  >
+                    <div className="w-full aspect-square bg-white rounded flex items-center justify-center p-3">
+                      <svg viewBox={t.viewBox} className="w-full h-full">
+                        <path
+                          d={t.svgPath}
+                          fill="none"
+                          stroke="hsl(var(--primary))"
+                          strokeWidth="2"
+                          strokeLinejoin="round"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    </div>
+                    <span className="text-sm font-medium text-foreground">{t.name}</span>
+                    <span className="text-[10px] text-secondary font-medium uppercase tracking-wider">{t.genre}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </TabsContent>
+
+        <TabsContent value="my-templates" className="flex-1 overflow-y-auto px-8 py-6 mt-0">
+          {myTemplates.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-center gap-3">
+              <p className="text-muted-foreground text-sm">No saved templates yet.</p>
+              <p className="text-muted-foreground text-xs">
+                Upload and trace an image, then click "Save as Template" to add one here.
+              </p>
+            </div>
+          ) : (
             <div className="grid grid-cols-4 gap-4">
-              {templates.filter((t) => t.category === cat).map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => onSelect(t)}
-                  className="border border-border rounded-lg p-4 bg-card hover:border-secondary/50 hover:shadow-sm transition-all group flex flex-col items-center gap-3"
+              {myTemplates.map((tpl) => (
+                <div
+                  key={tpl.id}
+                  className="border border-border rounded-lg p-4 bg-card hover:border-secondary/50 hover:shadow-sm transition-all flex flex-col items-center gap-3 relative group"
                 >
-                  <div className="w-full aspect-square bg-white rounded flex items-center justify-center p-3">
-                    <svg viewBox={t.viewBox} className="w-full h-full">
-                      <path
-                        d={t.svgPath}
-                        fill="none"
-                        stroke="hsl(var(--primary))"
-                        strokeWidth="2"
-                        strokeLinejoin="round"
-                        strokeLinecap="round"
+                  <button
+                    className="w-full flex flex-col items-center gap-3"
+                    onClick={() => handleMyTemplateSelect(tpl)}
+                  >
+                    <div className="w-full aspect-[4/3] bg-white rounded flex items-center justify-center overflow-hidden">
+                      <img
+                        src={tpl.thumbnailDataUrl}
+                        alt={tpl.name}
+                        className="w-full h-full object-contain"
                       />
-                    </svg>
+                    </div>
+                    <span className="text-sm font-medium text-foreground">{tpl.name}</span>
+                  </button>
+
+                  {/* Badge + actions */}
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                      tpl.isPublic
+                        ? "bg-green-500/15 text-green-700"
+                        : "bg-muted text-muted-foreground"
+                    }`}>
+                      {tpl.isPublic ? "Public" : "Internal"}
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        togglePublic(tpl.id);
+                        refreshMyTemplates();
+                      }}
+                      className="p-1 rounded hover:bg-muted transition-colors text-muted-foreground"
+                      title={tpl.isPublic ? "Make internal" : "Make public"}
+                    >
+                      {tpl.isPublic ? <Lock className="h-3 w-3" /> : <Globe className="h-3 w-3" />}
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteTemplate(tpl.id);
+                        refreshMyTemplates();
+                      }}
+                      className="p-1 rounded hover:bg-destructive/10 transition-colors text-muted-foreground hover:text-destructive"
+                      title="Delete template"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
                   </div>
-                  <span className="text-sm font-medium text-foreground">{t.name}</span>
-                  <span className="text-[10px] text-secondary font-medium uppercase tracking-wider">{t.genre}</span>
-                </button>
+                </div>
               ))}
             </div>
-          </div>
-        ))}
-      </div>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
