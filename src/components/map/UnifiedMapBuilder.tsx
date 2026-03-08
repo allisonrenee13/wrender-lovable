@@ -25,6 +25,7 @@ interface UnifiedMapBuilderProps {
   onConfirm?: () => void;
   onRender?: (svg: string) => void;
   initialPhase?: Phase;
+  initialSVG?: string | null;
 }
 
 const defaultCanvas: CanvasState = {
