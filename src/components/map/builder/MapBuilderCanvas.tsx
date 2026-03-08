@@ -682,32 +682,6 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
         canvas.renderAll();
         isLoadingRef.current = false;
       },
-      addReferenceImage: (url: string, opacity: number) => {
-        const canvas = fabricRef.current;
-        if (!canvas) return;
-        FabricImage.fromURL(url).then((img) => {
-          if (!img) return;
-          img.set({
-            opacity: opacity / 100, selectable: false, evented: false,
-            scaleX: canvasWidth / (img.width || canvasWidth),
-            scaleY: canvasHeight / (img.height || canvasHeight),
-            excludeFromExport: true,
-          });
-          canvas.add(img);
-          canvas.sendObjectToBack(img);
-          canvas.getObjects().forEach((obj) => {
-            if (obj.excludeFromExport && !(obj instanceof FabricImage)) canvas.sendObjectToBack(obj);
-          });
-          refImageRef.current = img;
-          canvas.renderAll();
-        });
-      },
-      setReferenceOpacity: (opacity: number) => {
-        if (refImageRef.current) {
-          refImageRef.current.set({ opacity: opacity / 100 });
-          fabricRef.current?.renderAll();
-        }
-      },
       getNodeCount: () => {
         const canvas = fabricRef.current;
         if (!canvas) return 0;
