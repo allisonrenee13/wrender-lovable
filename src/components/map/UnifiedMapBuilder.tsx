@@ -595,7 +595,13 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                   <div className="flex-1 flex flex-col">
                     <div className="p-5 space-y-5 flex-1 overflow-y-auto">
                       {/* 1. Heading */}
-                      <h3 className="text-base font-serif font-semibold text-foreground">Your trace is ready</h3>
+                      <h3 className="text-base font-serif font-semibold text-foreground">
+                        {retraceStatus === "running"
+                          ? "Analysing image..."
+                          : isTimedOut
+                          ? "Unable to auto-trace"
+                          : "Your trace is ready"}
+                      </h3>
 
                       {/* STATE 1: Loading */}
                       {retraceStatus === "running" && (
