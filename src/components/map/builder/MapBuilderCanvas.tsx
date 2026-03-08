@@ -640,23 +640,10 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
         if (!canvas) return "";
         const w = canvas.width || 800;
         const h = canvas.height || 600;
-        const objects = canvas.getObjects();
-        console.log("[getSVG] total objects:", objects.length);
-        objects.forEach((obj: any, i: number) => {
-          console.log(`[getSVG] obj[${i}] type:`, obj.type,
-            "x1:", obj.x1, "data:", JSON.stringify(obj.data));
-        });
         let markup = "";
-        objects.forEach((obj: any) => {
-          if (typeof obj.x1 === "number" && typeof obj.x2 === "number") {
-            const x1 = obj.x1 + (obj.left ?? 0);
-            const y1 = obj.y1 + (obj.top ?? 0);
-            const x2 = obj.x2 + (obj.left ?? 0);
-            const y2 = obj.y2 + (obj.top ?? 0);
-            markup += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round"/>`;
-          } else if (!obj.excludeFromExport) {
-            markup += obj.toSVG();
-          }
+        canvas.getObjects().forEach((obj: any) => {
+          if (obj.excludeFromExport) return;
+          markup += obj.toSVG();
         });
         if (!markup) return "";
         return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}">${markup}</svg>`;
