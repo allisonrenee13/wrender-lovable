@@ -23,6 +23,7 @@ type TabId = "trace" | "edit" | "add";
 
 interface UnifiedMapBuilderProps {
   onConfirm?: () => void;
+  onRender?: (svg: string) => void;
   initialPhase?: Phase;
 }
 
@@ -56,7 +57,7 @@ function reachedTabs(phase: Phase): Set<TabId> {
   return s;
 }
 
-const UnifiedMapBuilder = ({ onConfirm, initialPhase: initialPhaseProp }: UnifiedMapBuilderProps) => {
+const UnifiedMapBuilder = ({ onConfirm, onRender, initialPhase: initialPhaseProp }: UnifiedMapBuilderProps) => {
   const { currentProject, confirmMap, updateMapState, addPin } = useProject();
 
   const savedMapState = currentProject?.mapState;
@@ -328,22 +329,18 @@ const UnifiedMapBuilder = ({ onConfirm, initialPhase: initialPhaseProp }: Unifie
         stylePrefs: stylePrefs as any,
       });
 
-      console.log("[render] canvasSVG length:", canvasSVG?.length);
-      console.log("[render] rawSVG length:", rawSVG?.length);
-      console.log("[render] rawSVG preview:", rawSVG?.slice(0, 300));
       console.log("[render] processed length:", processed?.length);
-      console.log("[render] processed preview:", processed?.slice(0, 300));
       setPhaseAndSave("preview");
       saveCanvasState();
-      confirmMap(processed);
-      onConfirm?.();
+      confirmMap();
+      onRender?.(processed);
     }, 1500);
   };
 
   const handleUseMap = () => {
     saveCanvasState();
-    confirmMap(renderedSVG || undefined);
-    onConfirm?.();
+    confirmMap();
+    onRender?.(renderedSVG!);
   };
 
   const handleExportSVG = () => {

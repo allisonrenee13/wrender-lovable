@@ -9,7 +9,7 @@ interface ProjectContextType {
   allProjects: Project[];
   createProject: (data: { title: string; genre: string; setting: string; wordCount: string }) => string;
   updateProjectTitle: (title: string) => void;
-  confirmMap: (renderedSVG?: string) => void;
+  confirmMap: () => void;
   addPin: (pin: Omit<Pin, "id">) => void;
   removePin: (id: string) => void;
   updatePin: (id: string, updates: Partial<Pin>) => void;
@@ -85,8 +85,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     updateCurrentProject((p) => ({ ...p, [field]: value }));
   }, [updateCurrentProject]);
 
-  const confirmMap = useCallback((renderedSVG?: string) => {
-    console.log("[confirmMap] renderedSVG length:", renderedSVG?.length ?? 0);
+  const confirmMap = useCallback(() => {
     updateCurrentProject((p) => {
       const version: MapVersion = {
         id: genId(),
@@ -100,10 +99,6 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         ...p,
         mapConfirmed: true,
         mapVersions: [version],
-        mapState: {
-          ...p.mapState,
-          ...(renderedSVG ? { renderedSVG } : {}),
-        },
       };
     });
     logActivity("Map confirmed");
