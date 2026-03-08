@@ -686,23 +686,23 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                             In the Edit step you can draw missing lines and erase anything that doesn't look right.
                           </p>
 
-                          <p className="text-xs text-muted-foreground">Not quite right? You can also:</p>
-                          <div className="flex gap-2">
+                          <p className="text-xs text-muted-foreground">Not quite right? Try one of these instead:</p>
+                          <div className="space-y-2">
                             <Button
-                              variant="outline"
-                              size="sm"
-                              className="flex-1 text-xs"
-                              onClick={() => handleEntrySelect("template")}
+                              className="w-full bg-primary text-primary-foreground font-semibold"
+                              onClick={() => {
+                                if (traceImageDataUrl) handleManualTrace(traceImageDataUrl);
+                              }}
                             >
+                              Draw over it manually →
+                            </Button>
+                            <Button variant="outline" className="w-full"
+                              onClick={() => handleEntrySelect("template")}>
                               Browse Templates →
                             </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="flex-1 text-xs"
-                              onClick={() => handleEntrySelect("draw")}
-                            >
-                              Draw from scratch →
+                            <Button variant="outline" className="w-full"
+                              onClick={() => handleEntrySelect("draw")}>
+                              Start from scratch →
                             </Button>
                           </div>
                         </>
