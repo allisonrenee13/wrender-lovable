@@ -17,7 +17,6 @@ import {
   FabricImage,
   loadSVGFromString,
 } from "fabric";
-import { EraserBrush } from "@erase2d/fabric";
 import type { StylePreferences, ShapeTool, FeatureStamp } from "./types";
 import { strokeWeightValues, backgroundColors } from "./types";
 
