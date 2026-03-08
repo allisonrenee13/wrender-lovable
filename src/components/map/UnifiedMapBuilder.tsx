@@ -922,23 +922,70 @@ function traceOutlineImage(
 
   const isColoredBackground = avgCornerBrightness < 220 && colorVar > 30;
 
-  // For colored backgrounds, use edge detection instead of brightness thresholding
+  // For colored backgrounds, use color-region quantization approach
   if (isColoredBackground) {
-    ink.fill(0);
-    for (let y = 1; y < h - 1; y++) {
-      for (let x = 1; x < w - 1; x++) {
-        const idx = (y * w + x) * 4;
-        const r = data[idx], g = data[idx + 1], b = data[idx + 2];
-        let maxDiff = 0;
-        for (const ni of [(y - 1) * w + x, (y + 1) * w + x, y * w + (x - 1), y * w + (x + 1)]) {
-          const diff = Math.abs(r - data[ni * 4]) +
-                       Math.abs(g - data[ni * 4 + 1]) +
-                       Math.abs(b - data[ni * 4 + 2]);
-          if (diff > maxDiff) maxDiff = diff;
-        }
-        ink[y * w + x] = maxDiff > Math.round(80 - sensitivity * 50) ? 1 : 0;
+    const QUANT = 32;
+    const quantize = (v: number) => Math.round(v / QUANT) * QUANT;
+
+    // Build color key per pixel
+    const colorKey = new Uint32Array(w * h);
+    for (let i = 0; i < w * h; i++) {
+      const r = quantize(data[i * 4]);
+      const g = quantize(data[i * 4 + 1]);
+      const b = quantize(data[i * 4 + 2]);
+      const brightness = (r + g + b) / 3;
+      if (brightness > 230 || brightness < 20) {
+        colorKey[i] = 0;
+      } else {
+        colorKey[i] = (r << 16) | (g << 8) | b;
       }
     }
+
+    // Find connected regions of matching color
+    const colorVisited = new Uint8Array(w * h);
+    const colorComponents: Array<{ pixels: Array<[number, number]>; color: number }> = [];
+
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const idx = y * w + x;
+        if (!colorKey[idx] || colorVisited[idx]) continue;
+        const targetColor = colorKey[idx];
+        const pixels: Array<[number, number]> = [];
+        const stack: Array<[number, number]> = [[x, y]];
+        colorVisited[idx] = 1;
+        while (stack.length) {
+          const [cx, cy] = stack.pop()!;
+          pixels.push([cx, cy]);
+          for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]] as Array<[number, number]>) {
+            const nx = cx + dx, ny = cy + dy;
+            if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
+            const ni = ny * w + nx;
+            if (!colorVisited[ni] && colorKey[ni] === targetColor) {
+              colorVisited[ni] = 1;
+              stack.push([nx, ny]);
+            }
+          }
+        }
+        if (pixels.length > 200) {
+          colorComponents.push({ pixels, color: targetColor });
+        }
+      }
+    }
+
+    // Convert color regions to ink map — mark boundary pixels
+    ink.fill(0);
+    colorComponents
+      .sort((a, b) => b.pixels.length - a.pixels.length)
+      .slice(0, 12)
+      .forEach(({ pixels }) => {
+        const pset = new Set(pixels.map(([x, y]) => y * w + x));
+        pixels.forEach(([x, y]) => {
+          const isEdge = ([[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]] as Array<[number, number]>).some(
+            ([nx, ny]) => nx < 0 || nx >= w || ny < 0 || ny >= h || !pset.has(ny * w + nx)
+          );
+          if (isEdge) ink[y * w + x] = 1;
+        });
+      });
   }
 
   // 2. Zero out 6px border to remove image frame artifacts
