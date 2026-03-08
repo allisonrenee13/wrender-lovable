@@ -21,7 +21,7 @@ import { defaultStylePreferences, lineStyleLabels, backgroundColors } from "./bu
 import { saveTemplate } from "@/lib/templateLibrary";
 
 type Phase = "entry" | "upload" | "traceReview" | "shapeCanvas" | "style" | "renderReady" | "rendering" | "preview";
-type TabId = "trace" | "edit" | "style" | "add";
+type TabId = "trace" | "edit" | "add";
 
 interface UnifiedMapBuilderProps {
   onConfirm?: () => void;
@@ -37,8 +37,7 @@ const defaultCanvas: CanvasState = {
 
 function phaseToTab(phase: Phase): TabId {
   if (phase === "entry" || phase === "upload" || phase === "traceReview") return "trace";
-  if (phase === "shapeCanvas") return "edit";
-  if (phase === "style") return "style";
+  if (phase === "shapeCanvas" || phase === "style") return "edit";
   return "add";
 }
 
@@ -53,7 +52,6 @@ function phaseToStep(phase: Phase): number {
 function reachedTabs(phase: Phase): Set<TabId> {
   const s = new Set<TabId>(["trace"]);
   if (["shapeCanvas", "style", "renderReady", "rendering", "preview"].includes(phase)) s.add("edit");
-  if (["style", "renderReady", "rendering", "preview"].includes(phase)) s.add("style");
   if (["renderReady", "rendering", "preview"].includes(phase)) s.add("add");
   return s;
 }
@@ -363,10 +361,6 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
       if (phase !== "shapeCanvas") {
         setPhase("shapeCanvas");
       }
-    } else if (tab === "style") {
-      if (phase !== "style") {
-        setPhase("style");
-      }
     } else if (tab === "add") {
       if (phase !== "renderReady" && phase !== "rendering" && phase !== "preview") {
         setPhase(renderedSVG ? "preview" : "renderReady");
@@ -386,7 +380,6 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   const tabs: Array<{ id: TabId; label: string }> = [
     { id: "trace", label: "Trace" },
     { id: "edit", label: "Edit" },
-    { id: "style", label: "Style" },
     { id: "add", label: "Add" },
   ];
 
@@ -704,8 +697,13 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                       <div>
                         <h3 className="text-base font-serif font-semibold text-foreground mb-1">Edit your outline</h3>
                         <p className="text-xs text-muted-foreground">
-                          Use Pen ✏️ to draw missing lines. Use Erase ⌫ to remove anything extra. Use Smooth to clean up jagged edges.
+                          Use Pen ✏️ to draw missing lines. Use Erase ⌫ to remove anything extra.
                         </p>
+                      </div>
+
+                      {/* Style controls (merged from Style tab) */}
+                      <div className="pt-2 border-t border-border">
+                        <StylePreferencesPanel prefs={stylePrefs} onChange={setStylePrefs} forceExpanded />
                       </div>
                     </div>
 
@@ -719,43 +717,6 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                         className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                       >
                         ← Back to Trace
-                      </button>
-                      <Button
-                        onClick={() => {
-                          setPhaseAndSave("style");
-                          setActiveTab("style");
-                        }}
-                        className="bg-primary text-primary-foreground font-semibold px-6"
-                      >
-                        Continue to Style →
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                {/* STYLE TAB */}
-                {activeTab === "style" && (
-                  <div className="flex-1 flex flex-col">
-                    <div className="flex-1 overflow-y-auto">
-                      <div className="p-6">
-                        <h3 className="text-base font-serif font-semibold text-foreground mb-1">Style your map</h3>
-                        <p className="text-xs text-muted-foreground mb-6">
-                          These are saved for this project. You can change them any time.
-                        </p>
-                      </div>
-                      <StylePreferencesPanel prefs={stylePrefs} onChange={setStylePrefs} forceExpanded />
-                    </div>
-
-                    {/* Style tab footer */}
-                    <div className="p-4 border-t border-border flex items-center justify-between">
-                      <button
-                        onClick={() => {
-                          setPhaseAndSave("shapeCanvas");
-                          setActiveTab("edit");
-                        }}
-                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        ← Back to Edit
                       </button>
                       <Button
                         onClick={() => {

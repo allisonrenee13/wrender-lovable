@@ -103,6 +103,7 @@ const CanvasToolbar = ({
             <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Draw</span>
             {drawTools.map((tool) =>
               renderToolButton(tool, activeTool === tool.id, () => {
+                console.log("[tool] switching to", tool.id);
                 onToolChange(tool.id);
               })
             )}
