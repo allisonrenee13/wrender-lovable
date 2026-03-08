@@ -388,6 +388,10 @@ const UnifiedMapBuilder = ({ onConfirm, initialPhase: initialPhaseProp }: Unifie
       }
     } else if (tab === "edit") {
       if (phase !== "shapeCanvas") {
+        // Restore reference image when returning to edit
+        if (canvasState.referenceImage) {
+          canvasRef.current?.setReferenceOpacity(canvasState.referenceOpacity);
+        }
         setPhase("shapeCanvas");
       }
     } else if (tab === "add") {
