@@ -109,9 +109,46 @@ const EditingCanvas = ({
     }
 
     if (canvasState.paths.length > 0 && !initialTemplate) {
-      const svgStr = `<svg viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
-        ${canvasState.paths.map((p) => `<path d="${p.d}" fill="none" stroke="#1B2A4A" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`).join("\n")}
-      </svg>`;
+      // Compute bounding box of all paths to scale & center them
+      const allPoints: Array<[number, number]> = [];
+      canvasState.paths.forEach((p) => {
+        const matches = p.d.matchAll(/(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)/g);
+        for (const m of matches) {
+          allPoints.push([parseFloat(m[1]), parseFloat(m[2])]);
+        }
+      });
+
+      let svgStr: string;
+      if (allPoints.length >= 2) {
+        const xs = allPoints.map(([x]) => x);
+        const ys = allPoints.map(([, y]) => y);
+        const minX = Math.min(...xs);
+        const maxX = Math.max(...xs);
+        const minY = Math.min(...ys);
+        const maxY = Math.max(...ys);
+        const shapeW = maxX - minX || 1;
+        const shapeH = maxY - minY || 1;
+
+        const canvasW = 800;
+        const canvasH = 600;
+        const targetW = canvasW * 0.8;
+        const targetH = canvasH * 0.8;
+        const scale = Math.min(targetW / shapeW, targetH / shapeH);
+        const scaledW = shapeW * scale;
+        const scaledH = shapeH * scale;
+        const tx = (canvasW - scaledW) / 2 - minX * scale;
+        const ty = (canvasH - scaledH) / 2 - minY * scale;
+
+        svgStr = `<svg viewBox="0 0 ${canvasW} ${canvasH}" xmlns="http://www.w3.org/2000/svg">
+          <g transform="translate(${tx}, ${ty}) scale(${scale})">
+            ${canvasState.paths.map((p) => `<path d="${p.d}" fill="none" stroke="#1B2A4A" stroke-width="${Math.max(1, 2 / scale)}" stroke-linejoin="round" stroke-linecap="round"/>`).join("\n")}
+          </g>
+        </svg>`;
+      } else {
+        svgStr = `<svg viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
+          ${canvasState.paths.map((p) => `<path d="${p.d}" fill="none" stroke="#1B2A4A" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`).join("\n")}
+        </svg>`;
+      }
       handle.loadSVG(svgStr);
     }
 
