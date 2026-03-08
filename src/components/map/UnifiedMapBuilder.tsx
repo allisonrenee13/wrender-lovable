@@ -77,7 +77,6 @@ const UnifiedMapBuilder = ({ onConfirm, initialPhase: initialPhaseProp }: Unifie
 
   const canvasRef = useRef<MapCanvasHandle | null>(null);
   const autoSaveTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const pendingConfirm = useRef(false);
 
   const [canvasState, setCanvasState] = useState<CanvasState>(defaultCanvas);
 
@@ -158,16 +157,6 @@ const UnifiedMapBuilder = ({ onConfirm, initialPhase: initialPhaseProp }: Unifie
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Auto-confirm after render completes
-  useEffect(() => {
-    if (pendingConfirm.current && renderedSVG) {
-      pendingConfirm.current = false;
-      saveCanvasState();
-      confirmMap();
-      onConfirm?.();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [renderedSVG]);
 
   // --- Handlers ---
   const handleEntrySelect = (path: BuilderPath) => {
@@ -953,7 +942,6 @@ const UnifiedMapBuilder = ({ onConfirm, initialPhase: initialPhaseProp }: Unifie
                     <div className="p-4 border-t border-border">
                       <Button
                         onClick={() => {
-                          pendingConfirm.current = true;
                           handleRender();
                         }}
                         className="w-full bg-primary text-primary-foreground font-semibold h-11"
