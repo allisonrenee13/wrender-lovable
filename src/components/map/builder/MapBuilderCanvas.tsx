@@ -611,7 +611,25 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
 
     // --- Public API ---
     useImperativeHandle(ref, () => ({
-      getSVG: () => fabricRef.current?.toSVG() ?? "",
+      getSVG: () => {
+        const canvas = fabricRef.current;
+        if (!canvas) return "";
+        const w = canvas.width || 800;
+        const h = canvas.height || 600;
+        let markup = "";
+        canvas.getObjects().forEach(obj => {
+          if (obj instanceof Line && (obj as any).data?.isMapStroke) {
+            const x1 = (obj.x1 ?? 0) + (obj.left ?? 0);
+            const y1 = (obj.y1 ?? 0) + (obj.top ?? 0);
+            const x2 = (obj.x2 ?? 0) + (obj.left ?? 0);
+            const y2 = (obj.y2 ?? 0) + (obj.top ?? 0);
+            markup += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round"/>`;
+          } else if (!(obj instanceof Line) && !obj.excludeFromExport) {
+            markup += obj.toSVG();
+          }
+        });
+        return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}">${markup}</svg>`;
+      },
       getPNG: () => fabricRef.current?.toDataURL({ format: "png", quality: 1, multiplier: 2 }) ?? "",
       loadSVG: async (svgString: string) => {
         const canvas = fabricRef.current;

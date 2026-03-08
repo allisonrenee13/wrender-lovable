@@ -73,6 +73,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
 
   const canvasRef = useRef<MapCanvasHandle | null>(null);
   const autoSaveTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pendingConfirm = useRef(false);
 
   const [canvasState, setCanvasState] = useState<CanvasState>(defaultCanvas);
 
@@ -147,6 +148,17 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Auto-confirm after render completes
+  useEffect(() => {
+    if (pendingConfirm.current && renderedSVG) {
+      pendingConfirm.current = false;
+      saveCanvasState();
+      confirmMap();
+      onConfirm?.();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [renderedSVG]);
+
   // --- Handlers ---
   const handleEntrySelect = (path: BuilderPath) => {
     setIsPoorTrace(false);
@@ -162,6 +174,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
 
   const handleTemplateSelect = (template: MapTemplate) => {
     setIsPoorTrace(false);
+    setSelectedTemplate(template);
     setTemplatePickerOpen(false);
     setCanvasState({ ...defaultCanvas, paths: [{ d: template.svgPath, confidence: 1 }] });
     setPhase("shapeCanvas");
@@ -280,20 +293,29 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
     setPhase("rendering");
 
     setTimeout(() => {
-      const sw = stylePrefs.strokeWeight === "fine" ? 1 : stylePrefs.strokeWeight === "bold" ? 2.5 : 1.8;
-      const pathMarkup = canvasState.paths
-        .map((p) => `<path d="${p.d}" fill="none" stroke="${colors.stroke}" stroke-width="${sw}" stroke-linejoin="round" stroke-linecap="round"/>`)
-        .join("\n");
-      const rawSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600">
-        <rect width="600" height="600" fill="${colors.bg}"/>
-        ${pathMarkup}
-      </svg>`;
+      const canvasSVG = canvasRef.current?.getSVG() || "";
+      let rawSVG: string;
+
+      if (canvasSVG && canvasSVG.length > 100) {
+        rawSVG = canvasSVG;
+      } else {
+        const sw = stylePrefs.strokeWeight === "fine" ? 1 : stylePrefs.strokeWeight === "bold" ? 2.5 : 1.8;
+        const pathMarkup = canvasState.paths
+          .map((p) => `<path d="${p.d}" fill="none" stroke="${colors.stroke}" stroke-width="${sw}" stroke-linejoin="round" stroke-linecap="round"/>`)
+          .join("\n");
+        rawSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600">
+          <rect width="600" height="600" fill="${colors.bg}"/>
+          ${pathMarkup}
+        </svg>`;
+      }
 
       const pins = currentProject?.pins.map((p) => ({ title: p.title, x: p.x * 1.33, y: p.y * 0.86 })) || [];
       const processed = postProcessSVG(rawSVG, stylePrefs, pins, 600, 600);
       setRenderedSVG(processed);
 
+      const json = canvasRef.current?.getJSON() || null;
       updateMapState({
+        canvasJSON: json,
         renderedSVG: processed,
         currentStep: 3,
         stylePrefs: stylePrefs as any,
@@ -877,8 +899,8 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                     <div className="p-4 border-t border-border">
                       <Button
                         onClick={() => {
+                          pendingConfirm.current = true;
                           handleRender();
-                          handleUseMap();
                         }}
                         className="w-full bg-primary text-primary-foreground font-semibold h-11"
                       >
