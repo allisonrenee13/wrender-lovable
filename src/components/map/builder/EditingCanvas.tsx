@@ -78,7 +78,8 @@ const EditingCanvas = ({
       const pathElements = Array.from(doc.querySelectorAll("path"));
       const paths = pathElements
         .map((el) => el.getAttribute("d"))
-        .filter(Boolean) as string[];
+        .filter(Boolean)
+        .map((d) => ({ d: d as string, confidence: 1 }));
 
       onCanvasChange({
         ...canvasState,
@@ -109,7 +110,7 @@ const EditingCanvas = ({
 
     if (canvasState.paths.length > 0 && !initialTemplate) {
       const svgStr = `<svg viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
-        ${canvasState.paths.map((p) => `<path d="${p}" fill="none" stroke="#1B2A4A" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`).join("\n")}
+        ${canvasState.paths.map((p) => `<path d="${p.d}" fill="none" stroke="#1B2A4A" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`).join("\n")}
       </svg>`;
       handle.loadSVG(svgStr);
     }

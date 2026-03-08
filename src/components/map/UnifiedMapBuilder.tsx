@@ -2,6 +2,11 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useProject } from "@/context/ProjectContext";
 import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import StepIndicator, { type BuilderStep } from "./builder/StepIndicator";
 import EntryScreen from "./builder/EntryScreen";
 import TemplatePicker from "./builder/TemplatePicker";
@@ -10,10 +15,11 @@ import EditingCanvas from "./builder/EditingCanvas";
 import StyleStep from "./builder/StyleStep";
 import type { MapCanvasHandle } from "./builder/MapBuilderCanvas";
 import { postProcessSVG, exportSVG, exportPNG } from "./builder/svgPostProcess";
-import type { BuilderPath, MapTemplate, StylePreferences, CanvasState } from "./builder/types";
+import type { BuilderPath, MapTemplate, StylePreferences, CanvasState, TracedPath } from "./builder/types";
 import { defaultStylePreferences, lineStyleLabels, backgroundColors } from "./builder/types";
+import { saveTemplate } from "@/lib/templateLibrary";
 
-type Phase = "entry" | "upload" | "shapeCanvas" | "style" | "renderReady" | "rendering" | "preview";
+type Phase = "entry" | "upload" | "traceReview" | "shapeCanvas" | "style" | "renderReady" | "rendering" | "preview";
 
 interface UnifiedMapBuilderProps {
   onConfirm?: () => void;
@@ -28,7 +34,7 @@ const defaultCanvas: CanvasState = {
 };
 
 function phaseToStep(phase: Phase): BuilderStep {
-  if (phase === "entry" || phase === "upload" || phase === "shapeCanvas") return 1;
+  if (phase === "entry" || phase === "upload" || phase === "traceReview" || phase === "shapeCanvas") return 1;
   if (phase === "style") return 2;
   return 3;
 }
@@ -70,6 +76,17 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
     if (savedMapState?.stylePrefs) return savedMapState.stylePrefs as unknown as StylePreferences;
     return defaultStylePreferences;
   });
+
+  // Trace review state
+  const [traceSensitivity, setTraceSensitivity] = useState(0.65);
+  const [traceImageDataUrl, setTraceImageDataUrl] = useState<string | null>(null);
+  const [traceImageData, setTraceImageData] = useState<{ data: ImageData; w: number; h: number } | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Save-as-template modal
+  const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
+  const [templateName, setTemplateName] = useState("");
+  const [templatePublic, setTemplatePublic] = useState(false);
 
   const hasShape = canvasState.paths.length > 0 || selectedTemplate !== null;
   const currentStep = phaseToStep(phase);
@@ -131,10 +148,14 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   const handleTemplateSelect = (template: MapTemplate) => {
     setSelectedTemplate(template);
     setTemplatePickerOpen(false);
-    setCanvasState({ ...defaultCanvas, paths: [template.svgPath] });
+    setCanvasState({ ...defaultCanvas, paths: [{ d: template.svgPath, confidence: 1 }] });
     setPhase("shapeCanvas");
     toast({ title: "Template loaded", description: "Edit the shape to match your world." });
   };
+
+  const runTrace = useCallback((imageData: ImageData, w: number, h: number, sensitivity: number): TracedPath[] => {
+    return traceImageToSVGPaths(imageData, w, h, sensitivity);
+  }, []);
 
   const handleAutoTrace = (imageDataUrl: string) => {
     const img = new Image();
@@ -147,7 +168,11 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
       const ctx = traceCanvas.getContext("2d")!;
       ctx.drawImage(img, 0, 0, w, h);
       const imageData = ctx.getImageData(0, 0, w, h);
-      const paths = traceImageToSVGPaths(imageData, w, h);
+      const paths = runTrace(imageData, w, h, 0.65);
+
+      setTraceImageDataUrl(imageDataUrl);
+      setTraceImageData({ data: imageData, w, h });
+      setTraceSensitivity(0.65);
 
       if (paths.length > 0) {
         setCanvasState({
@@ -162,11 +187,30 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
           nodeCount: 12,
         });
       }
-      setPhaseAndSave("shapeCanvas");
-      toast({ title: "Trace complete", description: "Use the node editor to clean up any imperfect edges." });
+      setPhase("traceReview");
     };
     img.src = imageDataUrl;
   };
+
+  // Re-trace with new sensitivity (debounced call)
+  const handleSensitivityChange = useCallback((value: number) => {
+    setTraceSensitivity(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      if (!traceImageData) return;
+      const { data, w, h } = traceImageData;
+      const paths = traceImageToSVGPaths(data, w, h, value);
+      if (paths.length > 0) {
+        setCanvasState((prev) => ({ ...prev, paths, nodeCount: paths.length * 10 }));
+      } else {
+        setCanvasState((prev) => ({
+          ...prev,
+          paths: [generateOutlinePath(w, h)],
+          nodeCount: 12,
+        }));
+      }
+    }, 500);
+  }, [traceImageData]);
 
   const handleManualTrace = (image: string) => {
     setCanvasState({ ...defaultCanvas, referenceImage: image, referenceOpacity: 40 });
@@ -208,6 +252,53 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
     }
   };
 
+  const handleSaveAsTemplate = () => {
+    if (!templateName.trim()) return;
+    // Generate thumbnail
+    const thumbCanvas = document.createElement("canvas");
+    thumbCanvas.width = 200;
+    thumbCanvas.height = 150;
+    const ctx = thumbCanvas.getContext("2d")!;
+    ctx.fillStyle = "#FAFAF7";
+    ctx.fillRect(0, 0, 200, 150);
+
+    // Find bounding box of all paths to scale them into thumbnail
+    const allPaths = canvasState.paths;
+    if (allPaths.length > 0) {
+      ctx.strokeStyle = "#1a1a1a";
+      ctx.lineWidth = 1;
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+      // Draw paths using Path2D
+      allPaths.forEach((p) => {
+        const path2d = new Path2D(p.d);
+        ctx.stroke(path2d);
+      });
+    }
+
+    const thumbnailDataUrl = thumbCanvas.toDataURL("image/png");
+    saveTemplate({
+      name: templateName.trim(),
+      svgPaths: allPaths,
+      thumbnailDataUrl,
+      isPublic: templatePublic,
+    });
+    setSaveTemplateOpen(false);
+    setTemplateName("");
+    setTemplatePublic(false);
+    toast({ title: "Template saved", description: `"${templateName.trim()}" saved to your library.` });
+  };
+
+  // Trace review stats
+  const highCount = canvasState.paths.filter((p) => p.confidence > 0.65).length;
+  const lowCount = canvasState.paths.filter((p) => p.confidence < 0.35).length;
+
+  const getConfidenceColor = (c: number) => {
+    if (c > 0.65) return "#2EAA5E";
+    if (c >= 0.35) return "#D4882A";
+    return "#D94040";
+  };
+
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden">
       <StepIndicator currentStep={currentStep} completedSteps={completed} />
@@ -221,6 +312,145 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
             onAutoTrace={handleAutoTrace}
             onManualTrace={handleManualTrace}
           />
+        )}
+
+        {phase === "traceReview" && (
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 flex overflow-hidden">
+              {/* Image + SVG overlay */}
+              <div className="flex-1 flex items-center justify-center p-6 bg-muted/20 relative">
+                <div className="relative w-full max-w-[600px]">
+                  {traceImageDataUrl && (
+                    <img
+                      src={traceImageDataUrl}
+                      alt="Uploaded reference"
+                      className="w-full h-auto rounded-lg border border-border"
+                    />
+                  )}
+                  {/* SVG overlay */}
+                  <svg
+                    viewBox={`0 0 ${traceImageData?.w || 600} ${traceImageData?.h || 600}`}
+                    className="absolute inset-0 w-full h-full"
+                    style={{ pointerEvents: "none" }}
+                  >
+                    {canvasState.paths.map((p, i) => (
+                      <path
+                        key={i}
+                        d={p.d}
+                        fill="none"
+                        stroke={getConfidenceColor(p.confidence)}
+                        strokeWidth="2"
+                        strokeLinejoin="round"
+                        strokeLinecap="round"
+                        opacity="0.85"
+                      />
+                    ))}
+                  </svg>
+                </div>
+              </div>
+
+              {/* Right panel */}
+              <div className="w-[320px] border-l border-border flex flex-col bg-card">
+                <div className="p-5 space-y-5 flex-1 overflow-y-auto">
+                  <div>
+                    <h3 className="text-base font-serif font-semibold text-foreground mb-1">Review Trace</h3>
+                    <p className="text-xs text-muted-foreground">
+                      Adjust sensitivity and review detected edges before continuing.
+                    </p>
+                  </div>
+
+                  {/* Legend */}
+                  <div className="space-y-1.5">
+                    <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Confidence</p>
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="w-3 h-3 rounded-full" style={{ backgroundColor: "#2EAA5E" }} />
+                      <span className="text-foreground">High (&gt; 0.65)</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="w-3 h-3 rounded-full" style={{ backgroundColor: "#D4882A" }} />
+                      <span className="text-foreground">Medium (0.35–0.65)</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="w-3 h-3 rounded-full" style={{ backgroundColor: "#D94040" }} />
+                      <span className="text-foreground">Low (&lt; 0.35)</span>
+                    </div>
+                  </div>
+
+                  {/* Stats */}
+                  <div className="bg-muted/40 rounded-lg p-3 space-y-1">
+                    <p className="text-sm text-foreground font-medium">{canvasState.paths.length} paths found</p>
+                    <p className="text-xs text-muted-foreground">
+                      {highCount} high · {canvasState.paths.length - highCount - lowCount} medium · {lowCount} low confidence
+                    </p>
+                  </div>
+
+                  {/* Sensitivity slider */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-medium text-foreground">Sensitivity</p>
+                      <span className="text-xs text-muted-foreground">{traceSensitivity.toFixed(2)}</span>
+                    </div>
+                    <Slider
+                      value={[traceSensitivity]}
+                      onValueChange={([v]) => handleSensitivityChange(v)}
+                      min={0.2}
+                      max={0.95}
+                      step={0.01}
+                      className="w-full"
+                    />
+                    <p className="text-[10px] text-muted-foreground">
+                      Lower = fewer edges, higher = more detail (may include noise)
+                    </p>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="p-4 border-t border-border space-y-2">
+                  <Button
+                    onClick={() => setPhaseAndSave("shapeCanvas")}
+                    className="w-full bg-primary text-primary-foreground font-semibold"
+                  >
+                    Looks good, continue →
+                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 text-xs"
+                      onClick={() => {
+                        if (traceImageData) {
+                          const paths = runTrace(traceImageData.data, traceImageData.w, traceImageData.h, traceSensitivity);
+                          if (paths.length > 0) {
+                            setCanvasState((prev) => ({ ...prev, paths, nodeCount: paths.length * 10 }));
+                          }
+                        }
+                      }}
+                    >
+                      Re-trace
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 text-xs"
+                      onClick={() => {
+                        setTemplateName("");
+                        setTemplatePublic(false);
+                        setSaveTemplateOpen(true);
+                      }}
+                    >
+                      Save as Template
+                    </Button>
+                  </div>
+                  <button
+                    onClick={() => setPhase("upload")}
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors w-full text-center"
+                  >
+                    ← Back to Upload
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
 
         {phase === "shapeCanvas" && (
@@ -269,7 +499,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                 {canvasState.paths.map((p, i) => (
                   <path
                     key={i}
-                    d={p}
+                    d={p.d}
                     fill="none"
                     stroke={colors.stroke}
                     strokeWidth={stylePrefs.strokeWeight === "fine" ? 1 : stylePrefs.strokeWeight === "bold" ? 2.5 : 1.8}
@@ -381,87 +611,245 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
         onClose={() => setTemplatePickerOpen(false)}
         onSelect={handleTemplateSelect}
       />
+
+      {/* Save as Template Modal */}
+      <Dialog open={saveTemplateOpen} onOpenChange={setSaveTemplateOpen}>
+        <DialogContent className="sm:max-w-[360px]">
+          <DialogHeader>
+            <DialogTitle className="font-serif">Save as Template</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="tpl-name" className="text-xs">Template name</Label>
+              <Input
+                id="tpl-name"
+                value={templateName}
+                onChange={(e) => setTemplateName(e.target.value)}
+                placeholder="My island template"
+                className="h-9"
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="tpl-public" className="text-xs">Make public</Label>
+              <Switch
+                id="tpl-public"
+                checked={templatePublic}
+                onCheckedChange={setTemplatePublic}
+              />
+            </div>
+            <Button
+              onClick={handleSaveAsTemplate}
+              disabled={!templateName.trim()}
+              className="w-full bg-primary text-primary-foreground font-semibold"
+            >
+              Save Template
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
-// --- Client-side image edge tracing ---
-function traceImageToSVGPaths(imageData: ImageData, w: number, h: number): string[] {
+// --- Improved Client-side image edge tracing ---
+function traceImageToSVGPaths(imageData: ImageData, w: number, h: number, sensitivity = 0.65): TracedPath[] {
   const { data } = imageData;
-  const edgePoints: Array<{ x: number; y: number }> = [];
 
-  for (let y = 1; y < h - 1; y += 3) {
-    for (let x = 1; x < w - 1; x += 3) {
-      const idx = (y * w + x) * 4;
-      const gray = (data[idx] + data[idx + 1] + data[idx + 2]) / 3;
-      const idxRight = (y * w + (x + 1)) * 4;
-      const idxDown = ((y + 1) * w + x) * 4;
-      const grayRight = (data[idxRight] + data[idxRight + 1] + data[idxRight + 2]) / 3;
-      const grayDown = (data[idxDown] + data[idxDown + 1] + data[idxDown + 2]) / 3;
+  // 1. Convert to grayscale
+  const gray = new Float32Array(w * h);
+  for (let i = 0; i < w * h; i++) {
+    const idx = i * 4;
+    gray[i] = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
+  }
 
-      const gradient = Math.abs(gray - grayRight) + Math.abs(gray - grayDown);
-      if (gradient > 40) {
-        edgePoints.push({ x, y });
+  // 2. Apply 3 passes of 3x3 Gaussian blur
+  const kernel = [1/16, 2/16, 1/16, 2/16, 4/16, 2/16, 1/16, 2/16, 1/16];
+  let src = gray;
+  for (let pass = 0; pass < 3; pass++) {
+    const dst = new Float32Array(w * h);
+    for (let y = 1; y < h - 1; y++) {
+      for (let x = 1; x < w - 1; x++) {
+        let sum = 0;
+        let ki = 0;
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            sum += src[(y + dy) * w + (x + dx)] * kernel[ki++];
+          }
+        }
+        dst[y * w + x] = sum;
       }
+    }
+    src = dst;
+  }
+
+  // 3. Sobel operator
+  const magnitude = new Float32Array(w * h);
+  let maxMag = 0;
+  for (let y = 1; y < h - 1; y++) {
+    for (let x = 1; x < w - 1; x++) {
+      const tl = src[(y-1)*w+(x-1)], tc = src[(y-1)*w+x], tr = src[(y-1)*w+(x+1)];
+      const ml = src[y*w+(x-1)],                           mr = src[y*w+(x+1)];
+      const bl = src[(y+1)*w+(x-1)], bc = src[(y+1)*w+x], br = src[(y+1)*w+(x+1)];
+
+      const gx = -tl + tr - 2*ml + 2*mr - bl + br;
+      const gy = -tl - 2*tc - tr + bl + 2*bc + br;
+      const mag = Math.sqrt(gx*gx + gy*gy);
+      magnitude[y*w+x] = mag;
+      if (mag > maxMag) maxMag = mag;
     }
   }
 
-  if (edgePoints.length < 10) return [];
+  // 4. Threshold
+  if (maxMag === 0) return [];
+  const threshold = (0.08 + (1 - sensitivity) * 0.35) * maxMag;
 
-  const paths: string[] = [];
-  const used = new Set<number>();
-  
-  while (used.size < edgePoints.length) {
-    let startIdx = -1;
-    for (let i = 0; i < edgePoints.length; i++) {
-      if (!used.has(i)) { startIdx = i; break; }
-    }
-    if (startIdx === -1) break;
+  // Normalize magnitudes
+  const normalized = new Float32Array(w * h);
+  for (let i = 0; i < w * h; i++) {
+    normalized[i] = magnitude[i] / maxMag;
+  }
 
-    const chain: Array<{ x: number; y: number }> = [edgePoints[startIdx]];
-    used.add(startIdx);
+  // 5. Find connected components via DFS
+  const isEdge = new Uint8Array(w * h);
+  for (let i = 0; i < w * h; i++) {
+    isEdge[i] = magnitude[i] >= threshold ? 1 : 0;
+  }
 
-    for (let step = 0; step < 200; step++) {
-      const last = chain[chain.length - 1];
-      let bestDist = 15;
-      let bestIdx = -1;
-      for (let i = 0; i < edgePoints.length; i++) {
-        if (used.has(i)) continue;
-        const dx = edgePoints[i].x - last.x;
-        const dy = edgePoints[i].y - last.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < bestDist) {
-          bestDist = dist;
-          bestIdx = i;
+  const visited = new Uint8Array(w * h);
+  const components: Array<{ points: Array<{ x: number; y: number }>; totalMag: number }> = [];
+
+  for (let y = 1; y < h - 1; y++) {
+    for (let x = 1; x < w - 1; x++) {
+      const idx = y * w + x;
+      if (!isEdge[idx] || visited[idx]) continue;
+
+      // DFS
+      const stack = [idx];
+      const points: Array<{ x: number; y: number }> = [];
+      let totalMag = 0;
+
+      while (stack.length > 0) {
+        const ci = stack.pop()!;
+        if (visited[ci]) continue;
+        visited[ci] = 1;
+        const cx = ci % w;
+        const cy = (ci - cx) / w;
+        points.push({ x: cx, y: cy });
+        totalMag += normalized[ci];
+
+        // 8-connected neighbors
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            if (dx === 0 && dy === 0) continue;
+            const nx = cx + dx, ny = cy + dy;
+            if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
+            const ni = ny * w + nx;
+            if (isEdge[ni] && !visited[ni]) {
+              stack.push(ni);
+            }
+          }
         }
       }
-      if (bestIdx === -1) break;
-      chain.push(edgePoints[bestIdx]);
-      used.add(bestIdx);
-    }
 
-    if (chain.length >= 5) {
-      let d = `M ${chain[0].x} ${chain[0].y}`;
-      for (let i = 1; i < chain.length - 1; i += 2) {
-        const cp = chain[i];
-        const end = chain[i + 1] || chain[i];
-        d += ` Q ${cp.x} ${cp.y} ${end.x} ${end.y}`;
+      if (points.length >= 6) {
+        components.push({ points, totalMag });
       }
-      paths.push(d);
     }
   }
 
-  return paths
-    .sort((a, b) => b.length - a.length)
-    .slice(0, 20);
+  // Sort by size, keep top 250
+  components.sort((a, b) => b.points.length - a.points.length);
+  const kept = components.slice(0, 250);
+
+  // 6. Douglas-Peucker simplification + path building
+  const results: TracedPath[] = [];
+
+  for (const comp of kept) {
+    // Order points by a simple nearest-neighbor walk
+    const ordered = orderPoints(comp.points);
+    const simplified = douglasPeucker(ordered, 1.8);
+    if (simplified.length < 2) continue;
+
+    let d = `M ${simplified[0].x} ${simplified[0].y}`;
+    for (let i = 1; i < simplified.length; i++) {
+      d += ` L ${simplified[i].x} ${simplified[i].y}`;
+    }
+
+    const confidence = comp.totalMag / comp.points.length;
+    results.push({ d, confidence: Math.min(confidence, 1) });
+  }
+
+  return results;
 }
 
-function generateOutlinePath(w: number, h: number): string {
+function orderPoints(points: Array<{ x: number; y: number }>): Array<{ x: number; y: number }> {
+  if (points.length <= 2) return points;
+  const used = new Set<number>();
+  const ordered: Array<{ x: number; y: number }> = [points[0]];
+  used.add(0);
+
+  for (let step = 1; step < points.length; step++) {
+    const last = ordered[ordered.length - 1];
+    let bestDist = Infinity;
+    let bestIdx = -1;
+    for (let i = 0; i < points.length; i++) {
+      if (used.has(i)) continue;
+      const dx = points[i].x - last.x;
+      const dy = points[i].y - last.y;
+      const dist = dx * dx + dy * dy;
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestIdx = i;
+      }
+    }
+    if (bestIdx === -1) break;
+    used.add(bestIdx);
+    ordered.push(points[bestIdx]);
+  }
+  return ordered;
+}
+
+function douglasPeucker(points: Array<{ x: number; y: number }>, epsilon: number): Array<{ x: number; y: number }> {
+  if (points.length <= 2) return points;
+
+  let maxDist = 0;
+  let maxIdx = 0;
+  const first = points[0];
+  const last = points[points.length - 1];
+
+  for (let i = 1; i < points.length - 1; i++) {
+    const dist = perpendicularDistance(points[i], first, last);
+    if (dist > maxDist) {
+      maxDist = dist;
+      maxIdx = i;
+    }
+  }
+
+  if (maxDist > epsilon) {
+    const left = douglasPeucker(points.slice(0, maxIdx + 1), epsilon);
+    const right = douglasPeucker(points.slice(maxIdx), epsilon);
+    return [...left.slice(0, -1), ...right];
+  }
+  return [first, last];
+}
+
+function perpendicularDistance(
+  point: { x: number; y: number },
+  lineStart: { x: number; y: number },
+  lineEnd: { x: number; y: number }
+): number {
+  const dx = lineEnd.x - lineStart.x;
+  const dy = lineEnd.y - lineStart.y;
+  const lenSq = dx * dx + dy * dy;
+  if (lenSq === 0) return Math.sqrt((point.x - lineStart.x) ** 2 + (point.y - lineStart.y) ** 2);
+  return Math.abs(dy * point.x - dx * point.y + lineEnd.x * lineStart.y - lineEnd.y * lineStart.x) / Math.sqrt(lenSq);
+}
+
+function generateOutlinePath(w: number, h: number): TracedPath {
   const cx = w / 2;
   const cy = h / 2;
   const r = Math.min(w, h) * 0.35;
 
-  // Fixed variation values — consistent every time, organic but stable
   const variations = [1.0, 0.88, 1.1, 0.92, 0.85, 1.05, 0.95, 1.08, 1.0, 0.9, 1.12, 0.87, 0.95, 1.02, 0.88, 1.0];
   const cpOffsets = [8, -10, 12, -8, 10, -12, 6, -9, 11, -7, 9, -11, 7, -8, 10, -6];
 
@@ -485,7 +873,7 @@ function generateOutlinePath(w: number, h: number): string {
     d += ` Q ${cpx.toFixed(0)} ${cpy.toFixed(0)} ${curr.x.toFixed(0)} ${curr.y.toFixed(0)}`;
   }
   d += " Z";
-  return d;
+  return { d, confidence: 0.5 };
 }
 
 export default UnifiedMapBuilder;
