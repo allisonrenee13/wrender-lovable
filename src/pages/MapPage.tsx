@@ -1,18 +1,23 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useProject } from "@/context/ProjectContext";
 import UnifiedMapBuilder from "@/components/map/UnifiedMapBuilder";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { X, Trash2, Move } from "lucide-react";
 
 const MapPage = () => {
-  const { currentProject, addPin } = useProject();
+  const { currentProject, addPin, removePin, updatePin } = useProject();
   const [savedSVG, setSavedSVG] = useState<string | null>(null);
   const [editingSVG, setEditingSVG] = useState<string | null>(null);
   const [versions, setVersions] = useState<string[]>([]);
   const [addingPin, setAddingPin] = useState(false);
+  const [movingPinId, setMovingPinId] = useState<string | null>(null);
   const [pendingPin, setPendingPin] = useState<{ x: number; y: number } | null>(null);
   const [pinName, setPinName] = useState("");
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [editingTitleId, setEditingTitleId] = useState<string | null>(null);
+  const [editingTitleValue, setEditingTitleValue] = useState("");
   const mapContainerRef = useRef<HTMLDivElement>(null);
 
   const showBuilder = editingSVG !== null || savedSVG === null;
@@ -28,10 +33,17 @@ const MapPage = () => {
   }
 
   const handleMapClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!addingPin || !mapContainerRef.current) return;
+    if ((!addingPin && !movingPinId) || !mapContainerRef.current) return;
     const rect = mapContainerRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+    if (movingPinId) {
+      updatePin(movingPinId, { x, y });
+      setMovingPinId(null);
+      return;
+    }
+
     setPendingPin({ x, y });
     setPinName("");
   };
@@ -59,6 +71,18 @@ const MapPage = () => {
     setEditingSVG(null);
   };
 
+  const handleMovePin = (pinId: string) => {
+    setDrawerOpen(false);
+    setMovingPinId(pinId);
+  };
+
+  const handleSaveTitle = (pinId: string) => {
+    if (editingTitleValue.trim()) {
+      updatePin(pinId, { title: editingTitleValue.trim() });
+    }
+    setEditingTitleId(null);
+  };
+
   if (showBuilder) {
     return (
       <div className="h-full flex flex-col">
@@ -80,6 +104,8 @@ const MapPage = () => {
     '<svg$1 style="width:100%;height:100%;display:block;">'
   );
 
+  const isPlacing = addingPin || !!movingPinId;
+
   return (
     <div className="h-full flex flex-col">
       <div className="flex items-center justify-between px-6 py-3 border-b border-border">
@@ -94,14 +120,14 @@ const MapPage = () => {
         </Button>
       </div>
 
-      {/* Pin placement banner */}
-      {addingPin && (
+      {/* Pin placement / move banner */}
+      {isPlacing && (
         <div className="px-6 py-2 bg-accent/50 border-b border-border text-center">
           <span className="text-xs text-accent-foreground font-medium">
-            Click anywhere on the map to place a pin
+            {movingPinId ? "Click on the map to move the pin" : "Click anywhere on the map to place a pin"}
           </span>
           <button
-            onClick={() => setAddingPin(false)}
+            onClick={() => { setAddingPin(false); setMovingPinId(null); }}
             className="ml-3 text-xs text-muted-foreground hover:text-foreground underline"
           >
             Cancel
@@ -113,7 +139,7 @@ const MapPage = () => {
         <div
           ref={mapContainerRef}
           className="relative w-full max-w-[600px]"
-          style={{ aspectRatio: "1 / 1", cursor: addingPin ? "crosshair" : "default" }}
+          style={{ aspectRatio: "1 / 1", cursor: isPlacing ? "crosshair" : "default" }}
           onClick={handleMapClick}
         >
           <div
@@ -143,10 +169,13 @@ const MapPage = () => {
 
       {/* Locations panel */}
       <div className="border-t border-border px-6 py-4">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2 mb-3">
           <h3 className="text-sm font-medium">Locations</h3>
           <Button size="sm" variant="outline" onClick={() => setAddingPin(true)}>
             + Add location
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => setDrawerOpen(true)}>
+            Manage
           </Button>
         </div>
         {!currentProject.pins?.length && (
@@ -183,6 +212,84 @@ const MapPage = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Manage Pins Drawer */}
+      {drawerOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-50 bg-black/50"
+            onClick={() => setDrawerOpen(false)}
+          />
+          <div className="fixed inset-y-0 right-0 z-50 w-[360px] bg-background border-l border-border shadow-lg animate-slide-in-right flex flex-col">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+              <h3 className="text-sm font-semibold">Manage Pins</h3>
+              <button onClick={() => setDrawerOpen(false)} className="text-muted-foreground hover:text-foreground">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-5 space-y-6">
+              {/* Locations */}
+              <div>
+                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Locations</h4>
+                {!currentProject.pins?.length && (
+                  <p className="text-xs text-muted-foreground italic">No pins yet</p>
+                )}
+                <div className="space-y-1.5">
+                  {currentProject.pins?.map((pin) => (
+                    <div key={pin.id} className="flex items-center gap-2 py-2 px-2 rounded-md hover:bg-muted/50 group">
+                      <div className="w-2 h-2 rounded-full bg-destructive flex-shrink-0" />
+                      {editingTitleId === pin.id ? (
+                        <Input
+                          value={editingTitleValue}
+                          onChange={(e) => setEditingTitleValue(e.target.value)}
+                          onBlur={() => handleSaveTitle(pin.id)}
+                          onKeyDown={(e) => { if (e.key === "Enter") handleSaveTitle(pin.id); }}
+                          className="h-7 text-sm flex-1"
+                          autoFocus
+                        />
+                      ) : (
+                        <span
+                          className="text-sm flex-1 cursor-pointer hover:underline"
+                          onClick={() => { setEditingTitleId(pin.id); setEditingTitleValue(pin.title); }}
+                        >
+                          {pin.title}
+                        </span>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 px-2 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => handleMovePin(pin.id)}
+                      >
+                        <Move className="h-3 w-3 mr-1" />
+                        Move
+                      </Button>
+                      <button
+                        className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => removePin(pin.id)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Events */}
+              <div>
+                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Events</h4>
+                <p className="text-xs text-muted-foreground italic">Coming soon</p>
+              </div>
+
+              {/* Characters */}
+              <div>
+                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Characters</h4>
+                <p className="text-xs text-muted-foreground italic">Coming soon</p>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
