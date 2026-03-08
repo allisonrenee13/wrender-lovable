@@ -689,18 +689,20 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                           <p className="text-xs text-muted-foreground">Not quite right? Try one of these instead:</p>
                           <div className="space-y-2">
                             <Button
-                              className="w-full bg-primary text-primary-foreground font-semibold"
+                              variant="outline"
+                              size="sm"
+                              className="w-full"
                               onClick={() => {
                                 if (traceImageDataUrl) handleManualTrace(traceImageDataUrl);
                               }}
                             >
                               Draw over it manually →
                             </Button>
-                            <Button variant="outline" className="w-full"
+                            <Button variant="outline" size="sm" className="w-full"
                               onClick={() => handleEntrySelect("template")}>
                               Browse Templates →
                             </Button>
-                            <Button variant="outline" className="w-full"
+                            <Button variant="outline" size="sm" className="w-full"
                               onClick={() => handleEntrySelect("draw")}>
                               Start from scratch →
                             </Button>
