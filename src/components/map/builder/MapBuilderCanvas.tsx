@@ -704,7 +704,12 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
               }
             });
           canvas.renderAll();
-          saveState();
+          // Reset history so undo never goes below the loaded state
+          setTimeout(() => {
+            history.current = [];
+            historyIndex.current = -1;
+            saveState();
+          }, 100);
         } catch (err) {
           console.error("loadSVG failed:", err);
         } finally {
@@ -731,6 +736,10 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
         await canvas.loadFromJSON(json);
         canvas.renderAll();
         isBusy.current = false;
+        // Reset history so undo floor is the loaded state
+        history.current = [];
+        historyIndex.current = -1;
+        saveState();
       },
       addReferenceImage: (url: string, opacity: number) => {
         const canvas = fabricRef.current;
