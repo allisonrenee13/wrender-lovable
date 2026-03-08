@@ -58,12 +58,13 @@ function reachedTabs(phase: Phase): Set<TabId> {
   return s;
 }
 
-const UnifiedMapBuilder = ({ onConfirm, onRender, initialPhase: initialPhaseProp }: UnifiedMapBuilderProps) => {
+const UnifiedMapBuilder = ({ onConfirm, onRender, initialPhase: initialPhaseProp, initialSVG }: UnifiedMapBuilderProps) => {
   const { currentProject, confirmMap, updateMapState, addPin } = useProject();
 
   const savedMapState = currentProject?.mapState;
 
   const getInitialPhase = (): Phase => {
+    if (initialSVG) return "shapeCanvas";
     if (initialPhaseProp) return initialPhaseProp;
     if (savedMapState?.currentStep === 2) return "style";
     if (savedMapState?.currentStep === 3) return "preview";
