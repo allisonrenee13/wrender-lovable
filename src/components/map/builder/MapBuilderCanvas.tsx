@@ -260,6 +260,12 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
       canvas.isDrawingMode = false;
       canvas.selection = false;
       canvas.defaultCursor = "default";
+      // Remove any eraser cursor circles left over
+      canvas.getObjects().forEach((obj) => {
+        if (obj.excludeFromExport && obj instanceof Circle && (obj as any).stroke === "rgba(255,0,0,0.4)") {
+          canvas.remove(obj);
+        }
+      });
       canvas.getObjects().forEach((obj) => {
         if (!obj.excludeFromExport && !(obj instanceof FabricImage)) {
           obj.selectable = false;
@@ -336,64 +342,60 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
         }
 
         case "eraser": {
-          canvas.defaultCursor = "pointer";
+          canvas.defaultCursor = "none";
+          // Eraser cursor circle
+          let eraserCursor: Circle | null = null;
+          const cursorRadius = eraserRadius ?? 24;
+
+          const createCursor = () => {
+            eraserCursor = new Circle({
+              radius: cursorRadius,
+              fill: "transparent",
+              stroke: "rgba(255,0,0,0.4)",
+              strokeWidth: 1.5,
+              strokeDashArray: [4, 3],
+              selectable: false,
+              evented: false,
+              excludeFromExport: true,
+              originX: "center",
+              originY: "center",
+            });
+            canvas.add(eraserCursor);
+            canvas.renderAll();
+          };
+          createCursor();
+
+          canvas.on("mouse:move", (e) => {
+            const pointer = canvas.getScenePoint(e.e);
+            if (eraserCursor) {
+              eraserCursor.set({ left: pointer.x, top: pointer.y });
+              canvas.renderAll();
+            }
+          });
+
           canvas.on("mouse:down", (e) => {
             const pointer = canvas.getScenePoint(e.e);
-            // Find nearest Path within 20px
-            let nearestPath: Path | null = null;
-            let nearestDist = eraserRadius ?? 20;
+            const objects = canvas.getObjects().filter(
+              (obj) => !obj.excludeFromExport && !(obj instanceof FabricImage)
+            );
 
-            canvas.getObjects().forEach((obj) => {
-              if (!(obj instanceof Path) || obj.excludeFromExport) return;
-              const pathData = (obj as any).path as any[];
-              if (!pathData) return;
+            // Find closest object center within eraser radius
+            let closest: FabricObject | null = null;
+            let closestDist = cursorRadius;
 
-              for (const seg of pathData) {
-                for (let j = 1; j < seg.length; j += 2) {
-                  const px = seg[j], py = seg[j + 1];
-                  if (px === undefined || py === undefined) continue;
-                  const dist = Math.sqrt((px - pointer.x) ** 2 + (py - pointer.y) ** 2);
-                  if (dist < nearestDist) {
-                    nearestDist = dist;
-                    nearestPath = obj;
-                  }
-                }
+            objects.forEach((obj) => {
+              const center = obj.getCenterPoint();
+              const dist = Math.sqrt(
+                (center.x - pointer.x) ** 2 + (center.y - pointer.y) ** 2
+              );
+              if (dist < closestDist) {
+                closestDist = dist;
+                closest = obj;
               }
             });
 
-            if (!nearestPath) return;
-            const pathObj = nearestPath as Path;
-            const pathData = ((pathObj as any).path as any[]).slice();
-
-            // Find nearest segment index
-            let bestSegIdx = -1;
-            let bestSegDist = Infinity;
-            for (let si = 0; si < pathData.length; si++) {
-              const seg = pathData[si];
-              for (let j = 1; j < seg.length; j += 2) {
-                const px = seg[j], py = seg[j + 1];
-                if (px === undefined || py === undefined) continue;
-                const dist = Math.sqrt((px - pointer.x) ** 2 + (py - pointer.y) ** 2);
-                if (dist < bestSegDist) {
-                  bestSegDist = dist;
-                  bestSegIdx = si;
-                }
-              }
-            }
-
-            if (bestSegIdx >= 0) {
-              pathData.splice(bestSegIdx, 1);
-              if (pathData.length < 2) {
-                canvas.remove(pathObj);
-              } else {
-                // Ensure first segment is M
-                if (pathData.length > 0 && pathData[0][0] !== "M") {
-                  const seg = pathData[0];
-                  pathData[0] = ["M", seg[seg.length - 2], seg[seg.length - 1]];
-                }
-                rebuildPath(canvas, pathObj, pathData);
-              }
-              canvas.discardActiveObject();
+            if (closest) {
+              canvas.remove(closest);
               canvas.renderAll();
               saveState();
             }

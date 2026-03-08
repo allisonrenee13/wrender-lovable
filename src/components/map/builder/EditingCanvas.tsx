@@ -50,6 +50,7 @@ const EditingCanvas = ({
   const [objectCount, setObjectCount] = useState(0);
   const [refOpacity, setRefOpacity] = useState(canvasState.referenceOpacity);
   const templateLoadedRef = useRef(false);
+  const initialLoadDone = useRef(false); // Guard: only load paths once on mount
   const [showGuidance, setShowGuidance] = useState(() => {
     return canvasState.paths.length === 0 && !initialTemplate && shouldShowGuidance();
   });
@@ -58,6 +59,9 @@ const EditingCanvas = ({
   // Brush weight state — synced with stylePrefs.strokeWeight
   const penWidthMap: Record<BrushWeight, number> = useMemo(() => ({ fine: 1, medium: 3, bold: 6 }), []);
   const eraserRadiusMap: Record<BrushWeight, number> = useMemo(() => ({ fine: 8, medium: 20, bold: 40 }), []);
+
+  // Eraser size state for slider (default 24)
+  const [eraserSize, setEraserSize] = useState(24);
 
   const [brushWeight, setBrushWeight] = useState<BrushWeight>(
     (stylePrefs.strokeWeight as BrushWeight) || "medium"
@@ -116,10 +120,13 @@ const EditingCanvas = ({
     }
   }, [canvasHandle, canvasState, onCanvasChange]);
 
-  // Load template SVG once canvas is ready
+  // Load template SVG once canvas is ready — guarded to run only once
   const handleCanvasReady = useCallback(() => {
+    if (initialLoadDone.current) return; // Never run again after first load
     const handle = canvasHandle.current;
     if (!handle) return;
+
+    initialLoadDone.current = true;
 
     if (initialTemplate && !templateLoadedRef.current) {
       templateLoadedRef.current = true;
@@ -215,6 +222,8 @@ const EditingCanvas = ({
           canRedo={true}
           brushWeight={brushWeight}
           onBrushWeightChange={handleBrushWeightChange}
+          eraserSize={eraserSize}
+          onEraserSizeChange={setEraserSize}
         />
 
         {/* Canvas area */}
@@ -239,7 +248,7 @@ const EditingCanvas = ({
                 width={800}
                 height={600}
                 brushWidth={activeTool === "pen" ? penWidthMap[brushWeight] : undefined}
-                eraserRadius={activeTool === "eraser" ? eraserRadiusMap[brushWeight] : undefined}
+                eraserRadius={activeTool === "eraser" ? eraserSize : undefined}
               />
 
               {/* Empty canvas prompt */}

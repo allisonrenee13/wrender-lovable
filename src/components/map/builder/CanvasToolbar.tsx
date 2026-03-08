@@ -6,6 +6,7 @@ import {
   Redo2,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import { Slider } from "@/components/ui/slider";
 import type { ShapeTool, ToolMode } from "./types";
 
 export type BrushWeight = "fine" | "medium" | "bold";
@@ -21,11 +22,13 @@ interface CanvasToolbarProps {
   canRedo: boolean;
   brushWeight: BrushWeight;
   onBrushWeightChange: (weight: BrushWeight) => void;
+  eraserSize: number;
+  onEraserSizeChange: (size: number) => void;
 }
 
 const drawTools: Array<{ id: ShapeTool; icon: typeof Hand; label: string; hint: string }> = [
   { id: "pen", icon: PenTool, label: "Pen", hint: "Draw new lines freehand" },
-  { id: "eraser", icon: Eraser, label: "Erase", hint: "Remove part of a line by clicking it" },
+  { id: "eraser", icon: Eraser, label: "Erase", hint: "Click near a line to remove it" },
   { id: "pan", icon: Hand, label: "Pan", hint: "Click and drag to move around the canvas" },
 ];
 
@@ -40,9 +43,9 @@ const CanvasToolbar = ({
   canRedo,
   brushWeight,
   onBrushWeightChange,
+  eraserSize,
+  onEraserSizeChange,
 }: CanvasToolbarProps) => {
-
-  
 
   const renderToolButton = (
     tool: { id: ShapeTool; icon: typeof Hand; label: string; hint: string },
@@ -50,7 +53,8 @@ const CanvasToolbar = ({
     onClick: () => void
   ) => {
     const Icon = tool.icon;
-    const showPill = (tool.id === "pen" || tool.id === "eraser") && activeTool === tool.id;
+    const showPenPill = tool.id === "pen" && activeTool === "pen";
+    const showEraserSlider = tool.id === "eraser" && activeTool === "eraser";
     return (
       <div key={tool.id} className="flex flex-col items-center">
         <Tooltip>
@@ -71,7 +75,8 @@ const CanvasToolbar = ({
             <p className="text-muted-foreground">{tool.hint}</p>
           </TooltipContent>
         </Tooltip>
-        {showPill && (
+        {/* Pen weight pill: F · M · B */}
+        {showPenPill && (
           <div className="mt-1 flex rounded-full border border-border bg-card overflow-hidden">
             {(["fine", "medium", "bold"] as BrushWeight[]).map((w) => (
               <button
@@ -86,6 +91,29 @@ const CanvasToolbar = ({
                 {w[0].toUpperCase()}
               </button>
             ))}
+          </div>
+        )}
+        {/* Eraser size: circular slider */}
+        {showEraserSlider && (
+          <div className="mt-1.5 flex flex-col items-center gap-1 w-[56px]">
+            <div
+              className="rounded-full border border-border bg-muted flex items-center justify-center"
+              style={{ width: Math.max(12, eraserSize * 0.6), height: Math.max(12, eraserSize * 0.6) }}
+            >
+              <div
+                className="rounded-full bg-primary/40"
+                style={{ width: Math.max(6, eraserSize * 0.4), height: Math.max(6, eraserSize * 0.4) }}
+              />
+            </div>
+            <Slider
+              value={[eraserSize]}
+              onValueChange={([v]) => onEraserSizeChange(v)}
+              min={10}
+              max={60}
+              step={2}
+              className="w-[48px]"
+            />
+            <span className="text-[9px] text-muted-foreground">{eraserSize}px</span>
           </div>
         )}
       </div>
@@ -120,7 +148,6 @@ const CanvasToolbar = ({
         {/* Shape tools */}
         {mode === "shape" && (
           <>
-            {/* Draw section */}
             <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Draw</span>
             {drawTools.map((tool) =>
               renderToolButton(tool, activeTool === tool.id, () => {
@@ -128,8 +155,6 @@ const CanvasToolbar = ({
                 onToolChange(tool.id);
               })
             )}
-
-
           </>
         )}
 
