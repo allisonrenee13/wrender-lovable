@@ -21,6 +21,7 @@ type TabId = "trace" | "edit" | "add";
 
 interface UnifiedMapBuilderProps {
   onConfirm?: () => void;
+  initialPhase?: Phase;
 }
 
 const defaultCanvas: CanvasState = {
@@ -53,12 +54,13 @@ function reachedTabs(phase: Phase): Set<TabId> {
   return s;
 }
 
-const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
+const UnifiedMapBuilder = ({ onConfirm, initialPhase: initialPhaseProp }: UnifiedMapBuilderProps) => {
   const { currentProject, confirmMap, updateMapState } = useProject();
 
   const savedMapState = currentProject?.mapState;
 
   const getInitialPhase = (): Phase => {
+    if (initialPhaseProp) return initialPhaseProp;
     if (savedMapState?.currentStep === 2) return "style";
     if (savedMapState?.currentStep === 3) return "preview";
     return "entry";
@@ -542,6 +544,12 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
           {/* RIGHT PANEL — tabbed */}
           {showRightPanel && (
             <div className="w-[320px] border-l border-border flex flex-col bg-card shrink-0">
+              {/* Edit banner when re-entering from view mode */}
+              {initialPhaseProp === "shapeCanvas" && (
+                <div className="px-4 py-2 bg-amber-50 border-b border-amber-200 text-xs text-amber-800 text-center">
+                  Editing — render again to update your saved map
+                </div>
+              )}
               {/* Tab bar */}
               <div className="flex border-b border-border">
                 {tabs.map((tab) => {

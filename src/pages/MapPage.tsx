@@ -37,7 +37,10 @@ const MapPage = () => {
           <span className="text-xs text-muted-foreground font-medium tracking-wide">Map Builder</span>
         </div>
         <div className="flex-1 overflow-hidden">
-          <UnifiedMapBuilder onConfirm={() => setForceBuilder(false)} />
+          <UnifiedMapBuilder
+            onConfirm={() => setForceBuilder(false)}
+            initialPhase={forceBuilder ? "shapeCanvas" : undefined}
+          />
         </div>
       </div>
     );
