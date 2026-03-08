@@ -1,15 +1,13 @@
 import { useState } from "react";
 import { useProject } from "@/context/ProjectContext";
 import UnifiedMapBuilder from "@/components/map/UnifiedMapBuilder";
-import MapViewMode from "@/components/map/MapViewMode";
-import { Map, Plus } from "lucide-react";
+import { Map } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const MapPage = () => {
   const { currentProject } = useProject();
   const [forceBuilder, setForceBuilder] = useState(false);
 
-  // No project selected
   if (!currentProject) {
     return (
       <div className="h-full flex flex-col items-center justify-center p-10">
@@ -24,7 +22,6 @@ const MapPage = () => {
     );
   }
 
-  // Show builder if map not confirmed, or user explicitly entered builder
   const showBuilder = !currentProject.mapConfirmed || forceBuilder;
 
   if (showBuilder) {
@@ -46,7 +43,48 @@ const MapPage = () => {
     );
   }
 
-  return <MapViewMode onEditMap={() => setForceBuilder(true)} />;
+  return (
+    <div className="h-full flex flex-col">
+      <div className="flex items-center justify-between px-6 py-3 border-b border-border">
+        <div className="flex items-center gap-2">
+          <h2 className="font-serif font-semibold text-base">{currentProject.title}</h2>
+          <span className="text-xs text-muted-foreground">v1</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setForceBuilder(true)}>
+            Edit map
+          </Button>
+        </div>
+      </div>
+      <div className="flex-1 relative overflow-hidden flex items-center justify-center p-6 bg-muted/20">
+        {currentProject.mapState?.renderedSVG ? (
+          <div
+            className="w-full max-w-[600px] border border-border rounded-lg overflow-hidden shadow-md"
+            dangerouslySetInnerHTML={{ __html: currentProject.mapState.renderedSVG }}
+          />
+        ) : (
+          <p className="text-sm text-muted-foreground italic">Your rendered map will appear here</p>
+        )}
+        {currentProject.pins?.map((pin) => (
+          <div
+            key={pin.id}
+            style={{
+              position: "absolute",
+              left: `${pin.x}%`,
+              top: `${pin.y}%`,
+              transform: "translate(-50%, -50%)",
+              zIndex: 10,
+            }}
+          >
+            <div className="w-3 h-3 rounded-full bg-destructive border-2 border-background shadow-sm" />
+            <span className="absolute top-4 left-1/2 -translate-x-1/2 text-[10px] font-medium whitespace-nowrap text-foreground">
+              {pin.title}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 };
 
 export default MapPage;
