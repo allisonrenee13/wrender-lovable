@@ -154,13 +154,13 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
     toast({ title: "Template loaded", description: "Edit the shape to match your world." });
   };
 
-  const runTrace = useCallback((canvas: HTMLCanvasElement, w: number, h: number, sensitivity: number): TracedPath[] => {
-    return runPotraceOnCanvas(canvas, w, h, sensitivity);
+  const runTrace = useCallback(async (canvas: HTMLCanvasElement, w: number, h: number, sensitivity: number): Promise<TracedPath[]> => {
+    return runPotraceOnCanvasAsync(canvas, w, h, sensitivity);
   }, []);
 
-  const handleAutoTrace = (imageDataUrl: string) => {
+  const handleAutoTrace = async (imageDataUrl: string) => {
     const img = new Image();
-    img.onload = () => {
+    img.onload = async () => {
       const traceCanvas = document.createElement("canvas");
       const w = Math.min(img.width, 600);
       const h = Math.min(img.height, 600);
@@ -169,7 +169,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
       const ctx = traceCanvas.getContext("2d")!;
       ctx.drawImage(img, 0, 0, w, h);
       const imageData = ctx.getImageData(0, 0, w, h);
-      const paths = runTrace(traceCanvas, w, h, 0.65);
+      const paths = await runTrace(traceCanvas, w, h, 0.65);
 
       setTraceImageDataUrl(imageDataUrl);
       setTraceImageData({ data: imageData, w, h });
@@ -207,7 +207,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
         c.height = h;
         const ctx = c.getContext("2d")!;
         ctx.drawImage(img, 0, 0, w, h);
-        const paths = runPotraceOnCanvas(c, w, h, value);
+        const paths = await runPotraceOnCanvasAsync(c, w, h, value);
         if (paths.length > 0) {
           setCanvasState((prev) => ({ ...prev, paths, nodeCount: paths.length * 10 }));
         } else {
@@ -434,7 +434,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                             c.height = h;
                             const ctx = c.getContext("2d")!;
                             ctx.drawImage(img, 0, 0, w, h);
-                            const paths = runPotraceOnCanvas(c, w, h, traceSensitivity);
+                            const paths = await runPotraceOnCanvasAsync(c, w, h, traceSensitivity);
                             if (paths.length > 0) {
                               setCanvasState((prev) => ({ ...prev, paths, nodeCount: paths.length * 10 }));
                             }
