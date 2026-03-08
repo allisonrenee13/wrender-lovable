@@ -4,7 +4,7 @@ import UnifiedMapBuilder from "@/components/map/UnifiedMapBuilder";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { X, Trash2, Move } from "lucide-react";
+import { X, Trash2 } from "lucide-react";
 
 const MapPage = () => {
   const { currentProject, addPin, removePin, updatePin } = useProject();
@@ -16,8 +16,6 @@ const MapPage = () => {
   const [pendingPin, setPendingPin] = useState<{ x: number; y: number } | null>(null);
   const [pinName, setPinName] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [editingTitleId, setEditingTitleId] = useState<string | null>(null);
-  const [editingTitleValue, setEditingTitleValue] = useState("");
   const mapContainerRef = useRef<HTMLDivElement>(null);
 
   const showBuilder = editingSVG !== null || savedSVG === null;
@@ -76,13 +74,6 @@ const MapPage = () => {
     setMovingPinId(pinId);
   };
 
-  const handleSaveTitle = (pinId: string) => {
-    if (editingTitleValue.trim()) {
-      updatePin(pinId, { title: editingTitleValue.trim() });
-    }
-    setEditingTitleId(null);
-  };
-
   if (showBuilder) {
     return (
       <div className="h-full flex flex-col">
@@ -106,21 +97,32 @@ const MapPage = () => {
 
   const isPlacing = addingPin || !!movingPinId;
 
+  const renamePin = (id: string, title: string) => {
+    if (title.trim()) updatePin(id, { title: title.trim() });
+  };
+
   return (
     <div className="h-full flex flex-col">
       <div className="flex items-center justify-between px-6 py-3 border-b border-border">
+        <h2 className="font-serif font-semibold text-base">
+          {currentProject.title}
+          <span className="ml-2 text-xs text-muted-foreground font-sans font-normal">
+            v{versions.length + 1}
+          </span>
+        </h2>
         <div className="flex items-center gap-2">
-          <h2 className="font-serif font-semibold text-base">
-            {currentProject.title}
-          </h2>
-          <span className="text-xs text-muted-foreground">v{versions.length + 1}</span>
+          <Button size="sm" variant="outline" onClick={() => setAddingPin(true)}>
+            + Add location
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => setDrawerOpen(true)}>
+            Manage
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => setEditingSVG(savedSVG)}>
+            Edit map
+          </Button>
         </div>
-        <Button variant="outline" size="sm" onClick={() => setEditingSVG(savedSVG)}>
-          Edit map
-        </Button>
       </div>
 
-      {/* Pin placement / move banner */}
       {isPlacing && (
         <div className="px-6 py-2 bg-accent/50 border-b border-border text-center">
           <span className="text-xs text-accent-foreground font-medium">
@@ -167,30 +169,6 @@ const MapPage = () => {
         </div>
       </div>
 
-      {/* Locations panel */}
-      <div className="border-t border-border px-6 py-4">
-        <div className="flex items-center gap-2 mb-3">
-          <h3 className="text-sm font-medium">Locations</h3>
-          <Button size="sm" variant="outline" onClick={() => setAddingPin(true)}>
-            + Add location
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => setDrawerOpen(true)}>
-            Manage
-          </Button>
-        </div>
-        {!currentProject.pins?.length && (
-          <p className="text-xs text-muted-foreground">
-            No locations yet — click "Add location" then click anywhere on the map to place a pin.
-          </p>
-        )}
-        {currentProject.pins?.map((pin) => (
-          <div key={pin.id} className="flex items-center gap-2 py-1.5 text-sm">
-            <div className="w-2 h-2 rounded-full bg-destructive" />
-            {pin.title}
-          </div>
-        ))}
-      </div>
-
       {/* Pin naming dialog */}
       <Dialog open={!!pendingPin} onOpenChange={(open) => { if (!open) setPendingPin(null); }}>
         <DialogContent className="sm:max-w-[320px]">
@@ -213,83 +191,58 @@ const MapPage = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Manage Pins Drawer */}
+      {/* Backdrop */}
       {drawerOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-50 bg-black/50"
-            onClick={() => setDrawerOpen(false)}
-          />
-          <div className="fixed inset-y-0 right-0 z-50 w-[360px] bg-background border-l border-border shadow-lg animate-slide-in-right flex flex-col">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-              <h3 className="text-sm font-semibold">Manage Pins</h3>
-              <button onClick={() => setDrawerOpen(false)} className="text-muted-foreground hover:text-foreground">
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-5 space-y-6">
-              {/* Locations */}
-              <div>
-                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Locations</h4>
-                {!currentProject.pins?.length && (
-                  <p className="text-xs text-muted-foreground italic">No pins yet</p>
-                )}
-                <div className="space-y-1.5">
-                  {currentProject.pins?.map((pin) => (
-                    <div key={pin.id} className="flex items-center gap-2 py-2 px-2 rounded-md hover:bg-muted/50 group">
-                      <div className="w-2 h-2 rounded-full bg-destructive flex-shrink-0" />
-                      {editingTitleId === pin.id ? (
-                        <Input
-                          value={editingTitleValue}
-                          onChange={(e) => setEditingTitleValue(e.target.value)}
-                          onBlur={() => handleSaveTitle(pin.id)}
-                          onKeyDown={(e) => { if (e.key === "Enter") handleSaveTitle(pin.id); }}
-                          className="h-7 text-sm flex-1"
-                          autoFocus
-                        />
-                      ) : (
-                        <span
-                          className="text-sm flex-1 cursor-pointer hover:underline"
-                          onClick={() => { setEditingTitleId(pin.id); setEditingTitleValue(pin.title); }}
-                        >
-                          {pin.title}
-                        </span>
-                      )}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 px-2 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => handleMovePin(pin.id)}
-                      >
-                        <Move className="h-3 w-3 mr-1" />
-                        Move
-                      </Button>
-                      <button
-                        className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => removePin(pin.id)}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Events */}
-              <div>
-                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Events</h4>
-                <p className="text-xs text-muted-foreground italic">Coming soon</p>
-              </div>
-
-              {/* Characters */}
-              <div>
-                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Characters</h4>
-                <p className="text-xs text-muted-foreground italic">Coming soon</p>
-              </div>
-            </div>
-          </div>
-        </>
+        <div className="fixed inset-0 z-40 bg-black/20" onClick={() => setDrawerOpen(false)} />
       )}
+
+      {/* Manage Pins Drawer */}
+      <div className={`fixed inset-y-0 right-0 z-50 w-[360px] bg-card border-l border-border shadow-xl flex flex-col transform transition-transform duration-300 ${drawerOpen ? "translate-x-0" : "translate-x-full"}`}>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+          <h3 className="font-serif font-semibold text-base">Manage Pins</h3>
+          <button onClick={() => setDrawerOpen(false)} className="text-muted-foreground hover:text-foreground">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-5 space-y-6">
+          <div>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Locations</h4>
+            {!currentProject.pins?.length && (
+              <p className="text-xs text-muted-foreground">No locations yet.</p>
+            )}
+            {currentProject.pins?.map((pin) => (
+              <div key={pin.id} className="flex items-center gap-3 py-2 group">
+                <div className="w-2.5 h-2.5 rounded-full bg-destructive flex-shrink-0" />
+                <input
+                  defaultValue={pin.title}
+                  onBlur={(e) => renamePin(pin.id, e.target.value)}
+                  className="flex-1 text-sm bg-transparent border-b border-transparent hover:border-border focus:border-primary outline-none py-0.5"
+                />
+                <button
+                  onClick={() => { setDrawerOpen(false); setMovingPinId(pin.id); }}
+                  className="text-xs text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity px-1"
+                >
+                  Move
+                </button>
+                <button
+                  onClick={() => removePin(pin.id)}
+                  className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+          <div>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Events</h4>
+            <p className="text-xs text-muted-foreground italic">Coming soon</p>
+          </div>
+          <div>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Characters</h4>
+            <p className="text-xs text-muted-foreground italic">Coming soon</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
