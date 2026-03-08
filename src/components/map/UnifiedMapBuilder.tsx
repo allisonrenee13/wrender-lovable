@@ -212,6 +212,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
 
   // Re-trace with new sensitivity (debounced call)
   const handleSensitivityChange = useCallback((value: number) => {
+    console.log("[sens] called with", value, "imageData:", !!traceImageData, "url:", !!traceImageDataUrl);
     setTraceSensitivity(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
