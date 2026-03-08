@@ -77,7 +77,6 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
 
   const canvasRef = useRef<MapCanvasHandle | null>(null);
   const autoSaveTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const cameFromAddRef = useRef(false);
 
   const [canvasState, setCanvasState] = useState<CanvasState>(defaultCanvas);
 
@@ -99,7 +98,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
   const [templateName, setTemplateName] = useState("");
   const [templatePublic, setTemplatePublic] = useState(false);
-  
+  const [showReference, setShowReference] = useState(false);
 
   const hasShape = canvasState.paths.length > 0 || selectedTemplate !== null;
   const colors = backgroundColors[stylePrefs.background];
@@ -258,44 +257,26 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
     setPhase("rendering");
 
     setTimeout(() => {
-      // Get SVG directly from canvas (includes Line segments)
-      const canvasSVG = canvasRef.current?.getSVG() || "";
-      
-      // Build raw SVG: use canvas export if available, fall back to paths
-      let rawSVG: string;
-      if (canvasSVG && canvasSVG.length > 100) {
-        rawSVG = canvasSVG;
-      } else {
-        const sw = stylePrefs.strokeWeight === "fine" ? 1 : stylePrefs.strokeWeight === "bold" ? 2.5 : 1.8;
-        const pathMarkup = canvasState.paths
-          .map((p) => `<path d="${p.d}" fill="none" stroke="${colors.stroke}" stroke-width="${sw}" stroke-linejoin="round" stroke-linecap="round"/>`)
-          .join("\n");
-        rawSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600">
-          <rect width="600" height="600" fill="${colors.bg}"/>
-          ${pathMarkup}
-        </svg>`;
-      }
+      const sw = stylePrefs.strokeWeight === "fine" ? 1 : stylePrefs.strokeWeight === "bold" ? 2.5 : 1.8;
+      const pathMarkup = canvasState.paths
+        .map((p) => `<path d="${p.d}" fill="none" stroke="${colors.stroke}" stroke-width="${sw}" stroke-linejoin="round" stroke-linecap="round"/>`)
+        .join("\n");
+      const rawSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600">
+        <rect width="600" height="600" fill="${colors.bg}"/>
+        ${pathMarkup}
+      </svg>`;
 
       const pins = currentProject?.pins.map((p) => ({ title: p.title, x: p.x * 1.33, y: p.y * 0.86 })) || [];
       const processed = postProcessSVG(rawSVG, stylePrefs, pins, 600, 600);
       setRenderedSVG(processed);
 
-      const json = canvasRef.current?.getJSON() || null;
       updateMapState({
-        canvasJSON: json,
         renderedSVG: processed,
         currentStep: 3,
         stylePrefs: stylePrefs as any,
       });
 
       setPhaseAndSave("preview");
-
-      // Auto-confirm if coming from Add phase
-      if (cameFromAddRef.current) {
-        cameFromAddRef.current = false;
-        confirmMap();
-        onConfirm?.();
-      }
     }, 1500);
   };
 
@@ -619,12 +600,12 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                       {/* 3. "Not quite right?" text */}
                       <p className="text-xs text-muted-foreground">Not quite right? You can also:</p>
 
-                      {/* 4. Option buttons */}
-                      <div className="flex flex-wrap gap-2">
+                      {/* 4. Two option buttons side by side */}
+                      <div className="flex gap-2">
                         <Button
                           variant="outline"
                           size="sm"
-                          className="flex-1 text-xs min-w-[120px]"
+                          className="flex-1 text-xs"
                           onClick={() => handleEntrySelect("template")}
                         >
                           Browse Templates →
@@ -632,21 +613,11 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="flex-1 text-xs min-w-[120px]"
+                          className="flex-1 text-xs"
                           onClick={() => handleEntrySelect("draw")}
                         >
                           Draw from scratch →
                         </Button>
-                        {traceImageDataUrl && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1 text-xs min-w-[120px]"
-                            onClick={() => handleManualTrace(traceImageDataUrl)}
-                          >
-                            Trace manually →
-                          </Button>
-                        )}
                       </div>
                     </div>
 
@@ -705,6 +676,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                             setCanvasState(prev => ({
                               ...prev,
                               referenceImage: traceImageDataUrl,
+                              referenceOpacity: 0,
                             }));
                           }
                           setPhaseAndSave("shapeCanvas");
@@ -739,8 +711,32 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                         </p>
                       </div>
 
-
-
+                      {/* Reference image toggle */}
+                      {canvasState.referenceImage && (
+                        <div className="flex items-center justify-between py-2 border-b border-border mb-2">
+                          <div>
+                            <p className="text-xs font-medium text-foreground">Reference image</p>
+                            <p className="text-[10px] text-muted-foreground">Show original as faint overlay</p>
+                          </div>
+                          <button
+                            onClick={() => {
+                              const next = !showReference;
+                              setShowReference(next);
+                              setCanvasState(prev => ({
+                                ...prev,
+                                referenceOpacity: next ? 30 : 0,
+                              }));
+                            }}
+                            className={`w-10 h-5 rounded-full transition-colors relative flex-shrink-0 ${
+                              showReference ? "bg-primary" : "bg-muted-foreground/30"
+                            }`}
+                          >
+                            <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                              showReference ? "translate-x-5" : "translate-x-0.5"
+                            }`} />
+                          </button>
+                        </div>
+                      )}
 
                       {/* Style controls (merged from Style tab) */}
                       <div className="pt-2 border-t border-border">
@@ -798,8 +794,8 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                     <div className="p-4 border-t border-border">
                       <Button
                         onClick={() => {
-                          cameFromAddRef.current = true;
                           handleRender();
+                          handleUseMap();
                         }}
                         className="w-full bg-primary text-primary-foreground font-semibold h-11"
                       >
@@ -897,95 +893,6 @@ function traceOutlineImage(
     const isBackground = brightness > threshold;
     const isWhite = r > 240 && g > 240 && b > 240;
     ink[i] = (!isBackground && !isWhite) ? 1 : 0;
-  }
-
-  // Colored background detection via color variance + corner brightness
-  let colorVar = 0;
-  let cvCount = 0;
-  for (let i = 0; i < w * h; i += 20) {
-    const r = data[i * 4], g = data[i * 4 + 1], b = data[i * 4 + 2];
-    const maxC = Math.max(r, g, b), minC = Math.min(r, g, b);
-    colorVar += maxC - minC;
-    cvCount++;
-  }
-  colorVar /= cvCount;
-
-  // Corner sampling for average brightness
-  const corners = [
-    0, w - 1, (h - 1) * w, (h - 1) * w + (w - 1)
-  ];
-  let cornerBrightnessSum = 0;
-  for (const ci of corners) {
-    cornerBrightnessSum += (data[ci * 4] + data[ci * 4 + 1] + data[ci * 4 + 2]) / 3;
-  }
-  const avgCornerBrightness = cornerBrightnessSum / corners.length;
-
-  const isColoredBackground = avgCornerBrightness < 220 && colorVar > 30;
-
-  // For colored backgrounds, use color-region quantization approach
-  if (isColoredBackground) {
-    const QUANT = 32;
-    const quantize = (v: number) => Math.round(v / QUANT) * QUANT;
-
-    // Build color key per pixel
-    const colorKey = new Uint32Array(w * h);
-    for (let i = 0; i < w * h; i++) {
-      const r = quantize(data[i * 4]);
-      const g = quantize(data[i * 4 + 1]);
-      const b = quantize(data[i * 4 + 2]);
-      const brightness = (r + g + b) / 3;
-      if (brightness > 230 || brightness < 20) {
-        colorKey[i] = 0;
-      } else {
-        colorKey[i] = (r << 16) | (g << 8) | b;
-      }
-    }
-
-    // Find connected regions of matching color
-    const colorVisited = new Uint8Array(w * h);
-    const colorComponents: Array<{ pixels: Array<[number, number]>; color: number }> = [];
-
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        const idx = y * w + x;
-        if (!colorKey[idx] || colorVisited[idx]) continue;
-        const targetColor = colorKey[idx];
-        const pixels: Array<[number, number]> = [];
-        const stack: Array<[number, number]> = [[x, y]];
-        colorVisited[idx] = 1;
-        while (stack.length) {
-          const [cx, cy] = stack.pop()!;
-          pixels.push([cx, cy]);
-          for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]] as Array<[number, number]>) {
-            const nx = cx + dx, ny = cy + dy;
-            if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
-            const ni = ny * w + nx;
-            if (!colorVisited[ni] && colorKey[ni] === targetColor) {
-              colorVisited[ni] = 1;
-              stack.push([nx, ny]);
-            }
-          }
-        }
-        if (pixels.length > 200) {
-          colorComponents.push({ pixels, color: targetColor });
-        }
-      }
-    }
-
-    // Convert color regions to ink map — mark boundary pixels
-    ink.fill(0);
-    colorComponents
-      .sort((a, b) => b.pixels.length - a.pixels.length)
-      .slice(0, 12)
-      .forEach(({ pixels }) => {
-        const pset = new Set(pixels.map(([x, y]) => y * w + x));
-        pixels.forEach(([x, y]) => {
-          const isEdge = ([[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]] as Array<[number, number]>).some(
-            ([nx, ny]) => nx < 0 || nx >= w || ny < 0 || ny >= h || !pset.has(ny * w + nx)
-          );
-          if (isEdge) ink[y * w + x] = 1;
-        });
-      });
   }
 
   // 2. Zero out 6px border to remove image frame artifacts
@@ -1120,12 +1027,8 @@ function traceOutlineImage(
     return [pts[0], pts[pts.length - 1]];
   }
 
-  const finalSignificant = isColoredBackground
-    ? filteredSignificant.slice(0, 8)
-    : filteredSignificant;
-
   const paths: TracedPath[] = [];
-  for (const comp of finalSignificant) {
+  for (const comp of filteredSignificant) {
     const boundary = getBoundary(comp);
     if (boundary.length < 4) continue;
     const ordered = orderPoints(boundary);
@@ -1139,7 +1042,7 @@ function traceOutlineImage(
     paths.push({ d, confidence: Math.min(1, comp.length / 2000) });
   }
 
-  console.log(`[tracer] found ${paths.length} paths from ${finalSignificant.length} components (${significant.length - filteredSignificant.length} text-like filtered out)`);
+  console.log(`[tracer] found ${paths.length} paths from ${filteredSignificant.length} components (${significant.length - filteredSignificant.length} text-like filtered out)`);
   return paths;
 }
 

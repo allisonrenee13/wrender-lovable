@@ -29,6 +29,8 @@ export interface MapCanvasHandle {
   redo: () => void;
   getJSON: () => string;
   loadJSON: (json: string) => void;
+  addReferenceImage: (url: string, opacity: number) => void;
+  setReferenceOpacity: (opacity: number) => void;
   getNodeCount: () => number;
   getObjectCount: () => number;
   setBrushWidth: (width: number) => void;
@@ -53,6 +55,7 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
     const historyRef = useRef<string[]>([]);
     const historyIndexRef = useRef(-1);
     const isLoadingRef = useRef(false);
+    const refImageRef = useRef<FabricImage | null>(null);
     const sculptingRef = useRef(false);
     const eraserSizeRef = useRef(eraserRadius ?? 24);
 
@@ -70,28 +73,10 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
     const saveState = useCallback(() => {
       const canvas = fabricRef.current;
       if (!canvas || isLoadingRef.current) return;
-      // Include custom properties in serialization
-      const jsonObj = canvas.toJSON();
-      // Manually preserve custom data on objects
-      const objects = canvas.getObjects();
-      if (jsonObj.objects) {
-        jsonObj.objects.forEach((obj: any, i: number) => {
-          const fabricObj = objects[i];
-          if (fabricObj) {
-            if ((fabricObj as any).data) obj.data = (fabricObj as any).data;
-            if ((fabricObj as any).excludeFromExport) obj.excludeFromExport = true;
-          }
-        });
-      }
-      const json = JSON.stringify(jsonObj);
+      const json = JSON.stringify(canvas.toJSON());
       historyRef.current = historyRef.current.slice(0, historyIndexRef.current + 1);
       historyRef.current.push(json);
       historyIndexRef.current = historyRef.current.length - 1;
-      // Keep max 50 states
-      if (historyRef.current.length > 50) {
-        historyRef.current.shift();
-        historyIndexRef.current--;
-      }
       onStateChange?.();
     }, [onStateChange]);
 
@@ -100,8 +85,7 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
       if (!canvas || historyIndexRef.current <= 0) return;
       isLoadingRef.current = true;
       historyIndexRef.current--;
-      const state = historyRef.current[historyIndexRef.current];
-      canvas.loadFromJSON(JSON.parse(state)).then(() => {
+      canvas.loadFromJSON(historyRef.current[historyIndexRef.current]).then(() => {
         canvas.renderAll();
         isLoadingRef.current = false;
         onStateChange?.();
@@ -113,8 +97,7 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
       if (!canvas || historyIndexRef.current >= historyRef.current.length - 1) return;
       isLoadingRef.current = true;
       historyIndexRef.current++;
-      const state = historyRef.current[historyIndexRef.current];
-      canvas.loadFromJSON(JSON.parse(state)).then(() => {
+      canvas.loadFromJSON(historyRef.current[historyIndexRef.current]).then(() => {
         canvas.renderAll();
         isLoadingRef.current = false;
         onStateChange?.();
@@ -253,9 +236,6 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
       window.addEventListener("keydown", handler);
       return () => window.removeEventListener("keydown", handler);
     }, [doUndo, doRedo]);
-
-
-
 
     // --- Style Changes ---
     useEffect(() => {
@@ -702,6 +682,32 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
         await canvas.loadFromJSON(json);
         canvas.renderAll();
         isLoadingRef.current = false;
+      },
+      addReferenceImage: (url: string, opacity: number) => {
+        const canvas = fabricRef.current;
+        if (!canvas) return;
+        FabricImage.fromURL(url).then((img) => {
+          if (!img) return;
+          img.set({
+            opacity: opacity / 100, selectable: false, evented: false,
+            scaleX: canvasWidth / (img.width || canvasWidth),
+            scaleY: canvasHeight / (img.height || canvasHeight),
+            excludeFromExport: true,
+          });
+          canvas.add(img);
+          canvas.sendObjectToBack(img);
+          canvas.getObjects().forEach((obj) => {
+            if (obj.excludeFromExport && !(obj instanceof FabricImage)) canvas.sendObjectToBack(obj);
+          });
+          refImageRef.current = img;
+          canvas.renderAll();
+        });
+      },
+      setReferenceOpacity: (opacity: number) => {
+        if (refImageRef.current) {
+          refImageRef.current.set({ opacity: opacity / 100 });
+          fabricRef.current?.renderAll();
+        }
       },
       getNodeCount: () => {
         const canvas = fabricRef.current;
