@@ -99,7 +99,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
   const [templateName, setTemplateName] = useState("");
   const [templatePublic, setTemplatePublic] = useState(false);
-  const [showReference, setShowReference] = useState(false);
+  
 
   const hasShape = canvasState.paths.length > 0 || selectedTemplate !== null;
   const colors = backgroundColors[stylePrefs.background];
@@ -695,7 +695,6 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                             setCanvasState(prev => ({
                               ...prev,
                               referenceImage: traceImageDataUrl,
-                              referenceOpacity: 0,
                             }));
                           }
                           setPhaseAndSave("shapeCanvas");
