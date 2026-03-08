@@ -616,9 +616,6 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                           <p className="text-[10px] text-muted-foreground">
                             Lower = fewer edges, higher = more detail (may include noise)
                           </p>
-                          {retraceStatus === "running" && (
-                            <p className="text-[11px] text-muted-foreground">Retracing...</p>
-                          )}
                           {retraceStatus === "done" && (
                             <p className="text-[11px]" style={{ color: "#2EAA5E" }}>
                               ✓ {canvasState.paths.length} shapes found
