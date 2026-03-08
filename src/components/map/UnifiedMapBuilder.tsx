@@ -329,10 +329,6 @@ const UnifiedMapBuilder = ({ onConfirm, onRender, initialPhase: initialPhaseProp
         stylePrefs: stylePrefs as any,
       });
 
-      console.log("[render] processed length:", processed?.length);
-      setPhaseAndSave("preview");
-      saveCanvasState();
-      confirmMap();
       onRender?.(processed);
     }, 1500);
   };

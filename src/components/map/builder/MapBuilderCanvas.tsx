@@ -638,9 +638,7 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
       getSVG: () => {
         const canvas = fabricRef.current;
         if (!canvas) return "";
-        const svg = canvas.toSVG();
-        console.log("[getSVG] native svg length:", svg.length);
-        return svg;
+        return canvas.toSVG();
       },
       getPNG: () => fabricRef.current?.toDataURL({ format: "png", quality: 1, multiplier: 2 }) ?? "",
       loadSVG: async (svgString: string) => {
