@@ -645,6 +645,10 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
                     canvas.add(line);
                   }
                 }
+              } else if (obj instanceof Line) {
+                // SVG <line> elements — tag as map strokes for eraser
+                obj.set({ stroke: colors.stroke, strokeWidth: sw, strokeLineCap: "round", selectable: false, evented: true, data: { isMapStroke: true } });
+                canvas.add(obj);
               } else {
                 obj.set({ stroke: colors.stroke, strokeWidth: sw, fill: "transparent", selectable: false, evented: false });
                 canvas.add(obj);
