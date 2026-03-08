@@ -924,6 +924,20 @@ function traceOutlineImage(
     // Filter 3: very thin tall components = likely letters like I, l, 1
     if (bboxW < w * 0.02 && bboxH < h * 0.06) return false;
 
+    // Filter 4: thin elongated shapes = letter stems (I, P, T, l etc.)
+    const longAxis = Math.max(bboxW, bboxH);
+    const shortAxis = Math.min(bboxW, bboxH);
+    const elongationRatio = longAxis / (shortAxis || 1);
+    const pixelDensityAlongLongAxis = comp.length / (longAxis || 1);
+    if (elongationRatio > 4 && pixelDensityAlongLongAxis < 8) return false;
+
+    // Filter 5: small isolated components near image edges
+    const centroidX = xs.reduce((a, b) => a + b, 0) / xs.length;
+    const centroidY = ys.reduce((a, b) => a + b, 0) / ys.length;
+    const isNearEdge = centroidX < w * 0.15 || centroidX > w * 0.85 ||
+                       centroidY < h * 0.15 || centroidY > h * 0.85;
+    if (isNearEdge && comp.length < imageArea * 0.005) return false;
+
     return true;
   });
 
