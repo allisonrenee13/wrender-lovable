@@ -735,9 +735,14 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
         if (!canvas) return;
         isBusy.current = true;
         await canvas.loadFromJSON(json);
+        canvas.getObjects().forEach(obj => {
+          if ((obj as any).data?.isMapStroke) {
+            obj.selectable = false;
+            obj.evented = true;
+          }
+        });
         canvas.renderAll();
         isBusy.current = false;
-        // Reset history so undo floor is the loaded state
         history.current = [];
         historyIndex.current = -1;
         saveState();

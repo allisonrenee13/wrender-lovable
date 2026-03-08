@@ -149,11 +149,19 @@ const UnifiedMapBuilder = ({ onConfirm, initialPhase: initialPhaseProp }: Unifie
     }, 100);
   }, [stylePrefs, renderedSVG, updateMapState]);
 
-  // Restore canvas from saved JSON when canvas mounts
+  // Restore canvas from saved JSON when canvas mounts (polling for ref)
   useEffect(() => {
-    if (savedMapState?.canvasJSON && canvasRef.current) {
-      canvasRef.current.loadJSON(savedMapState.canvasJSON);
-    }
+    if (!savedMapState?.canvasJSON) return;
+    let attempts = 0;
+    const tryRestore = () => {
+      if (canvasRef.current) {
+        canvasRef.current.loadJSON(savedMapState.canvasJSON);
+      } else if (attempts < 20) {
+        attempts++;
+        setTimeout(tryRestore, 100);
+      }
+    };
+    setTimeout(tryRestore, 100);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
