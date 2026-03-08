@@ -92,6 +92,8 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   const [traceImageData, setTraceImageData] = useState<{ data: ImageData; w: number; h: number } | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showOriginal, setShowOriginal] = useState(true);
+  const [isCleanOutline, setIsCleanOutline] = useState(false);
+  const [retraceStatus, setRetraceStatus] = useState<"idle" | "running" | "done">("idle");
 
   // Save-as-template modal
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
@@ -192,6 +194,10 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
       setTraceImageData({ data: imageData, w, h });
       setTraceSensitivity(0.65);
 
+      // Detect clean outline: all paths have confidence === 1.0
+      const clean = paths.length > 0 && paths.every(p => p.confidence === 1.0);
+      setIsCleanOutline(clean);
+
       if (paths.length > 0) {
         setCanvasState({
           ...defaultCanvas,
@@ -212,12 +218,12 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
 
   // Re-trace with new sensitivity (debounced call)
   const handleSensitivityChange = useCallback((value: number) => {
-    console.log("[sens] called with", value, "imageData:", !!traceImageData, "url:", !!traceImageDataUrl);
     setTraceSensitivity(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       if (!traceImageData || !traceImageDataUrl) return;
       const { w, h } = traceImageData;
+      setRetraceStatus("running");
       const img = new Image();
         img.onload = () => {
         const c = document.createElement("canvas");
@@ -225,7 +231,6 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
         c.height = h;
         const ctx = c.getContext("2d")!;
         ctx.drawImage(img, 0, 0, w, h);
-        console.log("[sens] running trace, w:", w, "h:", h);
         const paths = traceOutlineImage(c, w, h, value);
         if (paths.length > 0) {
           setCanvasState((prev) => ({ ...prev, paths, nodeCount: paths.length * 10 }));
@@ -236,6 +241,8 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
             nodeCount: 12,
           }));
         }
+        setRetraceStatus("done");
+        setTimeout(() => setRetraceStatus("idle"), 2000);
       };
       img.src = traceImageDataUrl;
     }, 500);
@@ -555,23 +562,40 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                       <h3 className="text-base font-serif font-semibold text-foreground">Your trace is ready</h3>
 
                       {/* 2. Sensitivity slider + Re-trace */}
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs font-medium text-foreground">Sensitivity</p>
-                          <span className="text-xs text-muted-foreground">{traceSensitivity.toFixed(2)}</span>
+                      {isCleanOutline ? (
+                        <div className="flex items-center gap-2 py-2">
+                          <span className="text-sm" style={{ color: "#2EAA5E" }}>✓</span>
+                          <p className="text-xs" style={{ color: "#2EAA5E" }}>
+                            Clean outline detected — your trace looks great.
+                          </p>
                         </div>
-                        <Slider
-                          value={[traceSensitivity]}
-                          onValueChange={([v]) => handleSensitivityChange(v)}
-                          min={0.2}
-                          max={0.95}
-                          step={0.01}
-                          className="w-full"
-                        />
-                        <p className="text-[10px] text-muted-foreground">
-                          Lower = fewer edges, higher = more detail (may include noise)
-                        </p>
-                      </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs font-medium text-foreground">Sensitivity</p>
+                            <span className="text-xs text-muted-foreground">{traceSensitivity.toFixed(2)}</span>
+                          </div>
+                          <Slider
+                            value={[traceSensitivity]}
+                            onValueChange={([v]) => handleSensitivityChange(v)}
+                            min={0.2}
+                            max={0.95}
+                            step={0.01}
+                            className="w-full"
+                          />
+                          <p className="text-[10px] text-muted-foreground">
+                            Lower = fewer edges, higher = more detail (may include noise)
+                          </p>
+                          {retraceStatus === "running" && (
+                            <p className="text-[11px] text-muted-foreground">Retracing...</p>
+                          )}
+                          {retraceStatus === "done" && (
+                            <p className="text-[11px]" style={{ color: "#2EAA5E" }}>
+                              ✓ {canvasState.paths.length} shapes found
+                            </p>
+                          )}
+                        </div>
+                      )}
 
                       {/* Edit hint */}
                       <p className="text-xs text-muted-foreground/80">
@@ -610,9 +634,11 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                           variant="outline"
                           size="sm"
                           className="flex-1 text-xs"
+                          disabled={retraceStatus === "running"}
                           onClick={() => {
                             if (traceImageData && traceImageDataUrl) {
                               const { w, h } = traceImageData;
+                              setRetraceStatus("running");
                               const img = new Image();
                               img.onload = () => {
                                 const c = document.createElement("canvas");
@@ -624,12 +650,14 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                                 if (paths.length > 0) {
                                   setCanvasState((prev) => ({ ...prev, paths, nodeCount: paths.length * 10 }));
                                 }
+                                setRetraceStatus("done");
+                                setTimeout(() => setRetraceStatus("idle"), 2000);
                               };
                               img.src = traceImageDataUrl;
                             }
                           }}
                         >
-                          Re-trace
+                          {retraceStatus === "running" ? "Retracing…" : retraceStatus === "done" ? "✓ Done" : "Re-trace"}
                         </Button>
                         <Button
                           variant="outline"
