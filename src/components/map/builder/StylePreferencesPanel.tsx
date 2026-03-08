@@ -17,6 +17,7 @@ interface StylePreferencesPanelProps {
   prefs: StylePreferences;
   onChange: (prefs: StylePreferences) => void;
   forceExpanded?: boolean;
+  hideLineStyle?: boolean;
 }
 
 /* tiny island swatch paths per line style */
@@ -47,7 +48,7 @@ function getSwatchAttrs(id: LineStyle, baseStroke: string) {
   }
 }
 
-const StylePreferencesPanel = ({ prefs, onChange, forceExpanded }: StylePreferencesPanelProps) => {
+const StylePreferencesPanel = ({ prefs, onChange, forceExpanded, hideLineStyle }: StylePreferencesPanelProps) => {
   const [expanded, setExpanded] = useState(forceExpanded ?? false);
 
   const update = <K extends keyof StylePreferences>(key: K, value: StylePreferences[K]) =>
@@ -63,7 +64,8 @@ const StylePreferencesPanel = ({ prefs, onChange, forceExpanded }: StylePreferen
     const colors = backgroundColors[prefs.background];
     return (
       <div className="space-y-4">
-        {/* Line Style — 2x2 grid */}
+        {/* Line Style — 2x2 grid (hidden when hideLineStyle) */}
+        {!hideLineStyle && (
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-foreground/80">Line style</label>
           <div className="grid grid-cols-2 gap-2">
@@ -107,6 +109,7 @@ const StylePreferencesPanel = ({ prefs, onChange, forceExpanded }: StylePreferen
             })}
           </div>
         </div>
+        )}
 
         {/* Stroke Weight — 3 buttons full width */}
         <div className="space-y-1.5">
