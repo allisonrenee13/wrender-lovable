@@ -1145,6 +1145,27 @@ function traceOutlineImage(
     return true;
   });
 
+  // 4c. Thick-stroke filtering: keep only major landmass boundaries
+  let finalComponents = filteredSignificant;
+  if (hasThickStrokes) {
+    finalComponents = filteredSignificant.filter(comp => {
+      const xs = comp.map(([x]) => x);
+      const ys = comp.map(([, y]) => y);
+      const minX = Math.min(...xs), maxX = Math.max(...xs);
+      const minY = Math.min(...ys), maxY = Math.max(...ys);
+      const bboxW = maxX - minX;
+      const bboxH = maxY - minY;
+      // Keep only large-span components
+      if (bboxW <= w * 0.1 && bboxH <= h * 0.1) return false;
+      // Skip elongated components (arrows, straight lines)
+      const aspect = Math.max(bboxW, bboxH) / (Math.min(bboxW, bboxH) || 1);
+      if (aspect > 8) return false;
+      return true;
+    })
+    .sort((a, b) => b.length - a.length)
+    .slice(0, 5);
+  }
+
   // 5. For each component, find boundary pixels only
   function getBoundary(comp: Array<[number, number]>): Array<[number, number]> {
     const compSet = new Set(comp.map(([x, y]) => y * w + x));
@@ -1195,11 +1216,11 @@ function traceOutlineImage(
   }
 
   const paths: TracedPath[] = [];
-  for (const comp of filteredSignificant) {
+  for (const comp of finalComponents) {
     const boundary = getBoundary(comp);
     if (boundary.length < 4) continue;
     const ordered = orderPoints(boundary);
-    const eps = sensitivity > 0.75 ? 0.4 : 0.7;
+    const eps = hasThickStrokes ? 2.0 : (sensitivity > 0.75 ? 0.4 : 0.7);
     const simplified = douglasPeucker(ordered, eps);
     if (simplified.length < 3) continue;
     let d = `M ${simplified[0][0]} ${simplified[0][1]}`;
