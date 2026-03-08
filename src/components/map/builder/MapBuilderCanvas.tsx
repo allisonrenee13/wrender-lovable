@@ -192,6 +192,7 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
             canvas.add(line);
           }
           canvas.renderAll();
+          console.log("[path:created segments] total objects after split:", canvas.getObjects().length);
           saveState();
         });
         saveState();
@@ -639,8 +640,14 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
         if (!canvas) return "";
         const w = canvas.width || 800;
         const h = canvas.height || 600;
+        const objects = canvas.getObjects();
+        console.log("[getSVG] total objects:", objects.length);
+        objects.forEach((obj: any, i: number) => {
+          console.log(`[getSVG] obj[${i}] type:`, obj.type,
+            "x1:", obj.x1, "data:", JSON.stringify(obj.data));
+        });
         let markup = "";
-        canvas.getObjects().forEach((obj: any) => {
+        objects.forEach((obj: any) => {
           if (typeof obj.x1 === "number" && typeof obj.x2 === "number") {
             const x1 = obj.x1 + (obj.left ?? 0);
             const y1 = obj.y1 + (obj.top ?? 0);
@@ -704,6 +711,7 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
                 canvas.add(obj);
               }
             });
+          console.log("[loadSVG segments] total objects after load:", canvas.getObjects().length);
           canvas.renderAll();
           // Reset history so undo never goes below the loaded state
           setTimeout(() => {
