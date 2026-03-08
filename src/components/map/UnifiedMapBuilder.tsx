@@ -91,6 +91,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   const [traceImageDataUrl, setTraceImageDataUrl] = useState<string | null>(null);
   const [traceImageData, setTraceImageData] = useState<{ data: ImageData; w: number; h: number } | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [showOriginal, setShowOriginal] = useState(true);
 
   // Save-as-template modal
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
@@ -405,11 +406,19 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
             {isTraceReview && (
               <div className="flex-1 flex items-center justify-center p-6 bg-muted/20 relative">
                 <div className="relative w-full max-w-[600px]">
+                  {/* Hide/Show original toggle */}
+                  <button
+                    onClick={() => setShowOriginal((v) => !v)}
+                    className="absolute top-2 right-2 z-10 px-2 py-1 text-[11px] rounded bg-background/80 border border-border text-muted-foreground hover:text-foreground transition-colors backdrop-blur-sm"
+                  >
+                    {showOriginal ? "Hide original" : "Show original"}
+                  </button>
                   {traceImageDataUrl && (
                     <img
                       src={traceImageDataUrl}
                       alt="Uploaded reference"
-                      className="w-full h-auto rounded-lg border border-border"
+                      className="w-full h-auto rounded-lg border border-border transition-opacity"
+                      style={{ opacity: showOriginal ? 1 : 0 }}
                     />
                   )}
                   <svg
@@ -561,6 +570,11 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                           Lower = fewer edges, higher = more detail (may include noise)
                         </p>
                       </div>
+
+                      {/* Edit hint */}
+                      <p className="text-xs text-muted-foreground/80">
+                        In the Edit step you can draw missing lines and erase anything that doesn't look right.
+                      </p>
 
                       {/* 3. "Not quite right?" text */}
                       <p className="text-xs text-muted-foreground">Not quite right? You can also:</p>
