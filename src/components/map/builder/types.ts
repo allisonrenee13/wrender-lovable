@@ -59,8 +59,13 @@ export interface MapTemplate {
   viewBox: string;
 }
 
+export interface TracedPath {
+  d: string;
+  confidence: number;
+}
+
 export interface CanvasState {
-  paths: string[];
+  paths: TracedPath[];
   features: Array<{ type: FeatureStamp; x: number; y: number; x2?: number; y2?: number }>;
   referenceImage: string | null;
   referenceOpacity: number;

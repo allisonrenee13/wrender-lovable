@@ -6,7 +6,7 @@ import { backgroundColors } from "./types";
 interface StyleStepProps {
   stylePrefs: StylePreferences;
   onStylePrefsChange: (prefs: StylePreferences) => void;
-  canvasState: { paths: string[] };
+  canvasState: { paths: Array<{ d: string; confidence: number }> };
   onContinue: () => void;
   onBack: () => void;
 }
@@ -23,7 +23,7 @@ const StyleStep = ({ stylePrefs, onStylePrefsChange, canvasState, onContinue, on
           {canvasState.paths.map((p, i) => (
             <path
               key={i}
-              d={p}
+              d={p.d}
               fill="none"
               stroke={colors.stroke}
               strokeWidth={stylePrefs.strokeWeight === "fine" ? 1 : stylePrefs.strokeWeight === "bold" ? 2.5 : 1.8}
