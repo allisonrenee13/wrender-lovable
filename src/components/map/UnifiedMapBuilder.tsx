@@ -8,8 +8,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Loader2 } from "lucide-react";
 import StepIndicator, { type BuilderStep } from "./builder/StepIndicator";
 import EntryScreen from "./builder/EntryScreen";
 import TemplatePicker from "./builder/TemplatePicker";
@@ -22,7 +20,7 @@ import type { BuilderPath, MapTemplate, StylePreferences, CanvasState, TracedPat
 import { defaultStylePreferences, lineStyleLabels, backgroundColors } from "./builder/types";
 import { saveTemplate } from "@/lib/templateLibrary";
 
-type Phase = "entry" | "upload" | "draw" | "style" | "done";
+type Phase = "entry" | "upload" | "traceReview" | "shapeCanvas" | "style" | "renderReady" | "rendering" | "preview";
 
 interface UnifiedMapBuilderProps {
   onConfirm?: () => void;
@@ -37,7 +35,7 @@ const defaultCanvas: CanvasState = {
 };
 
 function phaseToStep(phase: Phase): BuilderStep {
-  if (phase === "entry" || phase === "upload" || phase === "draw") return 1;
+  if (phase === "entry" || phase === "upload" || phase === "traceReview" || phase === "shapeCanvas") return 1;
   if (phase === "style") return 2;
   return 3;
 }
@@ -45,14 +43,14 @@ function phaseToStep(phase: Phase): BuilderStep {
 function completedStepsForPhase(phase: Phase): Set<number> {
   const s = new Set<number>();
   if (phase === "style") s.add(1);
-  if (phase === "done") { s.add(1); s.add(2); }
+  if (phase === "renderReady" || phase === "rendering" || phase === "preview") { s.add(1); s.add(2); }
   return s;
 }
 
 function stepToPhase(step: 1 | 2 | 3): Phase {
-  if (step === 1) return "draw";
+  if (step === 1) return "shapeCanvas";
   if (step === 2) return "style";
-  return "done";
+  return "renderReady";
 }
 
 const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
@@ -69,7 +67,6 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<MapTemplate | null>(null);
   const [renderedSVG, setRenderedSVG] = useState<string | null>(savedMapState?.renderedSVG || null);
-  const [isRendering, setIsRendering] = useState(false);
 
   const canvasRef = useRef<MapCanvasHandle | null>(null);
   const autoSaveTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -81,7 +78,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
     return defaultStylePreferences;
   });
 
-  // Trace state
+  // Trace review state
   const [traceSensitivity, setTraceSensitivity] = useState(0.65);
   const [traceImageDataUrl, setTraceImageDataUrl] = useState<string | null>(null);
   const [traceImageData, setTraceImageData] = useState<{ data: ImageData; w: number; h: number } | null>(null);
@@ -145,7 +142,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
       setPhase("upload");
     } else {
       setCanvasState(defaultCanvas);
-      setPhase("draw");
+      setPhase("shapeCanvas");
     }
   };
 
@@ -153,7 +150,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
     setSelectedTemplate(template);
     setTemplatePickerOpen(false);
     setCanvasState({ ...defaultCanvas, paths: [{ d: template.svgPath, confidence: 1 }] });
-    setPhase("draw");
+    setPhase("shapeCanvas");
     toast({ title: "Template loaded", description: "Edit the shape to match your world." });
   };
 
@@ -182,57 +179,56 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
         setCanvasState({
           ...defaultCanvas,
           paths,
-          referenceImage: imageDataUrl,
-          referenceOpacity: 30,
           nodeCount: paths.length * 10,
         });
       } else {
         setCanvasState({
           ...defaultCanvas,
           paths: [generateOutlinePath(w, h)],
-          referenceImage: imageDataUrl,
-          referenceOpacity: 30,
           nodeCount: 12,
         });
       }
-      // Go directly to draw phase
-      setPhase("draw");
+      setPhase("traceReview");
     };
     img.src = imageDataUrl;
   };
 
-  // Re-trace with new sensitivity
-  const handleReTrace = useCallback(() => {
-    if (!traceImageData || !traceImageDataUrl) return;
-    const { w, h } = traceImageData;
-    const img = new Image();
-    img.onload = () => {
-      const c = document.createElement("canvas");
-      c.width = w;
-      c.height = h;
-      const ctx = c.getContext("2d")!;
-      ctx.drawImage(img, 0, 0, w, h);
-      const paths = traceOutlineImage(c, w, h, traceSensitivity);
-      if (paths.length > 0) {
-        setCanvasState((prev) => ({ ...prev, paths, nodeCount: paths.length * 10 }));
-      } else {
-        setCanvasState((prev) => ({
-          ...prev,
-          paths: [generateOutlinePath(w, h)],
-          nodeCount: 12,
-        }));
-      }
-    };
-    img.src = traceImageDataUrl;
-  }, [traceImageData, traceImageDataUrl, traceSensitivity]);
+  // Re-trace with new sensitivity (debounced call)
+  const handleSensitivityChange = useCallback((value: number) => {
+    setTraceSensitivity(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      if (!traceImageData || !traceImageDataUrl) return;
+      const { w, h } = traceImageData;
+      const img = new Image();
+        img.onload = () => {
+        const c = document.createElement("canvas");
+        c.width = w;
+        c.height = h;
+        const ctx = c.getContext("2d")!;
+        ctx.drawImage(img, 0, 0, w, h);
+        const paths = traceOutlineImage(c, w, h, value);
+        if (paths.length > 0) {
+          setCanvasState((prev) => ({ ...prev, paths, nodeCount: paths.length * 10 }));
+        } else {
+          setCanvasState((prev) => ({
+            ...prev,
+            paths: [generateOutlinePath(w, h)],
+            nodeCount: 12,
+          }));
+        }
+      };
+      img.src = traceImageDataUrl;
+    }, 500);
+  }, [traceImageData, traceImageDataUrl]);
 
   const handleManualTrace = (image: string) => {
     setCanvasState({ ...defaultCanvas, referenceImage: image, referenceOpacity: 40 });
-    setPhase("draw");
+    setPhase("shapeCanvas");
   };
 
   const handleRender = () => {
-    setIsRendering(true);
+    setPhase("rendering");
 
     setTimeout(() => {
       // Build SVG from canvasState paths + style prefs directly
@@ -256,8 +252,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
         stylePrefs: stylePrefs as any,
       });
 
-      setIsRendering(false);
-      setPhaseAndSave("done");
+      setPhaseAndSave("preview");
     }, 1500);
   };
 
@@ -316,6 +311,21 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
     toast({ title: "Template saved", description: `"${templateName.trim()}" saved to your library.` });
   };
 
+  // Trace review stats
+  const pathCount = canvasState.paths.length;
+  const traceGuidance = pathCount === 0
+    ? "Nothing detected — try raising sensitivity or use a higher contrast image"
+    : pathCount <= 3
+    ? "Looks clean! Simple outlines work best."
+    : pathCount <= 15
+    ? "Good trace. Review the overlay and adjust if needed."
+    : "Lots of detail detected — lower sensitivity if the overlay looks noisy";
+  const getConfidenceColor = (c: number) => {
+    if (c > 0.65) return "#2EAA5E";
+    if (c >= 0.35) return "#D4882A";
+    return "#D94040";
+  };
+
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden">
       <StepIndicator currentStep={currentStep} completedSteps={completed} />
@@ -331,83 +341,160 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
           />
         )}
 
-        {phase === "draw" && (
-          <div className="flex-1 flex overflow-hidden">
-            {/* EditingCanvas fills center */}
-            <div className="flex-1 flex flex-col overflow-hidden">
-              <EditingCanvas
-                initialTemplate={selectedTemplate}
-                referenceImage={canvasState.referenceImage}
-                canvasState={canvasState}
-                onCanvasChange={setCanvasState}
-                stylePrefs={stylePrefs}
-                onStylePrefsChange={setStylePrefs}
-                onRenderPreview={() => {}}
-                hideStylePanel
-                hideRenderButton
-                canvasRef={canvasRef}
-              />
-            </div>
-
-            {/* Right side panel */}
-            <div className="w-[300px] border-l border-border flex flex-col bg-card">
-              <div className="flex-1 overflow-y-auto p-5 space-y-5">
-                {/* Trace adjustment accordion — only show if we have trace data */}
-                {traceImageDataUrl && (
-                  <div>
-                    <h3 className="text-sm font-semibold text-foreground mb-1">Your trace</h3>
-                    <Accordion type="single" collapsible>
-                      <AccordionItem value="sensitivity" className="border-b-0">
-                        <AccordionTrigger className="py-2 text-xs text-muted-foreground hover:no-underline">
-                          Adjust sensitivity
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <div className="space-y-3 pt-1">
-                            <div className="flex items-center justify-between">
-                              <span className="text-[11px] text-muted-foreground">Sensitivity</span>
-                              <span className="text-[11px] text-muted-foreground">{traceSensitivity.toFixed(2)}</span>
-                            </div>
-                            <Slider
-                              value={[traceSensitivity]}
-                              onValueChange={([v]) => setTraceSensitivity(v)}
-                              min={0.2}
-                              max={0.95}
-                              step={0.01}
-                              className="w-full"
-                            />
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full text-xs"
-                              onClick={handleReTrace}
-                            >
-                              Re-trace
-                            </Button>
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    </Accordion>
-                  </div>
-                )}
-
-                {/* Tip */}
-                <div className="bg-muted/40 rounded-lg p-3">
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Use <span className="font-medium text-foreground">Pen</span> to add missing lines.
-                    Use <span className="font-medium text-foreground">Erase</span> to remove anything extra.
-                  </p>
+        {phase === "traceReview" && (
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 flex overflow-hidden">
+              {/* Image + SVG overlay */}
+              <div className="flex-1 flex items-center justify-center p-6 bg-muted/20 relative">
+                <div className="relative w-full max-w-[600px]">
+                  {traceImageDataUrl && (
+                    <img
+                      src={traceImageDataUrl}
+                      alt="Uploaded reference"
+                      className="w-full h-auto rounded-lg border border-border"
+                    />
+                  )}
+                  {/* SVG overlay */}
+                  <svg
+                    viewBox={`0 0 ${traceImageData?.w || 600} ${traceImageData?.h || 600}`}
+                    className="absolute inset-0 w-full h-full"
+                    style={{ pointerEvents: "none" }}
+                  >
+                    {canvasState.paths.map((p, i) => (
+                      <path
+                        key={i}
+                        d={p.d}
+                        fill="none"
+                        stroke={getConfidenceColor(p.confidence)}
+                        strokeWidth="2"
+                        strokeLinejoin="round"
+                        strokeLinecap="round"
+                        opacity="0.85"
+                      />
+                    ))}
+                  </svg>
                 </div>
               </div>
 
-              {/* Footer */}
-              <div className="p-4 border-t border-border">
-                <Button
-                  onClick={() => setPhaseAndSave("style")}
-                  className="w-full bg-primary text-primary-foreground font-semibold"
-                >
-                  Looks good →
-                </Button>
+              {/* Right panel */}
+              <div className="w-[320px] border-l border-border flex flex-col bg-card">
+                <div className="p-5 space-y-5 flex-1 overflow-y-auto">
+                  <div>
+                    <h3 className="text-base font-serif font-semibold text-foreground mb-1">Does this look right?</h3>
+                    <p className="text-xs text-muted-foreground">
+                      The colored lines show what will be traced. Adjust sensitivity if anything looks off.
+                    </p>
+                  </div>
+
+                  {/* Trace summary */}
+                  <div className="bg-muted/40 rounded-lg p-3 space-y-1.5">
+                    <p className="text-sm text-foreground font-medium">{pathCount} {pathCount === 1 ? "shape" : "shapes"} traced</p>
+                    <p className="text-xs text-muted-foreground">{traceGuidance}</p>
+                  </div>
+
+                  {/* Sensitivity slider */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-medium text-foreground">Sensitivity</p>
+                      <span className="text-xs text-muted-foreground">{traceSensitivity.toFixed(2)}</span>
+                    </div>
+                    <Slider
+                      value={[traceSensitivity]}
+                      onValueChange={([v]) => handleSensitivityChange(v)}
+                      min={0.2}
+                      max={0.95}
+                      step={0.01}
+                      className="w-full"
+                    />
+                    <p className="text-[10px] text-muted-foreground">
+                      Lower = fewer edges, higher = more detail (may include noise)
+                    </p>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="p-4 border-t border-border space-y-2">
+                  <Button
+                    onClick={() => setPhaseAndSave("shapeCanvas")}
+                    className="w-full bg-primary text-primary-foreground font-semibold"
+                  >
+                    Looks good, continue →
+                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 text-xs"
+                      onClick={() => {
+                        if (traceImageData && traceImageDataUrl) {
+                          const { w, h } = traceImageData;
+                          const img = new Image();
+                          img.onload = () => {
+                            const c = document.createElement("canvas");
+                            c.width = w;
+                            c.height = h;
+                            const ctx = c.getContext("2d")!;
+                            ctx.drawImage(img, 0, 0, w, h);
+                            const paths = traceOutlineImage(c, w, h, traceSensitivity);
+                            if (paths.length > 0) {
+                              setCanvasState((prev) => ({ ...prev, paths, nodeCount: paths.length * 10 }));
+                            }
+                          };
+                          img.src = traceImageDataUrl;
+                        }
+                      }}
+                    >
+                      Re-trace
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 text-xs"
+                      onClick={() => {
+                        setTemplateName("");
+                        setTemplatePublic(false);
+                        setSaveTemplateOpen(true);
+                      }}
+                    >
+                      Save as Template
+                    </Button>
+                  </div>
+                  <button
+                    onClick={() => setPhase("upload")}
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors w-full text-center"
+                  >
+                    ← Back to Upload
+                  </button>
+                </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {phase === "shapeCanvas" && (
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <EditingCanvas
+              initialTemplate={selectedTemplate}
+              referenceImage={canvasState.referenceImage}
+              canvasState={canvasState}
+              onCanvasChange={setCanvasState}
+              stylePrefs={stylePrefs}
+              onStylePrefsChange={setStylePrefs}
+              onRenderPreview={() => {}}
+              hideStylePanel
+              hideRenderButton
+              canvasRef={canvasRef}
+            />
+            <div className="px-5 py-3 border-t border-border bg-card flex items-center justify-end gap-4">
+              <span className="text-[12px] text-muted-foreground hidden sm:inline">
+                Happy with the shape? Continue when ready — you can always come back and edit.
+              </span>
+              <Button
+                onClick={() => setPhaseAndSave("style")}
+                className="bg-primary text-primary-foreground font-semibold px-6 shrink-0"
+              >
+                Continue to Style →
+              </Button>
             </div>
           </div>
         )}
@@ -417,14 +504,83 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
             stylePrefs={stylePrefs}
             onStylePrefsChange={setStylePrefs}
             canvasState={canvasState}
-            onContinue={handleRender}
-            onBack={() => setPhaseAndSave("draw")}
-            renderButtonLabel={isRendering ? undefined : "Render & Save →"}
-            isRendering={isRendering}
+            onContinue={() => setPhaseAndSave("renderReady")}
+            onBack={() => setPhaseAndSave("shapeCanvas")}
           />
         )}
 
-        {phase === "done" && (
+        {phase === "renderReady" && (
+          <div className="flex-1 flex flex-col items-center justify-center p-8 gap-6" style={{ backgroundColor: colors.bg }}>
+            <div className="flex-1 flex items-center justify-center w-full max-w-[500px]">
+              <svg viewBox="0 0 600 600" className="w-full h-auto">
+                <rect width="600" height="600" fill={colors.bg} />
+                {canvasState.paths.map((p, i) => (
+                  <path
+                    key={i}
+                    d={p.d}
+                    fill="none"
+                    stroke={colors.stroke}
+                    strokeWidth={stylePrefs.strokeWeight === "fine" ? 1 : stylePrefs.strokeWeight === "bold" ? 2.5 : 1.8}
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                  />
+                ))}
+              </svg>
+            </div>
+            <div className="flex flex-col items-center gap-3 w-full max-w-sm">
+              <Button
+                onClick={handleRender}
+                className="w-full bg-primary text-primary-foreground font-bold h-14 text-base"
+              >
+                Render My Map
+              </Button>
+              <p className="text-xs text-muted-foreground text-center">
+                Wrender will finish your map with consistent strokes, terrain marks, a compass rose, and place labels.
+              </p>
+              <p className="text-[11px] text-muted-foreground/50 text-center">
+                This takes about 2 seconds. You can re-render any time after editing.
+              </p>
+              <button
+                onClick={() => setPhaseAndSave("style")}
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors mt-1"
+              >
+                ← Back to Style
+              </button>
+            </div>
+            <div className="w-full text-center">
+              <span className="text-[11px] text-muted-foreground">
+                Style: {lineStyleLabels[stylePrefs.lineStyle]} · Ready to render
+              </span>
+            </div>
+          </div>
+        )}
+
+        {phase === "rendering" && (
+          <div className="flex-1 flex flex-col items-center justify-center p-10 gap-4" style={{ backgroundColor: "#FAFAF7" }}>
+            <div className="relative w-16 h-16">
+              <svg viewBox="0 0 64 64" className="w-full h-full">
+                <path
+                  d="M 8 48 Q 20 20, 32 36 Q 44 52, 56 16"
+                  fill="none"
+                  stroke="hsl(var(--foreground))"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeDasharray="100"
+                  strokeDashoffset="100"
+                >
+                  <animate attributeName="stroke-dashoffset" from="100" to="0" dur="1.5s" repeatCount="indefinite" />
+                </path>
+                <circle r="3" fill="hsl(var(--secondary))">
+                  <animateMotion path="M 8 48 Q 20 20, 32 36 Q 44 52, 56 16" dur="1.5s" repeatCount="indefinite" />
+                </circle>
+              </svg>
+            </div>
+            <h3 className="text-lg font-serif font-semibold text-foreground">Finishing your map...</h3>
+            <p className="text-sm text-muted-foreground">Applying style and cleaning up strokes</p>
+          </div>
+        )}
+
+        {phase === "preview" && (
           <div className="flex-1 flex flex-col items-center justify-center p-8 gap-6" style={{ backgroundColor: colors.bg }}>
             <div className="flex-1 flex items-center justify-center w-full max-w-[700px]">
               {renderedSVG ? (
@@ -455,7 +611,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                 </Button>
               </div>
               <button
-                onClick={() => setPhaseAndSave("draw")}
+                onClick={() => setPhaseAndSave("shapeCanvas")}
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
               >
                 Keep Editing
