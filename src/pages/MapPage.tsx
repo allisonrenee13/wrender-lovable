@@ -49,8 +49,12 @@ const MapPage = () => {
       <div className="flex-1 flex items-center justify-center p-6 bg-muted/20 relative">
         {savedSVG ? (
           <div
-            className="w-full max-w-[600px] border border-border rounded-lg overflow-hidden shadow-md"
-            dangerouslySetInnerHTML={{ __html: savedSVG }}
+            className="w-full max-w-[600px] border border-border rounded-lg overflow-hidden shadow-md bg-background"
+            style={{ aspectRatio: "1 / 1" }}
+            dangerouslySetInnerHTML={{ __html: savedSVG.replace(
+              /<svg([^>]*)>/,
+              '<svg$1 style="width:100%;height:100%;display:block;">'
+            )}}
           />
         ) : (
           <p className="text-sm text-muted-foreground italic">No map yet</p>

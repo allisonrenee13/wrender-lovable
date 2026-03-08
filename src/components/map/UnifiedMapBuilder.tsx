@@ -299,7 +299,8 @@ const UnifiedMapBuilder = ({ onConfirm, onRender, initialPhase: initialPhaseProp
 
   const handleRender = () => {
     // Capture SVG NOW while canvas is still mounted
-    const svg = canvasRef.current?.getSVG() || "";
+    const svg = (canvasRef.current?.getSVG() || "")
+      .replace(/width="[^"]*" height="[^"]*"/, 'width="100%" height="100%"');
     console.log("[render] captured svg length:", svg.length);
 
     // Then animate
