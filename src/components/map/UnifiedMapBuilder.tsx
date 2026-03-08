@@ -899,6 +899,52 @@ function traceOutlineImage(
     ink[i] = (!isBackground && !isWhite) ? 1 : 0;
   }
 
+  // Colored background detection via color variance + corner brightness
+  let rSum = 0, gSum = 0, bSum = 0, count = 0;
+  for (let i = 0; i < w * h; i += 20) {
+    rSum += data[i * 4]; gSum += data[i * 4 + 1]; bSum += data[i * 4 + 2];
+    count++;
+  }
+  const rMean = rSum / count, gMean = gSum / count, bMean = bSum / count;
+  let colorVar = 0;
+  for (let i = 0; i < w * h; i += 20) {
+    colorVar += Math.abs(data[i * 4] - rMean) +
+                Math.abs(data[i * 4 + 1] - gMean) +
+                Math.abs(data[i * 4 + 2] - bMean);
+  }
+  colorVar /= count;
+
+  // Corner sampling for average brightness
+  const corners = [
+    0, w - 1, (h - 1) * w, (h - 1) * w + (w - 1)
+  ];
+  let cornerBrightnessSum = 0;
+  for (const ci of corners) {
+    cornerBrightnessSum += (data[ci * 4] + data[ci * 4 + 1] + data[ci * 4 + 2]) / 3;
+  }
+  const avgCornerBrightness = cornerBrightnessSum / corners.length;
+
+  const isColoredBackground = avgCornerBrightness < 230 && colorVar > 40;
+
+  // For colored backgrounds, use edge detection instead of brightness thresholding
+  if (isColoredBackground) {
+    ink.fill(0);
+    for (let y = 1; y < h - 1; y++) {
+      for (let x = 1; x < w - 1; x++) {
+        const idx = (y * w + x) * 4;
+        const r = data[idx], g = data[idx + 1], b = data[idx + 2];
+        let maxDiff = 0;
+        for (const ni of [(y - 1) * w + x, (y + 1) * w + x, y * w + (x - 1), y * w + (x + 1)]) {
+          const diff = Math.abs(r - data[ni * 4]) +
+                       Math.abs(g - data[ni * 4 + 1]) +
+                       Math.abs(b - data[ni * 4 + 2]);
+          if (diff > maxDiff) maxDiff = diff;
+        }
+        ink[y * w + x] = maxDiff > Math.round(80 - sensitivity * 50) ? 1 : 0;
+      }
+    }
+  }
+
   // 2. Zero out 6px border to remove image frame artifacts
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++)
