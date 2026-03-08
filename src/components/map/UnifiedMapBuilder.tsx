@@ -98,6 +98,8 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
   const [templateName, setTemplateName] = useState("");
   const [templatePublic, setTemplatePublic] = useState(false);
+  const [showReference, setShowReference] = useState(false);
+  const [templatePublic, setTemplatePublic] = useState(false);
 
   const hasShape = canvasState.paths.length > 0 || selectedTemplate !== null;
   const colors = backgroundColors[stylePrefs.background];
@@ -670,6 +672,13 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                       {/* 6. Continue to Edit */}
                       <Button
                         onClick={() => {
+                          // Carry the trace image as a reference overlay for the Edit tab
+                          if (traceImageDataUrl) {
+                            setCanvasState(prev => ({
+                              ...prev,
+                              referenceImage: traceImageDataUrl,
+                            }));
+                          }
                           setPhaseAndSave("shapeCanvas");
                           setActiveTab("edit");
                         }}
