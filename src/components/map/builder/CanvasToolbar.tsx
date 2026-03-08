@@ -134,15 +134,6 @@ const CanvasToolbar = ({
               </div>
             )}
 
-            <div className="w-10 border-t border-border my-1.5" />
-
-            {/* Adjust section */}
-            <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Adjust</span>
-            {adjustTools.map((tool) =>
-              renderToolButton(tool, activeTool === tool.id, () => {
-                onToolChange(tool.id);
-              })
-            )}
           </>
         )}
 
