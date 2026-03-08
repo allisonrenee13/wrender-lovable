@@ -6,8 +6,9 @@ import {
   Redo2,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
-import { Slider } from "@/components/ui/slider";
 import type { ShapeTool, ToolMode } from "./types";
+
+export type BrushWeight = "fine" | "medium" | "bold";
 
 interface CanvasToolbarProps {
   mode: ToolMode;
@@ -18,8 +19,8 @@ interface CanvasToolbarProps {
   onRedo: () => void;
   canUndo: boolean;
   canRedo: boolean;
-  brushSize: number;
-  onBrushSizeChange: (size: number) => void;
+  brushWeight: BrushWeight;
+  onBrushWeightChange: (weight: BrushWeight) => void;
 }
 
 const drawTools: Array<{ id: ShapeTool; icon: typeof Hand; label: string; hint: string }> = [
@@ -37,11 +38,11 @@ const CanvasToolbar = ({
   onRedo,
   canUndo,
   canRedo,
-  brushSize,
-  onBrushSizeChange,
+  brushWeight,
+  onBrushWeightChange,
 }: CanvasToolbarProps) => {
 
-  const showSizeSlider = activeTool === "pen" || activeTool === "eraser";
+  const showWeightButtons = activeTool === "pen" || activeTool === "eraser";
 
   const renderToolButton = (
     tool: { id: ShapeTool; icon: typeof Hand; label: string; hint: string },
@@ -108,19 +109,23 @@ const CanvasToolbar = ({
               })
             )}
 
-            {/* Brush size slider — visible only for Pen/Erase */}
-            {showSizeSlider && (
-              <div className="w-[56px] flex flex-col items-center gap-1 mt-1 mb-1 px-0.5">
-                <span className="text-[9px] text-muted-foreground">Size {brushSize}px</span>
-                <Slider
-                  value={[brushSize]}
-                  onValueChange={([v]) => onBrushSizeChange(v)}
-                  min={1}
-                  max={40}
-                  step={1}
-                  orientation="horizontal"
-                  className="w-full"
-                />
+            {/* Brush weight buttons — visible only for Pen/Erase */}
+            {showWeightButtons && (
+              <div className="w-[56px] flex flex-col items-center gap-0.5 mt-1 mb-1">
+                <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider mb-0.5">Weight</span>
+                {(["fine", "medium", "bold"] as BrushWeight[]).map((w) => (
+                  <button
+                    key={w}
+                    onClick={() => onBrushWeightChange(w)}
+                    className={`w-[56px] h-7 rounded text-[10px] font-medium transition-colors capitalize ${
+                      brushWeight === w
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    }`}
+                  >
+                    {w}
+                  </button>
+                ))}
               </div>
             )}
 

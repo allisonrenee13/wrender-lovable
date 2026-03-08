@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback, useEffect } from "react";
-import CanvasToolbar from "./CanvasToolbar";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import CanvasToolbar, { type BrushWeight } from "./CanvasToolbar";
 import StylePreferencesPanel from "./StylePreferencesPanel";
 import MapBuilderCanvas, { type MapCanvasHandle } from "./MapBuilderCanvas";
 import GuidanceOverlay, { shouldShowGuidance } from "./GuidanceOverlay";
@@ -55,30 +55,32 @@ const EditingCanvas = ({
   });
   const [hasDrawn, setHasDrawn] = useState(canvasState.paths.length > 0 || !!initialTemplate);
 
-  // Brush size state: separate defaults for pen and eraser
-  const [penSize, setPenSize] = useState(4);
-  const [eraserSize, setEraserSize] = useState(12);
-  const currentBrushSize = activeTool === "eraser" ? eraserSize : penSize;
+  // Brush weight state — synced with stylePrefs.strokeWeight
+  const penWidthMap: Record<BrushWeight, number> = useMemo(() => ({ fine: 1, medium: 3, bold: 6 }), []);
+  const eraserRadiusMap: Record<BrushWeight, number> = useMemo(() => ({ fine: 8, medium: 20, bold: 40 }), []);
 
-  const handleBrushSizeChange = (size: number) => {
-    if (activeTool === "eraser") {
-      setEraserSize(size);
-    } else {
-      setPenSize(size);
-      canvasHandle.current?.setBrushWidth(size);
+  const [brushWeight, setBrushWeight] = useState<BrushWeight>(
+    (stylePrefs.strokeWeight as BrushWeight) || "medium"
+  );
+
+  const handleBrushWeightChange = (weight: BrushWeight) => {
+    setBrushWeight(weight);
+    if (activeTool === "pen") {
+      canvasHandle.current?.setBrushWidth(penWidthMap[weight]);
     }
   };
 
   const internalRef = useRef<MapCanvasHandle | null>(null);
   const canvasHandle = externalCanvasRef || internalRef;
 
-  // FIX 2: Sync pen brush width when strokeWeight changes
-  const strokeWeightToBrush: Record<string, number> = { fine: 1, medium: 2, bold: 4 };
+  // Sync brush weight when stylePrefs.strokeWeight changes
   useEffect(() => {
-    if (activeTool === "pen") {
-      const w = strokeWeightToBrush[stylePrefs.strokeWeight] ?? 2;
-      setPenSize(w);
-      canvasHandle.current?.setBrushWidth(w);
+    const w = stylePrefs.strokeWeight as BrushWeight;
+    if (w && w !== brushWeight) {
+      setBrushWeight(w);
+      if (activeTool === "pen") {
+        canvasHandle.current?.setBrushWidth(penWidthMap[w]);
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stylePrefs.strokeWeight]);
@@ -211,8 +213,8 @@ const EditingCanvas = ({
           onRedo={() => canvasHandle.current?.redo()}
           canUndo={true}
           canRedo={true}
-          brushSize={currentBrushSize}
-          onBrushSizeChange={handleBrushSizeChange}
+          brushWeight={brushWeight}
+          onBrushWeightChange={handleBrushWeightChange}
         />
 
         {/* Canvas area */}
@@ -236,8 +238,8 @@ const EditingCanvas = ({
                 onStateChange={handleStateChange}
                 width={800}
                 height={600}
-                brushWidth={activeTool === "pen" ? penSize : undefined}
-                eraserRadius={activeTool === "eraser" ? eraserSize : undefined}
+                brushWidth={activeTool === "pen" ? penWidthMap[brushWeight] : undefined}
+                eraserRadius={activeTool === "eraser" ? eraserRadiusMap[brushWeight] : undefined}
               />
 
               {/* Empty canvas prompt */}
