@@ -56,11 +56,11 @@ const MapViewMode = ({ onEditMap }: MapViewModeProps) => {
     if (!dropPoint || !pinForm.name.trim()) return;
     addPin({
       title: pinForm.name,
-      type: pinForm.type,
-      tier: "main",
-      chapter: pinForm.chapter,
+      type: "location",
+      tier: "minor",
+      chapter: 1,
       location: pinForm.name,
-      note: pinForm.note,
+      note: "",
       x: dropPoint.x,
       y: dropPoint.y,
       placed: true,
@@ -175,15 +175,54 @@ const MapViewMode = ({ onEditMap }: MapViewModeProps) => {
       )}
 
       {/* Full-screen map */}
-      <div className="flex-1 overflow-auto relative" style={{ backgroundColor: "#FAFAF7" }}>
-        {renderMap()}
+      <div
+        className="flex-1 overflow-auto relative"
+        style={{ backgroundColor: "#FAFAF7", cursor: pinDropMode && !dropPoint ? "crosshair" : undefined }}
+      >
+        {/* Map + pin overlay container */}
+        <div
+          className="w-full flex justify-center py-6"
+          onClick={(e) => {
+            if (!pinDropMode || dropPoint) return;
+            const container = e.currentTarget;
+            const rect = container.getBoundingClientRect();
+            const xPct = ((e.clientX - rect.left) / rect.width) * 100;
+            const yPct = ((e.clientY - rect.top) / rect.height) * 100;
+            handleMapClick(xPct, yPct);
+          }}
+        >
+          <div className="w-full max-w-[700px] relative">
+            {renderedSVG ? (
+              <div dangerouslySetInnerHTML={{ __html: renderedSVG }} />
+            ) : (
+              <div className="aspect-[4/3] bg-muted/30 rounded-lg flex items-center justify-center">
+                <p className="text-sm text-muted-foreground italic">Your rendered map will appear here</p>
+              </div>
+            )}
 
-        {/* Overlay pins on the map */}
-        {currentProject.pins.length > 0 && (
-          <div className="absolute inset-0 pointer-events-none">
-            {/* Pins would be rendered as overlays here based on coordinates */}
+            {/* Pin SVG overlay */}
+            <svg
+              className="absolute inset-0 w-full h-full"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+              style={{ pointerEvents: "none" }}
+            >
+              {currentProject.pins.map((pin) => {
+                const isSelected = pin.id === selectedPinId;
+                const r = isSelected ? 1.4 : 1;
+                const fill = isSelected ? "hsl(var(--primary))" : pin.tier === "main" ? "hsl(var(--destructive))" : "hsl(var(--muted-foreground))";
+                return (
+                  <g key={pin.id} style={{ pointerEvents: "all", cursor: "pointer" }} onClick={(e) => { e.stopPropagation(); setSelectedPinId(pin.id); }}>
+                    <circle cx={pin.x} cy={pin.y} r={r} fill={fill} stroke="hsl(var(--background))" strokeWidth="0.3" />
+                    <text x={pin.x} y={pin.y + 2.2} textAnchor="middle" fontSize="1.6" fill="hsl(var(--foreground))" fontFamily="serif" style={{ pointerEvents: "none" }}>
+                      {pin.title}
+                    </text>
+                  </g>
+                );
+              })}
+            </svg>
           </div>
-        )}
+        </div>
 
         {/* Empty pin state message */}
         {currentProject.pins.length === 0 && !pinDropMode && (
@@ -194,60 +233,31 @@ const MapViewMode = ({ onEditMap }: MapViewModeProps) => {
           </div>
         )}
 
-        {/* Pin drop form popup */}
+        {/* Pin drop form popup — simple name + Add */}
         {dropPoint && (
           <div
-            className="absolute z-30 bg-card border border-border rounded-lg shadow-lg p-4 w-64 animate-in fade-in zoom-in-95 duration-200"
+            className="absolute z-30 bg-card border border-border rounded-lg shadow-lg p-3 w-56 animate-in fade-in zoom-in-95 duration-200"
             style={{
-              left: `min(calc(50% + ${(dropPoint.x - 300) * 0.5}px), calc(100% - 280px))`,
-              top: `min(calc(${(dropPoint.y / 700) * 100}% + 20px), calc(100% - 260px))`,
+              left: `${Math.min(Math.max(dropPoint.x, 10), 80)}%`,
+              top: `${Math.min(Math.max(dropPoint.y, 5), 75)}%`,
+              transform: "translate(-50%, 8px)",
             }}
           >
-            <div className="space-y-3">
+            <div className="space-y-2">
               <Input
                 value={pinForm.name}
                 onChange={(e) => setPinForm({ ...pinForm, name: e.target.value })}
                 placeholder="Location name"
-                className="text-sm font-serif"
+                className="text-sm font-serif h-8"
                 autoFocus
-              />
-              <div className="flex gap-1.5">
-                {(["plot", "location", "character"] as PinType[]).map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => setPinForm({ ...pinForm, type: t })}
-                    className={cn(
-                      "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium border transition-colors",
-                      pinForm.type === t
-                        ? "border-foreground/20 bg-muted text-foreground"
-                        : "border-transparent text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    <span className={cn("w-2 h-2 rounded-full", pinTypeColors[t])} />
-                    {t === "plot" ? "Plot" : t === "location" ? "Location" : "Character"}
-                  </button>
-                ))}
-              </div>
-              <Input
-                type="number"
-                value={pinForm.chapter}
-                onChange={(e) => setPinForm({ ...pinForm, chapter: Number(e.target.value) })}
-                placeholder="Chapter"
-                className="text-sm"
-              />
-              <Textarea
-                value={pinForm.note}
-                onChange={(e) => setPinForm({ ...pinForm, note: e.target.value })}
-                placeholder="Note (optional)"
-                rows={2}
-                className="text-sm resize-none"
+                onKeyDown={(e) => { if (e.key === "Enter") handlePlacePin(); if (e.key === "Escape") handleCancelDrop(); }}
               />
               <div className="flex items-center gap-2">
-                <Button onClick={handlePlacePin} disabled={!pinForm.name.trim()} className="flex-1 h-8 text-xs bg-primary text-primary-foreground">
-                  Place
+                <Button onClick={handlePlacePin} disabled={!pinForm.name.trim()} size="sm" className="flex-1 h-7 text-xs">
+                  Add
                 </Button>
                 <button onClick={handleCancelDrop} className="text-muted-foreground hover:text-foreground">
-                  <X className="h-4 w-4" />
+                  <X className="h-3.5 w-3.5" />
                 </button>
               </div>
             </div>

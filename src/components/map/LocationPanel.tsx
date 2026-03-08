@@ -3,6 +3,8 @@ import { useProject } from "@/context/ProjectContext";
 import { ChevronRight, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface LocationPanelProps {
   isOpen: boolean;
@@ -12,8 +14,10 @@ interface LocationPanelProps {
 }
 
 const LocationPanel = ({ isOpen, onToggle, selectedLocationId, onSelectLocation }: LocationPanelProps) => {
-  const { currentProject } = useProject();
+  const { currentProject, addPin } = useProject();
   const [showAllEvents, setShowAllEvents] = useState(false);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [newPinName, setNewPinName] = useState("");
 
   const selectedPin = currentProject.pins.find((p) => p.id === selectedLocationId);
 
@@ -149,12 +153,49 @@ const LocationPanel = ({ isOpen, onToggle, selectedLocationId, onSelectLocation 
             <p className="text-xs text-muted-foreground text-center py-4 italic">No pins yet. Add events on the map or timeline.</p>
           )}
 
-          <Button variant="outline" size="sm" className="w-full mt-2">
+          <Button variant="outline" size="sm" className="w-full mt-2" onClick={() => setShowAddDialog(true)}>
             <Plus className="h-3 w-3 mr-1.5" />
             Add Pin
           </Button>
         </div>
       </div>
+
+      {/* Add Pin Dialog */}
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent className="sm:max-w-xs">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-serif">Add Pin</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Input
+              value={newPinName}
+              onChange={(e) => setNewPinName(e.target.value)}
+              placeholder="Location name"
+              className="text-sm font-serif"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && newPinName.trim()) {
+                  addPin({ title: newPinName.trim(), type: "location", tier: "minor", chapter: 1, location: newPinName.trim(), note: "", x: 50, y: 50, placed: true });
+                  setNewPinName("");
+                  setShowAddDialog(false);
+                }
+              }}
+            />
+            <Button
+              size="sm"
+              className="w-full"
+              disabled={!newPinName.trim()}
+              onClick={() => {
+                addPin({ title: newPinName.trim(), type: "location", tier: "minor", chapter: 1, location: newPinName.trim(), note: "", x: 50, y: 50, placed: true });
+                setNewPinName("");
+                setShowAddDialog(false);
+              }}
+            >
+              Add
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
