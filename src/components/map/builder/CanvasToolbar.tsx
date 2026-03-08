@@ -42,7 +42,7 @@ const CanvasToolbar = ({
   onBrushWeightChange,
 }: CanvasToolbarProps) => {
 
-  const showWeightButtons = activeTool === "pen" || activeTool === "eraser";
+  
 
   const renderToolButton = (
     tool: { id: ShapeTool; icon: typeof Hand; label: string; hint: string },
@@ -50,25 +50,45 @@ const CanvasToolbar = ({
     onClick: () => void
   ) => {
     const Icon = tool.icon;
+    const showPill = (tool.id === "pen" || tool.id === "eraser") && activeTool === tool.id;
     return (
-      <Tooltip key={tool.id}>
-        <TooltipTrigger asChild>
-          <button
-            onClick={onClick}
-            className={`w-[56px] rounded flex flex-col items-center justify-center gap-0.5 py-2 transition-colors ${
-              isActive
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
-            }`}
-          >
-            <Icon className="h-4 w-4" />
-            <span className="text-[10px] font-medium leading-tight">{tool.label}</span>
-          </button>
-        </TooltipTrigger>
-        <TooltipContent side="right" className="text-xs max-w-[180px]">
-          <p className="text-muted-foreground">{tool.hint}</p>
-        </TooltipContent>
-      </Tooltip>
+      <div key={tool.id} className="flex flex-col items-center">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={onClick}
+              className={`w-[56px] rounded flex flex-col items-center justify-center gap-0.5 py-2 transition-colors ${
+                isActive
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              }`}
+            >
+              <Icon className="h-4 w-4" />
+              <span className="text-[10px] font-medium leading-tight">{tool.label}</span>
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="right" className="text-xs max-w-[180px]">
+            <p className="text-muted-foreground">{tool.hint}</p>
+          </TooltipContent>
+        </Tooltip>
+        {showPill && (
+          <div className="mt-1 flex rounded-full border border-border bg-card overflow-hidden">
+            {(["fine", "medium", "bold"] as BrushWeight[]).map((w) => (
+              <button
+                key={w}
+                onClick={() => onBrushWeightChange(w)}
+                className={`w-[20px] h-[20px] text-[9px] font-semibold transition-colors ${
+                  brushWeight === w
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                {w[0].toUpperCase()}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     );
   };
 
@@ -109,25 +129,6 @@ const CanvasToolbar = ({
               })
             )}
 
-            {/* Brush weight buttons — visible only for Pen/Erase */}
-            {showWeightButtons && (
-              <div className="w-[56px] flex flex-col items-center gap-0.5 mt-1 mb-1">
-                <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider mb-0.5">Weight</span>
-                {(["fine", "medium", "bold"] as BrushWeight[]).map((w) => (
-                  <button
-                    key={w}
-                    onClick={() => onBrushWeightChange(w)}
-                    className={`w-[56px] h-7 rounded text-[10px] font-medium transition-colors capitalize ${
-                      brushWeight === w
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                    }`}
-                  >
-                    {w}
-                  </button>
-                ))}
-              </div>
-            )}
 
           </>
         )}

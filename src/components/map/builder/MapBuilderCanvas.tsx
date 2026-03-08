@@ -223,7 +223,7 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
       });
       if (canvas.freeDrawingBrush) {
         canvas.freeDrawingBrush.color = lineProps.stroke;
-        canvas.freeDrawingBrush.width = sw;
+        // Don't override brush width here — it's controlled by the weight selector via brushWidth prop
       }
       canvas.renderAll();
     }, [colors.bg, colors.stroke, sw, stylePrefs.lineStyle, stylePrefs.background]);
