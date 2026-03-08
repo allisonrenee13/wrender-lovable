@@ -1230,7 +1230,7 @@ function traceOutlineImage(
     paths.push({ d, confidence: Math.min(1, comp.length / 2000) });
   }
 
-  console.log(`[tracer] found ${paths.length} paths from ${filteredSignificant.length} components (${significant.length - filteredSignificant.length} text-like filtered out)`);
+  console.log(`[tracer] found ${paths.length} paths from ${finalComponents.length} components (${significant.length - finalComponents.length} filtered out, thickStrokes=${hasThickStrokes})`);
   return paths;
 }
 
