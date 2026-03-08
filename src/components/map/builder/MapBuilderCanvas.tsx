@@ -57,6 +57,12 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
     const isLoadingRef = useRef(false);
     const refImageRef = useRef<FabricImage | null>(null);
     const sculptingRef = useRef(false);
+    const eraserSizeRef = useRef(eraserRadius ?? 24);
+
+    // Keep eraserSizeRef in sync without re-running the tool useEffect
+    useEffect(() => {
+      eraserSizeRef.current = eraserRadius ?? 24;
+    }, [eraserRadius]);
 
     const canvasWidth = width || 800;
     const canvasHeight = height || 600;
@@ -262,7 +268,7 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
       canvas.defaultCursor = "default";
       // Remove any eraser cursor circles left over
       canvas.getObjects().forEach((obj) => {
-        if (obj.excludeFromExport && obj instanceof Circle && (obj as any).stroke === "rgba(255,0,0,0.4)") {
+        if (obj.excludeFromExport && obj instanceof Circle && ((obj as any).stroke === "rgba(255,0,0,0.4)" || (obj as any).stroke === "#666")) {
           canvas.remove(obj);
         }
       });
@@ -342,63 +348,79 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
         }
 
         case "eraser": {
+          canvas.isDrawingMode = false;
           canvas.defaultCursor = "none";
-          // Eraser cursor circle
-          let eraserCursor: Circle | null = null;
-          const cursorRadius = eraserRadius ?? 24;
 
-          const createCursor = () => {
-            eraserCursor = new Circle({
-              radius: cursorRadius,
-              fill: "transparent",
-              stroke: "rgba(255,0,0,0.4)",
-              strokeWidth: 1.5,
-              strokeDashArray: [4, 3],
+          let cursorCircle: Circle | null = null;
+
+          const updateCursor = (pointer: { x: number; y: number }) => {
+            const r = eraserSizeRef.current;
+            if (cursorCircle) canvas.remove(cursorCircle);
+            cursorCircle = new Circle({
+              left: pointer.x - r,
+              top: pointer.y - r,
+              radius: r,
+              fill: "rgba(255,255,255,0.3)",
+              stroke: "#666",
+              strokeWidth: 1,
+              strokeDashArray: [3, 3],
               selectable: false,
               evented: false,
               excludeFromExport: true,
-              originX: "center",
-              originY: "center",
             });
-            canvas.add(eraserCursor);
+            canvas.add(cursorCircle);
             canvas.renderAll();
           };
-          createCursor();
+
+          let isErasing = false;
 
           canvas.on("mouse:move", (e) => {
             const pointer = canvas.getScenePoint(e.e);
-            if (eraserCursor) {
-              eraserCursor.set({ left: pointer.x, top: pointer.y });
-              canvas.renderAll();
-            }
-          });
+            updateCursor(pointer);
+            if (!isErasing) return;
 
-          canvas.on("mouse:down", (e) => {
-            const pointer = canvas.getScenePoint(e.e);
-            const objects = canvas.getObjects().filter(
-              (obj) => !obj.excludeFromExport && !(obj instanceof FabricImage)
-            );
+            const r = eraserSizeRef.current;
+            const toReplace: Array<{ old: Path; pathData: any[] }> = [];
 
-            // Find closest object center within eraser radius
-            let closest: FabricObject | null = null;
-            let closestDist = cursorRadius;
+            canvas.getObjects().forEach((obj) => {
+              if (!(obj instanceof Path) || obj.excludeFromExport) return;
+              const pathData = (obj as any).path as any[];
+              if (!pathData) return;
 
-            objects.forEach((obj) => {
-              const center = obj.getCenterPoint();
-              const dist = Math.sqrt(
-                (center.x - pointer.x) ** 2 + (center.y - pointer.y) ** 2
-              );
-              if (dist < closestDist) {
-                closestDist = dist;
-                closest = obj;
+              const filtered = pathData.filter((segment: any[]) => {
+                for (let j = 1; j < segment.length - 1; j += 2) {
+                  const px = segment[j];
+                  const py = segment[j + 1];
+                  if (px === undefined || py === undefined) continue;
+                  const dist = Math.sqrt((px - pointer.x) ** 2 + (py - pointer.y) ** 2);
+                  if (dist < r) return false;
+                }
+                return true;
+              });
+
+              if (filtered.length !== pathData.length) {
+                toReplace.push({ old: obj as Path, pathData: filtered });
               }
             });
 
-            if (closest) {
-              canvas.remove(closest);
-              canvas.renderAll();
-              saveState();
-            }
+            toReplace.forEach(({ old, pathData }) => {
+              if (pathData.length < 2) {
+                canvas.remove(old);
+              } else {
+                rebuildPath(canvas, old, pathData);
+              }
+            });
+            if (toReplace.length > 0) canvas.renderAll();
+          });
+
+          canvas.on("mouse:down", () => { isErasing = true; });
+          canvas.on("mouse:up", () => {
+            isErasing = false;
+            saveState();
+          });
+          canvas.on("mouse:out", () => {
+            if (cursorCircle) { canvas.remove(cursorCircle); cursorCircle = null; }
+            canvas.renderAll();
           });
           break;
         }
