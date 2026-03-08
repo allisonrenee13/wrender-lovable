@@ -180,7 +180,6 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   }, []);
 
   const handleAutoTrace = (imageDataUrl: string) => {
-    setIsPoorTrace(false);
     const img = new Image();
     img.onload = () => {
       const traceCanvas = document.createElement("canvas");
@@ -190,39 +189,43 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
       traceCanvas.height = h;
       const ctx = traceCanvas.getContext("2d")!;
       ctx.drawImage(img, 0, 0, w, h);
-      const imageData = ctx.getImageData(0, 0, w, h);
-      const paths = runTrace(traceCanvas, w, h, 0.65);
 
+      // Navigate immediately — don't wait for trace
       setTraceImageDataUrl(imageDataUrl);
-      setTraceImageData({ data: imageData, w, h });
+      setTraceImageData({ data: ctx.getImageData(0, 0, w, h), w, h });
       setTraceSensitivity(0.65);
-
-      // Detect clean outline: all paths have confidence === 1.0
-      const clean = paths.length > 0 && paths.every(p => p.confidence === 1.0);
-      setIsCleanOutline(clean);
-
-      // Detect poor trace quality
-      const avgConfidence = paths.length > 0
-        ? paths.reduce((sum, p) => sum + p.confidence, 0) / paths.length
-        : 0;
-      const poor = paths.length === 0 ||
-        (paths.length > 25 && avgConfidence < 0.3);
-      setIsPoorTrace(poor);
-
-      if (paths.length > 0) {
-        setCanvasState({
-          ...defaultCanvas,
-          paths,
-          nodeCount: paths.length * 10,
-        });
-      } else {
-        setCanvasState({
-          ...defaultCanvas,
-          paths: [generateOutlinePath(w, h)],
-          nodeCount: 12,
-        });
-      }
+      setRetraceStatus("running");
+      setIsPoorTrace(false);
+      setIsCleanOutline(false);
       setPhase("traceReview");
+
+      // Run expensive trace after browser has painted
+      setTimeout(() => {
+        const paths = runTrace(traceCanvas, w, h, 0.65);
+        const avgConfidence = paths.length > 0
+          ? paths.reduce((sum, p) => sum + p.confidence, 0) / paths.length
+          : 0;
+        const clean = paths.length > 0 && paths.every(p => p.confidence === 1.0);
+        setIsCleanOutline(clean);
+        setIsPoorTrace(
+          paths.length === 0 || (paths.length > 25 && avgConfidence < 0.3)
+        );
+
+        if (paths.length > 0) {
+          setCanvasState({
+            ...defaultCanvas,
+            paths,
+            nodeCount: paths.length * 10,
+          });
+        } else {
+          setCanvasState({
+            ...defaultCanvas,
+            paths: [generateOutlinePath(w, h)],
+            nodeCount: 12,
+          });
+        }
+        setRetraceStatus("idle");
+      }, 50);
     };
     img.src = imageDataUrl;
   };
@@ -436,24 +439,34 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                       style={{ opacity: showOriginal ? 1 : 0 }}
                     />
                   )}
-                  <svg
-                    viewBox={`0 0 ${traceImageData?.w || 600} ${traceImageData?.h || 600}`}
-                    className="absolute inset-0 w-full h-full"
-                    style={{ pointerEvents: "none" }}
-                  >
-                    {canvasState.paths.map((p, i) => (
-                      <path
-                        key={i}
-                        d={p.d}
-                        fill="none"
-                        stroke={getConfidenceColor(p.confidence)}
-                        strokeWidth="2"
-                        strokeLinejoin="round"
-                        strokeLinecap="round"
-                        opacity="0.85"
-                      />
-                    ))}
-                  </svg>
+                  {retraceStatus !== "running" && (
+                    <svg
+                      viewBox={`0 0 ${traceImageData?.w || 600} ${traceImageData?.h || 600}`}
+                      className="absolute inset-0 w-full h-full"
+                      style={{ pointerEvents: "none" }}
+                    >
+                      {canvasState.paths.map((p, i) => (
+                        <path
+                          key={i}
+                          d={p.d}
+                          fill="none"
+                          stroke={getConfidenceColor(p.confidence)}
+                          strokeWidth="2"
+                          strokeLinejoin="round"
+                          strokeLinecap="round"
+                          opacity="0.85"
+                        />
+                      ))}
+                    </svg>
+                  )}
+                  {retraceStatus === "running" && (
+                    <div className="absolute inset-0 flex items-center justify-center rounded-lg" style={{ background: "rgba(255,255,255,0.5)" }}>
+                      <div className="flex flex-col items-center gap-2">
+                        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                        <p className="text-xs text-muted-foreground">Analysing image...</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -567,8 +580,10 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                       {/* 1. Heading */}
                       <h3 className="text-base font-serif font-semibold text-foreground">Your trace is ready</h3>
 
-                      {/* 2. Sensitivity slider / Clean / Poor trace */}
-                      {isPoorTrace ? (
+                      {/* 2. Sensitivity slider / Clean / Poor trace / Loading */}
+                      {retraceStatus === "running" ? (
+                        <p className="text-xs text-muted-foreground animate-pulse">Analysing your image...</p>
+                      ) : isPoorTrace ? (
                         <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 space-y-2">
                           <p className="text-xs font-medium text-amber-800">
                             This map is too detailed to auto-trace cleanly.
