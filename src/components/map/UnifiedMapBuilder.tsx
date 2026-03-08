@@ -869,6 +869,29 @@ function traceOutlineImage(
   const ctx = canvas.getContext("2d")!;
   const { data } = ctx.getImageData(0, 0, w, h);
 
+  // 0. Detect background type by sampling 4 corners (20x20px each)
+  const cornerSamples: number[] = [];
+  const sampleCorner = (startX: number, startY: number) => {
+    for (let dy = 0; dy < 20; dy++) {
+      for (let dx = 0; dx < 20; dx++) {
+        const i = ((startY + dy) * w + (startX + dx)) * 4;
+        cornerSamples.push((data[i] + data[i + 1] + data[i + 2]) / 3);
+      }
+    }
+  };
+  sampleCorner(0, 0); sampleCorner(w - 20, 0);
+  sampleCorner(0, h - 20); sampleCorner(w - 20, h - 20);
+  const avgCornerBrightness = cornerSamples.reduce((a, b) => a + b, 0) / cornerSamples.length;
+  const isColoredBackground = avgCornerBrightness > 80 && avgCornerBrightness < 220;
+
+  // Detect average background color from corner pixels
+  let bgR = 0, bgG = 0, bgB = 0;
+  [[0, 0], [w - 20, 0], [0, h - 20], [w - 20, h - 20]].forEach(([sx, sy]) => {
+    const i = (sy * w + sx) * 4;
+    bgR += data[i]; bgG += data[i + 1]; bgB += data[i + 2];
+  });
+  bgR = Math.round(bgR / 4); bgG = Math.round(bgG / 4); bgB = Math.round(bgB / 4);
+
   // 1. Build binary ink map with multi-tone detection
   let threshold = Math.round(240 - sensitivity * 80);
 
@@ -894,9 +917,19 @@ function traceOutlineImage(
   for (let i = 0; i < w * h; i++) {
     const r = data[i * 4], g = data[i * 4 + 1], b = data[i * 4 + 2];
     const brightness = (r + g + b) / 3;
-    const isBackground = brightness > threshold;
-    const isWhite = r > 240 && g > 240 && b > 240;
-    ink[i] = (!isBackground && !isWhite) ? 1 : 0;
+
+    if (isColoredBackground) {
+      // Strategy: find dark outline strokes only
+      const isDark = brightness < 100;
+      const diffFromBg = Math.abs(r - bgR) + Math.abs(g - bgG) + Math.abs(b - bgB);
+      ink[i] = (isDark || (diffFromBg > 80 && brightness < 140)) ? 1 : 0;
+    } else {
+      // Original strategy for white/light backgrounds
+      const thresh = Math.round(240 - (sensitivity * 80));
+      const isBackground = brightness > thresh;
+      const isWhite = r > 240 && g > 240 && b > 240;
+      ink[i] = (!isBackground && !isWhite) ? 1 : 0;
+    }
   }
 
   // 2. Zero out 6px border to remove image frame artifacts
@@ -932,7 +965,9 @@ function traceOutlineImage(
   }
 
   // 4. Min component size based on sensitivity
-  const minSize = Math.round((1 - sensitivity) * 150) + 8;
+  const minSize = isColoredBackground
+    ? Math.round((1 - sensitivity) * 300) + 20
+    : Math.round((1 - sensitivity) * 150) + 8;
   const significant = components
     .filter(c => c.length >= minSize)
     .sort((a, b) => b.length - a.length)
@@ -950,9 +985,11 @@ function traceOutlineImage(
 
     // Filter 1: too small to be a map region (likely a letter)
     const imageArea = w * h;
-    if (comp.length < imageArea * 0.002) {
+    const areaThreshold = isColoredBackground ? 0.003 : 0.002;
+    const fillThreshold = isColoredBackground ? 0.5 : 0.35;
+    if (comp.length < imageArea * areaThreshold) {
       const fillRatio = comp.length / (bboxArea || 1);
-      if (fillRatio < 0.35) return false;
+      if (fillRatio < fillThreshold) return false;
     }
 
     // Filter 2: aspect ratio close to square + small = likely a single letter
