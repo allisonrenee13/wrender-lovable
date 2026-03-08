@@ -619,12 +619,12 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                       {/* 3. "Not quite right?" text */}
                       <p className="text-xs text-muted-foreground">Not quite right? You can also:</p>
 
-                      {/* 4. Two option buttons side by side */}
-                      <div className="flex gap-2">
+                      {/* 4. Option buttons */}
+                      <div className="flex flex-wrap gap-2">
                         <Button
                           variant="outline"
                           size="sm"
-                          className="flex-1 text-xs"
+                          className="flex-1 text-xs min-w-[120px]"
                           onClick={() => handleEntrySelect("template")}
                         >
                           Browse Templates →
@@ -632,11 +632,21 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="flex-1 text-xs"
+                          className="flex-1 text-xs min-w-[120px]"
                           onClick={() => handleEntrySelect("draw")}
                         >
                           Draw from scratch →
                         </Button>
+                        {traceImageDataUrl && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 text-xs min-w-[120px]"
+                            onClick={() => handleManualTrace(traceImageDataUrl)}
+                          >
+                            Trace manually →
+                          </Button>
+                        )}
                       </div>
                     </div>
 
