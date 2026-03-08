@@ -342,7 +342,7 @@ const UnifiedMapBuilder = ({ onConfirm, initialPhase: initialPhaseProp }: Unifie
 
   const handleUseMap = () => {
     saveCanvasState();
-    confirmMap();
+    confirmMap(renderedSVG || undefined);
     onConfirm?.();
   };
 
