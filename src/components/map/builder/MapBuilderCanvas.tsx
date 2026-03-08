@@ -43,12 +43,10 @@ interface MapBuilderCanvasProps {
   height?: number;
   brushWidth?: number;
   eraserRadius?: number;
-  referenceImageUrl?: string | null;
-  referenceOpacity?: number;
 }
 
 const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
-  ({ stylePrefs, activeTool, activeStamp, onStateChange, width, height, brushWidth, eraserRadius, referenceImageUrl, referenceOpacity: refOpacityProp }, ref) => {
+  ({ stylePrefs, activeTool, activeStamp, onStateChange, width, height, brushWidth, eraserRadius }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const canvasElRef = useRef<HTMLCanvasElement>(null);
     const fabricRef = useRef<Canvas | null>(null);
