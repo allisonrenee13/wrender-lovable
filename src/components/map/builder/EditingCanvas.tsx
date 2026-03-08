@@ -193,6 +193,15 @@ const EditingCanvas = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Sync reference opacity when parent changes it (e.g. toggle in Edit tab)
+  useEffect(() => {
+    if (canvasState.referenceOpacity !== refOpacity) {
+      setRefOpacity(canvasState.referenceOpacity);
+      canvasHandle.current?.setReferenceOpacity(canvasState.referenceOpacity);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canvasState.referenceOpacity]);
+
   const handleRefOpacityChange = (value: number) => {
     setRefOpacity(value);
     onCanvasChange({ ...canvasState, referenceOpacity: value });
