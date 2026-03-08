@@ -225,6 +225,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
         c.height = h;
         const ctx = c.getContext("2d")!;
         ctx.drawImage(img, 0, 0, w, h);
+        console.log("[sens] running trace, w:", w, "h:", h);
         const paths = traceOutlineImage(c, w, h, value);
         if (paths.length > 0) {
           setCanvasState((prev) => ({ ...prev, paths, nodeCount: paths.length * 10 }));
