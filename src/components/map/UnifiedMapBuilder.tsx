@@ -154,13 +154,13 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
     toast({ title: "Template loaded", description: "Edit the shape to match your world." });
   };
 
-  const runTrace = useCallback(async (canvas: HTMLCanvasElement, w: number, h: number, sensitivity: number): Promise<TracedPath[]> => {
-    return runPotraceOnCanvasAsync(canvas, w, h, sensitivity);
+  const runTrace = useCallback((canvas: HTMLCanvasElement, w: number, h: number, sensitivity: number): TracedPath[] => {
+    return traceOutlineImage(canvas, w, h, sensitivity);
   }, []);
 
-  const handleAutoTrace = async (imageDataUrl: string) => {
+  const handleAutoTrace = (imageDataUrl: string) => {
     const img = new Image();
-    img.onload = async () => {
+    img.onload = () => {
       const traceCanvas = document.createElement("canvas");
       const w = Math.min(img.width, 600);
       const h = Math.min(img.height, 600);
@@ -169,7 +169,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
       const ctx = traceCanvas.getContext("2d")!;
       ctx.drawImage(img, 0, 0, w, h);
       const imageData = ctx.getImageData(0, 0, w, h);
-      const paths = await runTrace(traceCanvas, w, h, 0.65);
+      const paths = runTrace(traceCanvas, w, h, 0.65);
 
       setTraceImageDataUrl(imageDataUrl);
       setTraceImageData({ data: imageData, w, h });
@@ -201,13 +201,13 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
       if (!traceImageData || !traceImageDataUrl) return;
       const { w, h } = traceImageData;
       const img = new Image();
-        img.onload = async () => {
+        img.onload = () => {
         const c = document.createElement("canvas");
         c.width = w;
         c.height = h;
         const ctx = c.getContext("2d")!;
         ctx.drawImage(img, 0, 0, w, h);
-        const paths = await runPotraceOnCanvasAsync(c, w, h, value);
+        const paths = traceOutlineImage(c, w, h, value);
         if (paths.length > 0) {
           setCanvasState((prev) => ({ ...prev, paths, nodeCount: paths.length * 10 }));
         } else {
@@ -428,13 +428,13 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                         if (traceImageData && traceImageDataUrl) {
                           const { w, h } = traceImageData;
                           const img = new Image();
-                          img.onload = async () => {
+                          img.onload = () => {
                             const c = document.createElement("canvas");
                             c.width = w;
                             c.height = h;
                             const ctx = c.getContext("2d")!;
                             ctx.drawImage(img, 0, 0, w, h);
-                            const paths = await runPotraceOnCanvasAsync(c, w, h, traceSensitivity);
+                            const paths = traceOutlineImage(c, w, h, traceSensitivity);
                             if (paths.length > 0) {
                               setCanvasState((prev) => ({ ...prev, paths, nodeCount: paths.length * 10 }));
                             }
@@ -668,54 +668,129 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   );
 };
 
-// --- Load potrace from CDN ---
-let potraceLoaded: Promise<any> | null = null;
-function loadPotrace(): Promise<any> {
-  if (potraceLoaded) return potraceLoaded;
-  potraceLoaded = new Promise((resolve, reject) => {
-    if ((window as any).potrace) { resolve((window as any).potrace); return; }
-    const script = document.createElement("script");
-    script.src = "https://cdn.jsdelivr.net/npm/potrace-js@0.0.6/potrace.js";
-    script.onload = () => resolve((window as any).potrace);
-    script.onerror = () => { potraceLoaded = null; reject(new Error("Failed to load potrace")); };
-    document.head.appendChild(script);
-  });
-  return potraceLoaded;
-}
+// --- Self-contained outline tracer (no external deps) ---
+function traceOutlineImage(
+  canvas: HTMLCanvasElement,
+  w: number,
+  h: number,
+  sensitivity: number
+): TracedPath[] {
+  const ctx = canvas.getContext("2d")!;
+  const { data } = ctx.getImageData(0, 0, w, h);
 
-// --- Potrace-based tracing ---
-async function runPotraceOnCanvasAsync(canvas: HTMLCanvasElement, w: number, h: number, sensitivity: number): Promise<TracedPath[]> {
-  try {
-    const Potrace = await loadPotrace();
-    const threshold = Math.round(180 - (sensitivity - 0.2) * (100 / 0.75));
-    console.log(`[tracer] potrace ${w}x${h}, threshold=${threshold}, sensitivity=${sensitivity}`);
-
-    const result = Potrace.traceCanvas(canvas, {
-      turdsize: 4,
-      alphamax: 1.0,
-      optcurve: true,
-      opttolerance: 0.2,
-      threshold,
-    });
-
-    const svgString = Potrace.getSVG(result);
-    const pathRegex = /<path\s[^>]*d="([^"]+)"[^>]*>/gi;
-    const paths: TracedPath[] = [];
-    let match: RegExpExecArray | null;
-
-    while ((match = pathRegex.exec(svgString)) !== null) {
-      const d = match[1];
-      if (d && d.trim().length > 0) {
-        paths.push({ d, confidence: 1.0 });
-      }
-    }
-
-    console.log(`[tracer] potrace found ${paths.length} paths`);
-    return paths;
-  } catch (err) {
-    console.error("[tracer] potrace error:", err);
-    return [];
+  // 1. Build binary ink map
+  const threshold = 200 - Math.round(sensitivity * 120);
+  const ink = new Uint8Array(w * h);
+  for (let i = 0; i < w * h; i++) {
+    const r = data[i * 4], g = data[i * 4 + 1], b = data[i * 4 + 2];
+    const brightness = (r + g + b) / 3;
+    ink[i] = brightness < threshold ? 1 : 0;
   }
+
+  // 2. Zero out 6px border to remove image frame artifacts
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++)
+      if (x < 6 || x >= w - 6 || y < 6 || y >= h - 6)
+        ink[y * w + x] = 0;
+
+  // 3. Find connected ink components via DFS
+  const visited = new Uint8Array(w * h);
+  const DIRS8: Array<[number, number]> = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
+  const components: Array<Array<[number, number]>> = [];
+
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const idx = y * w + x;
+      if (!ink[idx] || visited[idx]) continue;
+      const comp: Array<[number, number]> = [];
+      const stack: Array<[number, number]> = [[x, y]];
+      visited[idx] = 1;
+      while (stack.length) {
+        const [cx, cy] = stack.pop()!;
+        comp.push([cx, cy]);
+        for (const [dx, dy] of DIRS8) {
+          const nx = cx + dx, ny = cy + dy;
+          if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
+          const ni = ny * w + nx;
+          if (ink[ni] && !visited[ni]) { visited[ni] = 1; stack.push([nx, ny]); }
+        }
+      }
+      components.push(comp);
+    }
+  }
+
+  // 4. Min component size based on sensitivity
+  const minSize = Math.round((1 - sensitivity) * 150) + 8;
+  const significant = components
+    .filter(c => c.length >= minSize)
+    .sort((a, b) => b.length - a.length)
+    .slice(0, 120);
+
+  // 5. For each component, find boundary pixels only
+  function getBoundary(comp: Array<[number, number]>): Array<[number, number]> {
+    const compSet = new Set(comp.map(([x, y]) => y * w + x));
+    return comp.filter(([x, y]) => {
+      return [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]].some(
+        ([nx, ny]) => nx < 0 || nx >= w || ny < 0 || ny >= h || !compSet.has(ny * w + nx)
+      );
+    });
+  }
+
+  // 6. Order boundary pixels into a walk, Douglas-Peucker simplify
+  function orderPoints(pts: Array<[number, number]>): Array<[number, number]> {
+    if (pts.length === 0) return [];
+    const remaining = new Set(pts.map((_, i) => i));
+    const result: Array<[number, number]> = [pts[0]];
+    remaining.delete(0);
+    while (remaining.size > 0) {
+      const [lx, ly] = result[result.length - 1];
+      let bestDist = Infinity, bestIdx = -1;
+      for (const i of remaining) {
+        const dx = pts[i][0] - lx, dy = pts[i][1] - ly;
+        const d = dx * dx + dy * dy;
+        if (d < bestDist) { bestDist = d; bestIdx = i; }
+      }
+      if (bestDist > 100) break;
+      result.push(pts[bestIdx]);
+      remaining.delete(bestIdx);
+    }
+    return result;
+  }
+
+  function douglasPeucker(pts: Array<[number, number]>, eps: number): Array<[number, number]> {
+    if (pts.length <= 2) return pts;
+    const [ax, ay] = pts[0], [bx, by] = pts[pts.length - 1];
+    const dx = bx - ax, dy = by - ay, len = Math.sqrt(dx * dx + dy * dy);
+    let maxD = 0, maxI = 0;
+    for (let i = 1; i < pts.length - 1; i++) {
+      const d = len === 0
+        ? Math.sqrt((pts[i][0] - ax) ** 2 + (pts[i][1] - ay) ** 2)
+        : Math.abs((pts[i][1] - ay) * dx - (pts[i][0] - ax) * dy) / len;
+      if (d > maxD) { maxD = d; maxI = i; }
+    }
+    if (maxD > eps) return [
+      ...douglasPeucker(pts.slice(0, maxI + 1), eps).slice(0, -1),
+      ...douglasPeucker(pts.slice(maxI), eps)
+    ];
+    return [pts[0], pts[pts.length - 1]];
+  }
+
+  const paths: TracedPath[] = [];
+  for (const comp of significant) {
+    const boundary = getBoundary(comp);
+    if (boundary.length < 4) continue;
+    const ordered = orderPoints(boundary);
+    const simplified = douglasPeucker(ordered, 1.2);
+    if (simplified.length < 3) continue;
+    let d = `M ${simplified[0][0]} ${simplified[0][1]}`;
+    for (let i = 1; i < simplified.length; i++)
+      d += ` L ${simplified[i][0]} ${simplified[i][1]}`;
+    if (comp.length > 500) d += " Z";
+    paths.push({ d, confidence: Math.min(1, comp.length / 2000) });
+  }
+
+  console.log(`[tracer] found ${paths.length} paths from ${significant.length} components`);
+  return paths;
 }
 
 function generateOutlinePath(w: number, h: number): TracedPath {
