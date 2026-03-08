@@ -99,7 +99,6 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   const [templateName, setTemplateName] = useState("");
   const [templatePublic, setTemplatePublic] = useState(false);
   const [showReference, setShowReference] = useState(false);
-  const [templatePublic, setTemplatePublic] = useState(false);
 
   const hasShape = canvasState.paths.length > 0 || selectedTemplate !== null;
   const colors = backgroundColors[stylePrefs.background];
