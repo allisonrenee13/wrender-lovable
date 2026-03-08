@@ -200,7 +200,6 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
     debounceRef.current = setTimeout(() => {
       if (!traceImageData || !traceImageDataUrl) return;
       const { w, h } = traceImageData;
-      // Rebuild canvas from the stored dataUrl for potrace
       const img = new Image();
       img.onload = () => {
         const c = document.createElement("canvas");
@@ -265,7 +264,6 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
 
   const handleSaveAsTemplate = () => {
     if (!templateName.trim()) return;
-    // Generate thumbnail
     const thumbCanvas = document.createElement("canvas");
     thumbCanvas.width = 200;
     thumbCanvas.height = 150;
@@ -273,14 +271,12 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
     ctx.fillStyle = "#FAFAF7";
     ctx.fillRect(0, 0, 200, 150);
 
-    // Find bounding box of all paths to scale them into thumbnail
     const allPaths = canvasState.paths;
     if (allPaths.length > 0) {
       ctx.strokeStyle = "#1a1a1a";
       ctx.lineWidth = 1;
       ctx.lineJoin = "round";
       ctx.lineCap = "round";
-      // Draw paths using Path2D
       allPaths.forEach((p) => {
         const path2d = new Path2D(p.d);
         ctx.stroke(path2d);
@@ -691,7 +687,7 @@ function runPotraceOnCanvas(canvas: HTMLCanvasElement, w: number, h: number, sen
     // Get SVG string from potrace result
     const svgString = (POTRACE as any).getSVG(result);
 
-    // Parse out <path d="..."> elements from the SVG string
+    // Parse out <path d="...""> elements from the SVG string
     const pathRegex = /<path\s[^>]*d="([^"]+)"[^>]*>/gi;
     const paths: TracedPath[] = [];
     let match: RegExpExecArray | null;
@@ -709,248 +705,6 @@ function runPotraceOnCanvas(canvas: HTMLCanvasElement, w: number, h: number, sen
     console.error("[tracer] potrace error:", err);
     return [];
   }
-}
-
-function generateOutlinePath(w: number, h: number): TracedPath {
-  const cx = w / 2;
-  const cy = h / 2;
-  const r = Math.min(w, h) * 0.35;
-
-  const variations = [1.0, 0.88, 1.1, 0.92, 0.85, 1.05, 0.95, 1.08, 1.0, 0.9, 1.12, 0.87, 0.95, 1.02, 0.88, 1.0];
-  const cpOffsets = [8, -10, 12, -8, 10, -12, 6, -9, 11, -7, 9, -11, 7, -8, 10, -6];
-
-  const points: Array<{ x: number; y: number }> = [];
-  const steps = 16;
-  for (let i = 0; i < steps; i++) {
-    const a = (i / steps) * Math.PI * 2;
-    const variation = r * variations[i];
-    points.push({
-      x: cx + Math.cos(a) * variation,
-      y: cy + Math.sin(a) * variation,
-    });
-  }
-
-  let d = `M ${points[0].x.toFixed(0)} ${points[0].y.toFixed(0)}`;
-  for (let i = 1; i < points.length; i++) {
-    const prev = points[i - 1];
-    const curr = points[i];
-    const cpx = (prev.x + curr.x) / 2 + cpOffsets[i];
-    const cpy = (prev.y + curr.y) / 2 + cpOffsets[(i + 4) % 16];
-    d += ` Q ${cpx.toFixed(0)} ${cpy.toFixed(0)} ${curr.x.toFixed(0)} ${curr.y.toFixed(0)}`;
-  }
-  d += " Z";
-  return { d, confidence: 0.5 };
-}
-
-export default UnifiedMapBuilder;
-      const idx = i * 4;
-      gray[i] = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
-    }
-
-    console.log(`[tracer] ${w}x${h}, mode=sobel-unified`);
-
-    return traceSobelMode(gray, w, h, sensitivity);
-  } catch (err) {
-    console.error("[tracer] crashed:", err);
-    return [];
-  }
-}
-
-// --- SOBEL MODE: for photos and complex maps (existing pipeline) ---
-function traceSobelMode(gray: Float32Array, w: number, h: number, sensitivity: number): TracedPath[] {
-  // Gaussian blur (3 passes)
-  const kernel = [1/16, 2/16, 1/16, 2/16, 4/16, 2/16, 1/16, 2/16, 1/16];
-  let src = gray;
-  for (let pass = 0; pass < 3; pass++) {
-    const dst = new Float32Array(w * h);
-    for (let y = 1; y < h - 1; y++) {
-      for (let x = 1; x < w - 1; x++) {
-        let sum = 0;
-        let ki = 0;
-        for (let dy = -1; dy <= 1; dy++) {
-          for (let dx = -1; dx <= 1; dx++) {
-            sum += src[(y + dy) * w + (x + dx)] * kernel[ki++];
-          }
-        }
-        dst[y * w + x] = sum;
-      }
-    }
-    src = dst;
-  }
-
-  // Sobel operator
-  const magnitude = new Float32Array(w * h);
-  let maxMag = 0;
-  for (let y = 1; y < h - 1; y++) {
-    for (let x = 1; x < w - 1; x++) {
-      const tl = src[(y-1)*w+(x-1)], tc = src[(y-1)*w+x], tr = src[(y-1)*w+(x+1)];
-      const ml = src[y*w+(x-1)],                           mr = src[y*w+(x+1)];
-      const bl = src[(y+1)*w+(x-1)], bc = src[(y+1)*w+x], br = src[(y+1)*w+(x+1)];
-
-      const gx = -tl + tr - 2*ml + 2*mr - bl + br;
-      const gy = -tl - 2*tc - tr + bl + 2*bc + br;
-      const mag = Math.sqrt(gx*gx + gy*gy);
-      magnitude[y*w+x] = mag;
-      if (mag > maxMag) maxMag = mag;
-    }
-  }
-
-  if (maxMag === 0) return [];
-  const threshold = (0.08 + (1 - sensitivity) * 0.35) * maxMag;
-
-  const normalized = new Float32Array(w * h);
-  for (let i = 0; i < w * h; i++) {
-    normalized[i] = magnitude[i] / maxMag;
-  }
-
-  // Connected components via DFS
-  const isEdge = new Uint8Array(w * h);
-  for (let i = 0; i < w * h; i++) {
-    isEdge[i] = magnitude[i] >= threshold ? 1 : 0;
-  }
-
-  // FIX 1a — Zero out 6px border to eliminate image frame artifacts
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      if (x < 6 || x >= w - 6 || y < 6 || y >= h - 6) {
-        isEdge[y * w + x] = 0;
-      }
-    }
-  }
-
-
-  const visited = new Uint8Array(w * h);
-  const components: Array<{ points: Array<{ x: number; y: number }>; totalMag: number }> = [];
-
-  for (let y = 1; y < h - 1; y++) {
-    for (let x = 1; x < w - 1; x++) {
-      const idx = y * w + x;
-      if (!isEdge[idx] || visited[idx]) continue;
-
-      const stack = [idx];
-      const points: Array<{ x: number; y: number }> = [];
-      let totalMag = 0;
-
-      while (stack.length > 0) {
-        const ci = stack.pop()!;
-        if (visited[ci]) continue;
-        visited[ci] = 1;
-        const cx = ci % w;
-        const cy = (ci - cx) / w;
-        points.push({ x: cx, y: cy });
-        totalMag += normalized[ci];
-
-        for (let dy = -1; dy <= 1; dy++) {
-          for (let dx = -1; dx <= 1; dx++) {
-            if (dx === 0 && dy === 0) continue;
-            const nx = cx + dx, ny = cy + dy;
-            if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
-            const ni = ny * w + nx;
-            if (isEdge[ni] && !visited[ni]) {
-              stack.push(ni);
-            }
-          }
-        }
-      }
-
-      if (points.length >= 6) {
-        components.push({ points, totalMag });
-      }
-    }
-  }
-
-  components.sort((a, b) => b.points.length - a.points.length);
-  const kept = components.slice(0, 250);
-
-  const results: TracedPath[] = [];
-  for (const comp of kept) {
-    const ordered = orderPoints(comp.points);
-    const simplified = douglasPeucker(ordered, 1.8);
-    if (simplified.length < 2) continue;
-
-    // FIX 1b — Filter straight-line artifacts: discard paths where
-    // bounding box perimeter / point count > 4.0
-    const xs = simplified.map(p => p.x);
-    const ys = simplified.map(p => p.y);
-    const bboxW = Math.max(...xs) - Math.min(...xs);
-    const bboxH = Math.max(...ys) - Math.min(...ys);
-
-    // Also discard border-spanning paths (>85% of canvas)
-    if (bboxW > w * 0.85 || bboxH > h * 0.85) continue;
-
-    let d = `M ${simplified[0].x} ${simplified[0].y}`;
-    for (let i = 1; i < simplified.length; i++) {
-      d += ` L ${simplified[i].x} ${simplified[i].y}`;
-    }
-
-    const confidence = comp.totalMag / comp.points.length;
-    results.push({ d, confidence: Math.min(confidence, 1) });
-  }
-
-  return results;
-}
-
-function orderPoints(points: Array<{ x: number; y: number }>): Array<{ x: number; y: number }> {
-  if (points.length <= 2) return points;
-  const used = new Set<number>();
-  const ordered: Array<{ x: number; y: number }> = [points[0]];
-  used.add(0);
-
-  for (let step = 1; step < points.length; step++) {
-    const last = ordered[ordered.length - 1];
-    let bestDist = Infinity;
-    let bestIdx = -1;
-    for (let i = 0; i < points.length; i++) {
-      if (used.has(i)) continue;
-      const dx = points[i].x - last.x;
-      const dy = points[i].y - last.y;
-      const dist = dx * dx + dy * dy;
-      if (dist < bestDist) {
-        bestDist = dist;
-        bestIdx = i;
-      }
-    }
-    if (bestIdx === -1) break;
-    used.add(bestIdx);
-    ordered.push(points[bestIdx]);
-  }
-  return ordered;
-}
-
-function douglasPeucker(points: Array<{ x: number; y: number }>, epsilon: number): Array<{ x: number; y: number }> {
-  if (points.length <= 2) return points;
-
-  let maxDist = 0;
-  let maxIdx = 0;
-  const first = points[0];
-  const last = points[points.length - 1];
-
-  for (let i = 1; i < points.length - 1; i++) {
-    const dist = perpendicularDistance(points[i], first, last);
-    if (dist > maxDist) {
-      maxDist = dist;
-      maxIdx = i;
-    }
-  }
-
-  if (maxDist > epsilon) {
-    const left = douglasPeucker(points.slice(0, maxIdx + 1), epsilon);
-    const right = douglasPeucker(points.slice(maxIdx), epsilon);
-    return [...left.slice(0, -1), ...right];
-  }
-  return [first, last];
-}
-
-function perpendicularDistance(
-  point: { x: number; y: number },
-  lineStart: { x: number; y: number },
-  lineEnd: { x: number; y: number }
-): number {
-  const dx = lineEnd.x - lineStart.x;
-  const dy = lineEnd.y - lineStart.y;
-  const lenSq = dx * dx + dy * dy;
-  if (lenSq === 0) return Math.sqrt((point.x - lineStart.x) ** 2 + (point.y - lineStart.y) ** 2);
-  return Math.abs(dy * point.x - dx * point.y + lineEnd.x * lineStart.y - lineEnd.y * lineStart.x) / Math.sqrt(lenSq);
 }
 
 function generateOutlinePath(w: number, h: number): TracedPath {
