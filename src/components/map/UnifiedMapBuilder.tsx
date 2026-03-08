@@ -924,12 +924,10 @@ const UnifiedMapBuilder = ({ onConfirm, initialPhase: initialPhaseProp }: Unifie
 
                       <Button
                         variant="outline"
-                        className="w-full"
-                        onClick={() => {
-                          toast({ title: "Pin placement", description: "Click on the map to place a pin." });
-                        }}
+                        className={`w-full ${placingPin ? "border-primary text-primary" : ""}`}
+                        onClick={() => setPlacingPin(true)}
                       >
-                        Place a Pin
+                        {placingPin ? "Click on the map to place pin..." : "Place a Pin"}
                       </Button>
                     </div>
 
