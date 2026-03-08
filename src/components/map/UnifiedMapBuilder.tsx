@@ -3,7 +3,7 @@ import { useProject } from "@/context/ProjectContext";
 import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import POTRACE from "potrace-js";
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -668,15 +668,29 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   );
 };
 
-// --- Potrace-based tracing ---
-function runPotraceOnCanvas(canvas: HTMLCanvasElement, w: number, h: number, sensitivity: number): TracedPath[] {
-  try {
-    // Map sensitivity (0.2–0.95) to potrace threshold (180–80)
-    const threshold = Math.round(180 - (sensitivity - 0.2) * (100 / 0.75));
+// --- Load potrace from CDN ---
+let potraceLoaded: Promise<any> | null = null;
+function loadPotrace(): Promise<any> {
+  if (potraceLoaded) return potraceLoaded;
+  potraceLoaded = new Promise((resolve, reject) => {
+    if ((window as any).potrace) { resolve((window as any).potrace); return; }
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/potrace-js@0.0.6/potrace.js";
+    script.onload = () => resolve((window as any).potrace);
+    script.onerror = () => { potraceLoaded = null; reject(new Error("Failed to load potrace")); };
+    document.head.appendChild(script);
+  });
+  return potraceLoaded;
+}
 
+// --- Potrace-based tracing ---
+async function runPotraceOnCanvasAsync(canvas: HTMLCanvasElement, w: number, h: number, sensitivity: number): Promise<TracedPath[]> {
+  try {
+    const Potrace = await loadPotrace();
+    const threshold = Math.round(180 - (sensitivity - 0.2) * (100 / 0.75));
     console.log(`[tracer] potrace ${w}x${h}, threshold=${threshold}, sensitivity=${sensitivity}`);
 
-    const result = (POTRACE as any).traceCanvas(canvas, {
+    const result = Potrace.traceCanvas(canvas, {
       turdsize: 4,
       alphamax: 1.0,
       optcurve: true,
@@ -684,10 +698,7 @@ function runPotraceOnCanvas(canvas: HTMLCanvasElement, w: number, h: number, sen
       threshold,
     });
 
-    // Get SVG string from potrace result
-    const svgString = (POTRACE as any).getSVG(result);
-
-    // Parse out <path d="...""> elements from the SVG string
+    const svgString = Potrace.getSVG(result);
     const pathRegex = /<path\s[^>]*d="([^"]+)"[^>]*>/gi;
     const paths: TracedPath[] = [];
     let match: RegExpExecArray | null;
