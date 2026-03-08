@@ -3,7 +3,7 @@ import { useProject } from "@/context/ProjectContext";
 import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import POTRACE from "potrace-js";
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -154,13 +154,13 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
     toast({ title: "Template loaded", description: "Edit the shape to match your world." });
   };
 
-  const runTrace = useCallback((canvas: HTMLCanvasElement, w: number, h: number, sensitivity: number): TracedPath[] => {
-    return runPotraceOnCanvas(canvas, w, h, sensitivity);
+  const runTrace = useCallback(async (canvas: HTMLCanvasElement, w: number, h: number, sensitivity: number): Promise<TracedPath[]> => {
+    return runPotraceOnCanvasAsync(canvas, w, h, sensitivity);
   }, []);
 
-  const handleAutoTrace = (imageDataUrl: string) => {
+  const handleAutoTrace = async (imageDataUrl: string) => {
     const img = new Image();
-    img.onload = () => {
+    img.onload = async () => {
       const traceCanvas = document.createElement("canvas");
       const w = Math.min(img.width, 600);
       const h = Math.min(img.height, 600);
@@ -169,7 +169,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
       const ctx = traceCanvas.getContext("2d")!;
       ctx.drawImage(img, 0, 0, w, h);
       const imageData = ctx.getImageData(0, 0, w, h);
-      const paths = runTrace(traceCanvas, w, h, 0.65);
+      const paths = await runTrace(traceCanvas, w, h, 0.65);
 
       setTraceImageDataUrl(imageDataUrl);
       setTraceImageData({ data: imageData, w, h });
@@ -201,13 +201,13 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
       if (!traceImageData || !traceImageDataUrl) return;
       const { w, h } = traceImageData;
       const img = new Image();
-      img.onload = () => {
+        img.onload = async () => {
         const c = document.createElement("canvas");
         c.width = w;
         c.height = h;
         const ctx = c.getContext("2d")!;
         ctx.drawImage(img, 0, 0, w, h);
-        const paths = runPotraceOnCanvas(c, w, h, value);
+        const paths = await runPotraceOnCanvasAsync(c, w, h, value);
         if (paths.length > 0) {
           setCanvasState((prev) => ({ ...prev, paths, nodeCount: paths.length * 10 }));
         } else {
@@ -428,13 +428,13 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                         if (traceImageData && traceImageDataUrl) {
                           const { w, h } = traceImageData;
                           const img = new Image();
-                          img.onload = () => {
+                          img.onload = async () => {
                             const c = document.createElement("canvas");
                             c.width = w;
                             c.height = h;
                             const ctx = c.getContext("2d")!;
                             ctx.drawImage(img, 0, 0, w, h);
-                            const paths = runPotraceOnCanvas(c, w, h, traceSensitivity);
+                            const paths = await runPotraceOnCanvasAsync(c, w, h, traceSensitivity);
                             if (paths.length > 0) {
                               setCanvasState((prev) => ({ ...prev, paths, nodeCount: paths.length * 10 }));
                             }
@@ -668,15 +668,29 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   );
 };
 
-// --- Potrace-based tracing ---
-function runPotraceOnCanvas(canvas: HTMLCanvasElement, w: number, h: number, sensitivity: number): TracedPath[] {
-  try {
-    // Map sensitivity (0.2–0.95) to potrace threshold (180–80)
-    const threshold = Math.round(180 - (sensitivity - 0.2) * (100 / 0.75));
+// --- Load potrace from CDN ---
+let potraceLoaded: Promise<any> | null = null;
+function loadPotrace(): Promise<any> {
+  if (potraceLoaded) return potraceLoaded;
+  potraceLoaded = new Promise((resolve, reject) => {
+    if ((window as any).potrace) { resolve((window as any).potrace); return; }
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/potrace-js@0.0.6/potrace.js";
+    script.onload = () => resolve((window as any).potrace);
+    script.onerror = () => { potraceLoaded = null; reject(new Error("Failed to load potrace")); };
+    document.head.appendChild(script);
+  });
+  return potraceLoaded;
+}
 
+// --- Potrace-based tracing ---
+async function runPotraceOnCanvasAsync(canvas: HTMLCanvasElement, w: number, h: number, sensitivity: number): Promise<TracedPath[]> {
+  try {
+    const Potrace = await loadPotrace();
+    const threshold = Math.round(180 - (sensitivity - 0.2) * (100 / 0.75));
     console.log(`[tracer] potrace ${w}x${h}, threshold=${threshold}, sensitivity=${sensitivity}`);
 
-    const result = (POTRACE as any).traceCanvas(canvas, {
+    const result = Potrace.traceCanvas(canvas, {
       turdsize: 4,
       alphamax: 1.0,
       optcurve: true,
@@ -684,10 +698,7 @@ function runPotraceOnCanvas(canvas: HTMLCanvasElement, w: number, h: number, sen
       threshold,
     });
 
-    // Get SVG string from potrace result
-    const svgString = (POTRACE as any).getSVG(result);
-
-    // Parse out <path d="...""> elements from the SVG string
+    const svgString = Potrace.getSVG(result);
     const pathRegex = /<path\s[^>]*d="([^"]+)"[^>]*>/gi;
     const paths: TracedPath[] = [];
     let match: RegExpExecArray | null;
