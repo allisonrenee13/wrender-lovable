@@ -81,6 +81,21 @@ const UnifiedMapBuilder = ({ onConfirm, onRender, initialPhase: initialPhaseProp
   const canvasRef = useRef<MapCanvasHandle | null>(null);
   const autoSaveTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Load initialSVG into canvas when editing an existing map
+  const initialSVGLoaded = useRef(false);
+  useEffect(() => {
+    if (!initialSVG || initialSVGLoaded.current) return;
+    const tryLoad = () => {
+      if (canvasRef.current) {
+        initialSVGLoaded.current = true;
+        canvasRef.current.loadSVG(initialSVG);
+      } else {
+        setTimeout(tryLoad, 100);
+      }
+    };
+    tryLoad();
+  }, [initialSVG]);
+
   const [canvasState, setCanvasState] = useState<CanvasState>(defaultCanvas);
 
   const [stylePrefs, setStylePrefs] = useState<StylePreferences>(() => {
