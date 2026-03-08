@@ -17,6 +17,7 @@ import {
   FabricImage,
   loadSVGFromString,
 } from "fabric";
+import { EraserBrush } from "@erase2d/fabric";
 import type { StylePreferences, ShapeTool, FeatureStamp } from "./types";
 import { strokeWeightValues, backgroundColors } from "./types";
 
@@ -59,10 +60,14 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
     const sculptingRef = useRef(false);
     const eraserSizeRef = useRef(eraserRadius ?? 24);
 
-    // Keep eraserSizeRef in sync without re-running the tool useEffect
+    // Keep eraserSizeRef in sync and update brush width live
     useEffect(() => {
       eraserSizeRef.current = eraserRadius ?? 24;
-    }, [eraserRadius]);
+      const canvas = fabricRef.current;
+      if (activeTool === "eraser" && canvas?.freeDrawingBrush) {
+        canvas.freeDrawingBrush.width = eraserSizeRef.current;
+      }
+    }, [eraserRadius, activeTool]);
 
     const canvasWidth = width || 800;
     const canvasHeight = height || 600;
@@ -348,80 +353,11 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
         }
 
         case "eraser": {
-          canvas.isDrawingMode = false;
-          canvas.defaultCursor = "none";
-
-          let cursorCircle: Circle | null = null;
-
-          const updateCursor = (pointer: { x: number; y: number }) => {
-            const r = eraserSizeRef.current;
-            if (cursorCircle) canvas.remove(cursorCircle);
-            cursorCircle = new Circle({
-              left: pointer.x - r,
-              top: pointer.y - r,
-              radius: r,
-              fill: "rgba(255,255,255,0.3)",
-              stroke: "#666",
-              strokeWidth: 1,
-              strokeDashArray: [3, 3],
-              selectable: false,
-              evented: false,
-              excludeFromExport: true,
-            });
-            canvas.add(cursorCircle);
-            canvas.renderAll();
-          };
-
-          let isErasing = false;
-
-          canvas.on("mouse:move", (e) => {
-            const pointer = canvas.getScenePoint(e.e);
-            updateCursor(pointer);
-            if (!isErasing) return;
-
-            const r = eraserSizeRef.current;
-            const toReplace: Array<{ old: Path; pathData: any[] }> = [];
-
-            canvas.getObjects().forEach((obj) => {
-              if (!(obj instanceof Path) || obj.excludeFromExport) return;
-              const pathData = (obj as any).path as any[];
-              if (!pathData) return;
-
-              const filtered = pathData.filter((segment: any[]) => {
-                for (let j = 1; j < segment.length - 1; j += 2) {
-                  const px = segment[j];
-                  const py = segment[j + 1];
-                  if (px === undefined || py === undefined) continue;
-                  const dist = Math.sqrt((px - pointer.x) ** 2 + (py - pointer.y) ** 2);
-                  if (dist < r) return false;
-                }
-                return true;
-              });
-
-              if (filtered.length !== pathData.length) {
-                toReplace.push({ old: obj as Path, pathData: filtered });
-              }
-            });
-
-            toReplace.forEach(({ old, pathData }) => {
-              if (pathData.length < 2) {
-                canvas.remove(old);
-              } else {
-                rebuildPath(canvas, old, pathData);
-              }
-            });
-            if (toReplace.length > 0) canvas.renderAll();
-          });
-
-          canvas.on("mouse:down", () => { isErasing = true; });
-          canvas.on("mouse:up", () => {
-            isErasing = false;
-            saveState();
-          });
-          canvas.on("mouse:out", () => {
-            if (cursorCircle) { canvas.remove(cursorCircle); cursorCircle = null; }
-            canvas.renderAll();
-          });
+          canvas.isDrawingMode = true;
+          const eraserBrush = new EraserBrush(canvas);
+          eraserBrush.width = eraserSizeRef.current;
+          canvas.freeDrawingBrush = eraserBrush;
+          canvas.defaultCursor = "crosshair";
           break;
         }
 
