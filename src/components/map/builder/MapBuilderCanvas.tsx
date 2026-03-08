@@ -236,6 +236,49 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
       return () => window.removeEventListener("keydown", handler);
     }, [doUndo, doRedo]);
 
+    // --- Reference Image HTML Overlay ---
+    useEffect(() => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      // Remove existing reference img if any
+      const existing = container.querySelector("#wrender-reference-img");
+      if (existing) existing.remove();
+
+      if (!referenceImageUrl || (refOpacityProp ?? 0) === 0) return;
+
+      const img = document.createElement("img");
+      img.id = "wrender-reference-img";
+      img.src = referenceImageUrl;
+      img.style.cssText = `
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        opacity: ${(refOpacityProp ?? 30) / 100};
+        pointer-events: none;
+        z-index: 0;
+      `;
+      container.style.position = "relative";
+      // Insert before the canvas element so it's behind
+      const canvasEl = canvasElRef.current;
+      if (canvasEl) {
+        // Make sure Fabric's canvas wrapper sits above the reference
+        const wrapper = canvasEl.parentElement;
+        if (wrapper && wrapper !== container) {
+          wrapper.style.position = "relative";
+          wrapper.style.zIndex = "1";
+        }
+      }
+      container.insertBefore(img, container.firstChild);
+
+      return () => {
+        const el = container.querySelector("#wrender-reference-img");
+        if (el) el.remove();
+      };
+    }, [referenceImageUrl, refOpacityProp]);
+
     // --- Style Changes ---
     useEffect(() => {
       const canvas = fabricRef.current;
