@@ -63,7 +63,11 @@ const MapPage = () => {
             dangerouslySetInnerHTML={{ __html: currentProject.mapState.renderedSVG }}
           />
         ) : (
-          <p className="text-sm text-muted-foreground italic">Your rendered map will appear here</p>
+          <div className="text-xs text-muted-foreground space-y-1 text-center">
+            <p>mapConfirmed: {String(currentProject.mapConfirmed)}</p>
+            <p>renderedSVG length: {currentProject.mapState?.renderedSVG?.length ?? 0}</p>
+            <p>renderedSVG preview: {currentProject.mapState?.renderedSVG?.slice(0, 50) ?? "null"}</p>
+          </div>
         )}
         {currentProject.pins?.map((pin) => (
           <div
