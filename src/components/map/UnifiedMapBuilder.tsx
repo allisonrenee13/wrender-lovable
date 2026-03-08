@@ -158,7 +158,6 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   // --- Handlers ---
   const handleEntrySelect = (path: BuilderPath) => {
     setIsPoorTrace(false);
-    setIsTimedOut(false);
     if (path === "template") {
       setTemplatePickerOpen(true);
     } else if (path === "upload") {
@@ -182,6 +181,10 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   }, []);
 
   const handleAutoTrace = (imageDataUrl: string) => {
+    if (imageDataUrl !== traceImageDataUrl) {
+      setIsTimedOut(false);
+      setIsPoorTrace(false);
+    }
     const img = new Image();
     img.onload = () => {
       const traceCanvas = document.createElement("canvas");
@@ -197,9 +200,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
       setTraceImageData({ data: ctx.getImageData(0, 0, w, h), w, h });
       setTraceSensitivity(0.65);
       setRetraceStatus("running");
-      setIsPoorTrace(false);
       setIsCleanOutline(false);
-      setIsTimedOut(false);
       setPhase("traceReview");
 
       // Run expensive trace after browser has painted
@@ -739,35 +740,50 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                       {retraceStatus !== "running" && !isPoorTrace && (
                         <>
                           <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="flex-1 text-xs"
-                              
-                              onClick={() => {
-                                if (traceImageData && traceImageDataUrl) {
-                                  const { w, h } = traceImageData;
-                                  setRetraceStatus("running");
-                                  const img = new Image();
-                                  img.onload = () => {
-                                    const c = document.createElement("canvas");
-                                    c.width = w;
-                                    c.height = h;
-                                    const ctx = c.getContext("2d")!;
-                                    ctx.drawImage(img, 0, 0, w, h);
-                                    const paths = traceOutlineImage(c, w, h, traceSensitivity);
-                                    if (paths.length > 0) {
-                                      setCanvasState((prev) => ({ ...prev, paths, nodeCount: paths.length * 10 }));
-                                    }
-                                    setRetraceStatus("done");
-                                    setTimeout(() => setRetraceStatus("idle"), 2000);
-                                  };
-                                  img.src = traceImageDataUrl;
-                                }
-                              }}
-                            >
-                              {retraceStatus === "done" ? "✓ Done" : "Re-trace"}
-                            </Button>
+                            {!isTimedOut && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex-1 text-xs"
+                                onClick={() => {
+                                  if (traceImageData && traceImageDataUrl) {
+                                    const { w, h } = traceImageData;
+                                    setRetraceStatus("running");
+                                    const img = new Image();
+                                    img.onload = () => {
+                                      const c = document.createElement("canvas");
+                                      c.width = w;
+                                      c.height = h;
+                                      const ctx = c.getContext("2d")!;
+                                      ctx.drawImage(img, 0, 0, w, h);
+
+                                      const retraceTimeout = setTimeout(() => {
+                                        setRetraceStatus("idle");
+                                        setIsPoorTrace(true);
+                                        setIsTimedOut(true);
+                                        setCanvasState({
+                                          ...defaultCanvas,
+                                          paths: [],
+                                          nodeCount: 0,
+                                        });
+                                      }, 5000);
+
+                                      const paths = traceOutlineImage(c, w, h, traceSensitivity);
+                                      clearTimeout(retraceTimeout);
+
+                                      if (paths.length > 0) {
+                                        setCanvasState((prev) => ({ ...prev, paths, nodeCount: paths.length * 10 }));
+                                      }
+                                      setRetraceStatus("done");
+                                      setTimeout(() => setRetraceStatus("idle"), 2000);
+                                    };
+                                    img.src = traceImageDataUrl;
+                                  }
+                                }}
+                              >
+                                {retraceStatus === "done" ? "✓ Done" : "Re-trace"}
+                              </Button>
+                            )}
                             <Button
                               variant="outline"
                               size="sm"
