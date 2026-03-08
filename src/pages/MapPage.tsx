@@ -4,7 +4,7 @@ import UnifiedMapBuilder from "@/components/map/UnifiedMapBuilder";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { X, Trash2, Move } from "lucide-react";
+import { X, Trash2 } from "lucide-react";
 
 const MapPage = () => {
   const { currentProject, addPin, removePin, updatePin } = useProject();
@@ -16,8 +16,6 @@ const MapPage = () => {
   const [pendingPin, setPendingPin] = useState<{ x: number; y: number } | null>(null);
   const [pinName, setPinName] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [editingTitleId, setEditingTitleId] = useState<string | null>(null);
-  const [editingTitleValue, setEditingTitleValue] = useState("");
   const mapContainerRef = useRef<HTMLDivElement>(null);
 
   const showBuilder = editingSVG !== null || savedSVG === null;
