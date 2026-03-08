@@ -73,6 +73,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
 
   const canvasRef = useRef<MapCanvasHandle | null>(null);
   const autoSaveTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pendingConfirm = useRef(false);
 
   const [canvasState, setCanvasState] = useState<CanvasState>(defaultCanvas);
 
