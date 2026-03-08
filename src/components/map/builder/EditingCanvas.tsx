@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import CanvasToolbar from "./CanvasToolbar";
 import StylePreferencesPanel from "./StylePreferencesPanel";
 import MapBuilderCanvas, { type MapCanvasHandle } from "./MapBuilderCanvas";
@@ -43,6 +43,9 @@ const EditingCanvas = ({
 }: EditingCanvasProps) => {
   const [mode, setMode] = useState<ToolMode>("shape");
   const [activeTool, setActiveTool] = useState<ShapeTool>("pen");
+
+  // Debug: confirm activeTool updates
+  console.log("[EditingCanvas] activeTool:", activeTool);
   const [nodeCount, setNodeCount] = useState(0);
   const [objectCount, setObjectCount] = useState(0);
   const [refOpacity, setRefOpacity] = useState(canvasState.referenceOpacity);
@@ -68,6 +71,17 @@ const EditingCanvas = ({
 
   const internalRef = useRef<MapCanvasHandle | null>(null);
   const canvasHandle = externalCanvasRef || internalRef;
+
+  // FIX 2: Sync pen brush width when strokeWeight changes
+  const strokeWeightToBrush: Record<string, number> = { fine: 1, medium: 2, bold: 4 };
+  useEffect(() => {
+    if (activeTool === "pen") {
+      const w = strokeWeightToBrush[stylePrefs.strokeWeight] ?? 2;
+      setPenSize(w);
+      canvasHandle.current?.setBrushWidth(w);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stylePrefs.strokeWeight]);
 
   const handleStateChange = useCallback(() => {
     const handle = canvasHandle.current;
