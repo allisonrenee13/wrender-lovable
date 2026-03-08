@@ -730,32 +730,8 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                         </p>
                       </div>
 
-                      {/* Reference image toggle */}
-                      {canvasState.referenceImage && (
-                        <div className="flex items-center justify-between py-2 border-b border-border mb-2">
-                          <div>
-                            <p className="text-xs font-medium text-foreground">Reference image</p>
-                            <p className="text-[10px] text-muted-foreground">Show original as faint overlay</p>
-                          </div>
-                          <button
-                            onClick={() => {
-                              const next = !showReference;
-                              setShowReference(next);
-                              setCanvasState(prev => ({
-                                ...prev,
-                                referenceOpacity: next ? 30 : 0,
-                              }));
-                            }}
-                            className={`w-10 h-5 rounded-full transition-colors relative flex-shrink-0 ${
-                              showReference ? "bg-primary" : "bg-muted-foreground/30"
-                            }`}
-                          >
-                            <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
-                              showReference ? "translate-x-5" : "translate-x-0.5"
-                            }`} />
-                          </button>
-                        </div>
-                      )}
+
+
 
                       {/* Style controls (merged from Style tab) */}
                       <div className="pt-2 border-t border-border">
