@@ -143,47 +143,50 @@ const EditingCanvas = ({
     }
 
     if (canvasState.paths.length > 0 && !initialTemplate) {
-      // Compute bounding box of all paths to scale & center them
-      const allPoints: Array<[number, number]> = [];
-      canvasState.paths.forEach((p) => {
-        const matches = p.d.matchAll(/(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)/g);
-        for (const m of matches) {
-          allPoints.push([parseFloat(m[1]), parseFloat(m[2])]);
+      // Parse all path segments and compute bounding box
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      const allSegments: { x1: number; y1: number; x2: number; y2: number }[] = [];
+
+      canvasState.paths.forEach((tracedPath) => {
+        const commands = tracedPath.d.match(/[ML]\s*[\d.]+\s*[\d.]+/g) || [];
+        const points = commands.map((cmd) => {
+          const parts = cmd.trim().split(/\s+/);
+          return { x: parseFloat(parts[1]), y: parseFloat(parts[2]) };
+        });
+        for (let i = 0; i < points.length - 1; i++) {
+          allSegments.push({
+            x1: points[i].x, y1: points[i].y,
+            x2: points[i + 1].x, y2: points[i + 1].y,
+          });
+          minX = Math.min(minX, points[i].x, points[i + 1].x);
+          minY = Math.min(minY, points[i].y, points[i + 1].y);
+          maxX = Math.max(maxX, points[i].x, points[i + 1].x);
+          maxY = Math.max(maxY, points[i].y, points[i + 1].y);
         }
       });
 
-      let svgStr: string;
-      if (allPoints.length >= 2) {
-        const xs = allPoints.map(([x]) => x);
-        const ys = allPoints.map(([, y]) => y);
-        const minX = Math.min(...xs);
-        const maxX = Math.max(...xs);
-        const minY = Math.min(...ys);
-        const maxY = Math.max(...ys);
-        const shapeW = maxX - minX || 1;
-        const shapeH = maxY - minY || 1;
-
-        const canvasW = 800;
+      if (allSegments.length > 0) {
+        // Scale to fit canvas with 40px padding
+        const padding = 40;
+        const pathW = maxX - minX || 1;
+        const pathH = maxY - minY || 1;
+        const canvasW = handle.getJSON ? 800 : 800;
         const canvasH = 600;
-        const targetW = canvasW * 0.8;
-        const targetH = canvasH * 0.8;
-        const scale = Math.min(targetW / shapeW, targetH / shapeH);
-        const scaledW = shapeW * scale;
-        const scaledH = shapeH * scale;
-        const tx = (canvasW - scaledW) / 2 - minX * scale;
-        const ty = (canvasH - scaledH) / 2 - minY * scale;
+        const scale = Math.min(
+          (canvasW - padding * 2) / pathW,
+          (canvasH - padding * 2) / pathH
+        );
+        const offsetX = padding + (canvasW - padding * 2 - pathW * scale) / 2 - minX * scale;
+        const offsetY = padding + (canvasH - padding * 2 - pathH * scale) / 2 - minY * scale;
 
-        svgStr = `<svg viewBox="0 0 ${canvasW} ${canvasH}" xmlns="http://www.w3.org/2000/svg">
-          <g transform="translate(${tx}, ${ty}) scale(${scale})">
-            ${canvasState.paths.map((p) => `<path d="${p.d}" fill="none" stroke="#1B2A4A" stroke-width="${Math.max(1, 2 / scale)}" stroke-linejoin="round" stroke-linecap="round"/>`).join("\n")}
-          </g>
+        // Build a scaled SVG and load via loadSVG (which breaks into line segments)
+        const svgStr = `<svg viewBox="0 0 ${canvasW} ${canvasH}" xmlns="http://www.w3.org/2000/svg">
+          ${allSegments.map(({ x1, y1, x2, y2 }) =>
+            `<line x1="${x1 * scale + offsetX}" y1="${y1 * scale + offsetY}" x2="${x2 * scale + offsetX}" y2="${y2 * scale + offsetY}" stroke="#1B2A4A" stroke-width="1.5" stroke-linecap="round"/>`
+          ).join("\n")}
         </svg>`;
-      } else {
-        svgStr = `<svg viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
-          ${canvasState.paths.map((p) => `<path d="${p.d}" fill="none" stroke="#1B2A4A" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`).join("\n")}
-        </svg>`;
+        handle.loadSVG(svgStr);
       }
-      handle.loadSVG(svgStr);
     }
 
     handleStateChange();
