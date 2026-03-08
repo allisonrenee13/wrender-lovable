@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -360,7 +361,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   // --- Determine what to show in center ---
   const isEntryOrUpload = phase === "entry" || phase === "upload";
   const isTraceReview = phase === "traceReview";
-  const isCanvasPhase = phase === "shapeCanvas" || phase === "style";
+  const isCanvasPhase = phase === "shapeCanvas" || phase === "style" || phase === "traceReview";
   const isRenderPhase = phase === "renderReady" || phase === "rendering" || phase === "preview";
 
   // Show right panel only after entry/upload
@@ -393,45 +394,12 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
         <div className="flex-1 flex overflow-hidden">
           {/* CENTER — main canvas / content */}
           <div className="flex-1 flex flex-col overflow-hidden">
-            {/* Trace review center: image + SVG overlay */}
-            {isTraceReview && (
-              <div className="flex-1 flex items-center justify-center p-6 bg-muted/20 relative">
-                <div className="relative w-full max-w-[600px]">
-                  {traceImageDataUrl && (
-                    <img
-                      src={traceImageDataUrl}
-                      alt="Uploaded reference"
-                      className="w-full h-auto rounded-lg border border-border"
-                    />
-                  )}
-                  <svg
-                    viewBox={`0 0 ${traceImageData?.w || 600} ${traceImageData?.h || 600}`}
-                    className="absolute inset-0 w-full h-full"
-                    style={{ pointerEvents: "none" }}
-                  >
-                    {canvasState.paths.map((p, i) => (
-                      <path
-                        key={i}
-                        d={p.d}
-                        fill="none"
-                        stroke={getConfidenceColor(p.confidence)}
-                        strokeWidth="2"
-                        strokeLinejoin="round"
-                        strokeLinecap="round"
-                        opacity="0.85"
-                      />
-                    ))}
-                  </svg>
-                </div>
-              </div>
-            )}
-
-            {/* Canvas phase center: EditingCanvas */}
+            {/* Canvas phase center: EditingCanvas (includes traceReview now) */}
             {isCanvasPhase && (
               <EditingCanvas
                 initialTemplate={selectedTemplate}
-                referenceImage={canvasState.referenceImage}
-                canvasState={canvasState}
+                referenceImage={isTraceReview ? (traceImageDataUrl || canvasState.referenceImage) : canvasState.referenceImage}
+                canvasState={isTraceReview ? { ...canvasState, referenceOpacity: 30 } : canvasState}
                 onCanvasChange={setCanvasState}
                 stylePrefs={stylePrefs}
                 onStylePrefsChange={setStylePrefs}
@@ -532,37 +500,66 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                 {activeTab === "trace" && (
                   <div className="flex-1 flex flex-col">
                     <div className="p-5 space-y-5 flex-1 overflow-y-auto">
-                      <div>
-                        <h3 className="text-base font-serif font-semibold text-foreground mb-1">Does this look right?</h3>
-                        <p className="text-xs text-muted-foreground">
-                          The colored lines show what will be traced. Adjust sensitivity if anything looks off.
-                        </p>
-                      </div>
+                      <h3 className="text-base font-serif font-semibold text-foreground">Fine-tune your trace</h3>
 
-                      {/* Trace summary */}
-                      <div className="bg-muted/40 rounded-lg p-3 space-y-1.5">
-                        <p className="text-sm text-foreground font-medium">{pathCount} {pathCount === 1 ? "shape" : "shapes"} traced</p>
-                        <p className="text-xs text-muted-foreground">{traceGuidance}</p>
-                      </div>
+                      {/* Tip */}
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Use <span className="font-medium text-foreground">Pen ✏️</span> to draw missing lines.{" "}
+                        Use <span className="font-medium text-foreground">Erase ⌫</span> to remove anything extra.
+                      </p>
 
-                      {/* Sensitivity slider */}
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs font-medium text-foreground">Sensitivity</p>
-                          <span className="text-xs text-muted-foreground">{traceSensitivity.toFixed(2)}</span>
-                        </div>
-                        <Slider
-                          value={[traceSensitivity]}
-                          onValueChange={([v]) => handleSensitivityChange(v)}
-                          min={0.2}
-                          max={0.95}
-                          step={0.01}
-                          className="w-full"
-                        />
-                        <p className="text-[10px] text-muted-foreground">
-                          Lower = fewer edges, higher = more detail (may include noise)
-                        </p>
-                      </div>
+                      {/* Auto-trace settings accordion */}
+                      <Accordion type="single" collapsible className="w-full">
+                        <AccordionItem value="auto-trace" className="border-border">
+                          <AccordionTrigger className="text-xs font-medium text-foreground py-2 hover:no-underline">
+                            Auto-trace settings
+                          </AccordionTrigger>
+                          <AccordionContent className="space-y-3 pb-3">
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <p className="text-xs font-medium text-foreground">Sensitivity</p>
+                                <span className="text-xs text-muted-foreground">{traceSensitivity.toFixed(2)}</span>
+                              </div>
+                              <Slider
+                                value={[traceSensitivity]}
+                                onValueChange={([v]) => handleSensitivityChange(v)}
+                                min={0.2}
+                                max={0.95}
+                                step={0.01}
+                                className="w-full"
+                              />
+                              <p className="text-[10px] text-muted-foreground">
+                                Lower = fewer edges, higher = more detail
+                              </p>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full text-xs"
+                              onClick={() => {
+                                if (traceImageData && traceImageDataUrl) {
+                                  const { w, h } = traceImageData;
+                                  const img = new Image();
+                                  img.onload = () => {
+                                    const c = document.createElement("canvas");
+                                    c.width = w;
+                                    c.height = h;
+                                    const ctx = c.getContext("2d")!;
+                                    ctx.drawImage(img, 0, 0, w, h);
+                                    const paths = traceOutlineImage(c, w, h, traceSensitivity);
+                                    if (paths.length > 0) {
+                                      setCanvasState((prev) => ({ ...prev, paths, nodeCount: paths.length * 10 }));
+                                    }
+                                  };
+                                  img.src = traceImageDataUrl;
+                                }
+                              }}
+                            >
+                              Re-trace
+                            </Button>
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
                     </div>
 
                     {/* Trace tab footer */}
@@ -573,45 +570,18 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                       >
                         Continue to Style →
                       </Button>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1 text-xs"
-                          onClick={() => {
-                            if (traceImageData && traceImageDataUrl) {
-                              const { w, h } = traceImageData;
-                              const img = new Image();
-                              img.onload = () => {
-                                const c = document.createElement("canvas");
-                                c.width = w;
-                                c.height = h;
-                                const ctx = c.getContext("2d")!;
-                                ctx.drawImage(img, 0, 0, w, h);
-                                const paths = traceOutlineImage(c, w, h, traceSensitivity);
-                                if (paths.length > 0) {
-                                  setCanvasState((prev) => ({ ...prev, paths, nodeCount: paths.length * 10 }));
-                                }
-                              };
-                              img.src = traceImageDataUrl;
-                            }
-                          }}
-                        >
-                          Re-trace
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1 text-xs"
-                          onClick={() => {
-                            setTemplateName("");
-                            setTemplatePublic(false);
-                            setSaveTemplateOpen(true);
-                          }}
-                        >
-                          Save as Template
-                        </Button>
-                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full text-xs"
+                        onClick={() => {
+                          setTemplateName("");
+                          setTemplatePublic(false);
+                          setSaveTemplateOpen(true);
+                        }}
+                      >
+                        Save as Template
+                      </Button>
                       <button
                         onClick={() => setPhase("upload")}
                         className="text-xs text-muted-foreground hover:text-foreground transition-colors w-full text-center"
