@@ -186,11 +186,9 @@ const EditingCanvas = ({
   };
 
   // Determine current hint text
-  const currentHint = activeStamp
-    ? stampHints[activeStamp]
-    : shapeToolHints[activeTool];
+  const currentHint = shapeToolHints[activeTool];
 
-  const showEmptyPrompt = !hasDrawn && activeTool === "pen" && !activeStamp && !showGuidance;
+  const showEmptyPrompt = !hasDrawn && activeTool === "pen" && !showGuidance;
   const hasContent = nodeCount > 0 || objectCount > 0 || canvasState.paths.length > 0 || !!initialTemplate;
 
   return (
@@ -202,12 +200,12 @@ const EditingCanvas = ({
           onModeChange={setMode}
           activeTool={activeTool}
           onToolChange={setActiveTool}
-          activeStamp={activeStamp}
-          onStampChange={setActiveStamp}
           onUndo={() => canvasHandle.current?.undo()}
           onRedo={() => canvasHandle.current?.redo()}
           canUndo={true}
           canRedo={true}
+          brushSize={currentBrushSize}
+          onBrushSizeChange={handleBrushSizeChange}
         />
 
         {/* Canvas area */}
@@ -227,7 +225,7 @@ const EditingCanvas = ({
                 }}
                 stylePrefs={stylePrefs}
                 activeTool={activeTool}
-                activeStamp={activeStamp}
+                activeStamp={null}
                 onStateChange={handleStateChange}
                 width={800}
                 height={600}
