@@ -895,7 +895,7 @@ function traceOutlineImage(
   const significant = components
     .filter(c => c.length >= minSize)
     .sort((a, b) => b.length - a.length)
-    .slice(0, 120);
+    .slice(0, 300);
 
   // 5. For each component, find boundary pixels only
   function getBoundary(comp: Array<[number, number]>): Array<[number, number]> {
