@@ -20,7 +20,7 @@ import type { BuilderPath, MapTemplate, StylePreferences, CanvasState, TracedPat
 import { defaultStylePreferences, lineStyleLabels, backgroundColors } from "./builder/types";
 import { saveTemplate } from "@/lib/templateLibrary";
 
-type Phase = "entry" | "upload" | "traceReview" | "shapeCanvas" | "style" | "renderReady" | "rendering" | "preview";
+type Phase = "entry" | "upload" | "traceReview" | "shapeCanvas" | "add" | "style" | "renderReady" | "rendering" | "preview";
 type TabId = "trace" | "edit" | "add";
 
 interface UnifiedMapBuilderProps {
@@ -38,6 +38,7 @@ const defaultCanvas: CanvasState = {
 function phaseToTab(phase: Phase): TabId {
   if (phase === "entry" || phase === "upload" || phase === "traceReview") return "trace";
   if (phase === "shapeCanvas" || phase === "style") return "edit";
+  if (phase === "add") return "add";
   return "add";
 }
 
@@ -51,8 +52,8 @@ function phaseToStep(phase: Phase): number {
 /** Which tabs have been reached based on the furthest phase */
 function reachedTabs(phase: Phase): Set<TabId> {
   const s = new Set<TabId>(["trace"]);
-  if (["shapeCanvas", "style", "renderReady", "rendering", "preview"].includes(phase)) s.add("edit");
-  if (["renderReady", "rendering", "preview"].includes(phase)) s.add("add");
+  if (["shapeCanvas", "style", "add", "renderReady", "rendering", "preview"].includes(phase)) s.add("edit");
+  if (["add", "renderReady", "rendering", "preview"].includes(phase)) s.add("add");
   return s;
 }
 
@@ -362,8 +363,8 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
         setPhase("shapeCanvas");
       }
     } else if (tab === "add") {
-      if (phase !== "renderReady" && phase !== "rendering" && phase !== "preview") {
-        setPhase(renderedSVG ? "preview" : "renderReady");
+      if (phase !== "add" && phase !== "renderReady" && phase !== "rendering" && phase !== "preview") {
+        setPhase("add");
       }
     }
   };
@@ -371,7 +372,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   // --- Determine what to show in center ---
   const isEntryOrUpload = phase === "entry" || phase === "upload";
   const isTraceReview = phase === "traceReview";
-  const isCanvasPhase = phase === "shapeCanvas" || phase === "style";
+  const isCanvasPhase = phase === "shapeCanvas" || phase === "style" || phase === "add";
   const isRenderPhase = phase === "renderReady" || phase === "rendering" || phase === "preview";
 
   // Show right panel only after entry/upload
@@ -720,7 +721,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                       </button>
                       <Button
                         onClick={() => {
-                          setPhaseAndSave("renderReady");
+                          setPhaseAndSave("add");
                           setActiveTab("add");
                         }}
                         className="bg-primary text-primary-foreground font-semibold px-6"
