@@ -92,6 +92,7 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showOriginal, setShowOriginal] = useState(true);
   const [isCleanOutline, setIsCleanOutline] = useState(false);
+  const [isPoorTrace, setIsPoorTrace] = useState(false);
   const [retraceStatus, setRetraceStatus] = useState<"idle" | "running" | "done">("idle");
 
   // Save-as-template modal
@@ -197,6 +198,10 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
       // Detect clean outline: all paths have confidence === 1.0
       const clean = paths.length > 0 && paths.every(p => p.confidence === 1.0);
       setIsCleanOutline(clean);
+
+      // Detect poor trace quality
+      const poor = paths.length === 0 || paths.length > 8;
+      setIsPoorTrace(poor);
 
       if (paths.length > 0) {
         setCanvasState({
@@ -556,8 +561,17 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                       {/* 1. Heading */}
                       <h3 className="text-base font-serif font-semibold text-foreground">Your trace is ready</h3>
 
-                      {/* 2. Sensitivity slider + Re-trace */}
-                      {isCleanOutline ? (
+                      {/* 2. Sensitivity slider / Clean / Poor trace */}
+                      {isPoorTrace ? (
+                        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 space-y-2">
+                          <p className="text-xs font-medium text-amber-800">
+                            This map is too detailed to auto-trace cleanly.
+                          </p>
+                          <p className="text-xs text-amber-700">
+                            Try "Trace manually" to draw over it yourself, or "Browse Templates" for a similar shape.
+                          </p>
+                        </div>
+                      ) : isCleanOutline ? (
                         <div className="flex items-center gap-2 py-2">
                           <span className="text-sm" style={{ color: "#2EAA5E" }}>✓</span>
                           <p className="text-xs" style={{ color: "#2EAA5E" }}>
