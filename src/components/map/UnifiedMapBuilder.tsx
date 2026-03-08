@@ -1034,6 +1034,17 @@ function traceOutlineImage(
     }
   }
 
+  // Detect filled-region maps (gray/colored landmass fills)
+  const sampleStep2 = Math.max(1, Math.floor(w * h / 2000));
+  let grayPixelCount = 0;
+  for (let i = 0; i < w * h; i += sampleStep2) {
+    const r = data[i * 4], g = data[i * 4 + 1], b = data[i * 4 + 2];
+    const brightness = (r + g + b) / 3;
+    if (brightness > 60 && brightness < 200) grayPixelCount++;
+  }
+  const grayRatio = grayPixelCount / (w * h / sampleStep2);
+  const isFilledRegionMap = grayRatio > 0.15;
+
   // Detect thick black line maps (road maps, geographic maps)
   let hasThickStrokes = false;
   const darkPixelCount = Array.from(
@@ -1049,23 +1060,33 @@ function traceOutlineImage(
   }
 
   // For thick-stroke maps, use lower threshold to capture only very dark pixels
-  if (hasThickStrokes) {
+  if (hasThickStrokes && !isFilledRegionMap) {
     threshold = 100;
   }
 
   const ink = new Uint8Array(w * h);
-  for (let i = 0; i < w * h; i++) {
-    const r = data[i * 4], g = data[i * 4 + 1], b = data[i * 4 + 2];
-    const brightness = (r + g + b) / 3;
-    const isBackground = brightness > threshold;
-    const isWhite = r > 240 && g > 240 && b > 240;
-    ink[i] = (!isBackground && !isWhite) ? 1 : 0;
+  if (isFilledRegionMap) {
+    // Filled-region mode: capture all non-white pixels as ink
+    for (let i = 0; i < w * h; i++) {
+      const r = data[i * 4], g = data[i * 4 + 1], b = data[i * 4 + 2];
+      const brightness = (r + g + b) / 3;
+      ink[i] = brightness < 210 ? 1 : 0;
+    }
+  } else {
+    for (let i = 0; i < w * h; i++) {
+      const r = data[i * 4], g = data[i * 4 + 1], b = data[i * 4 + 2];
+      const brightness = (r + g + b) / 3;
+      const isBackground = brightness > threshold;
+      const isWhite = r > 240 && g > 240 && b > 240;
+      ink[i] = (!isBackground && !isWhite) ? 1 : 0;
+    }
   }
 
-  // 2. Zero out 6px border to remove image frame artifacts
+  // 2. Zero out border to remove image frame artifacts
+  const borderSize = isFilledRegionMap ? 15 : 6;
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++)
-      if (x < 6 || x >= w - 6 || y < 6 || y >= h - 6)
+      if (x < borderSize || x >= w - borderSize || y < borderSize || y >= h - borderSize)
         ink[y * w + x] = 0;
 
   // 3. Find connected ink components via DFS
@@ -1145,9 +1166,20 @@ function traceOutlineImage(
     return true;
   });
 
-  // 4c. Thick-stroke filtering: keep only major landmass boundaries
+  // 4c. Mode-specific filtering
   let finalComponents = filteredSignificant;
-  if (hasThickStrokes) {
+  if (isFilledRegionMap) {
+    finalComponents = filteredSignificant.filter(comp => {
+      const xs = comp.map(([x]) => x);
+      const ys = comp.map(([, y]) => y);
+      const bboxW = Math.max(...xs) - Math.min(...xs);
+      const bboxH = Math.max(...ys) - Math.min(...ys);
+      const aspect = Math.max(bboxW, bboxH) / (Math.min(bboxW, bboxH) || 1);
+      // Remove arrows and thin lines
+      if (aspect > 6 && comp.length < w * h * 0.02) return false;
+      return true;
+    }).slice(0, 6);
+  } else if (hasThickStrokes) {
     finalComponents = filteredSignificant.filter(comp => {
       const xs = comp.map(([x]) => x);
       const ys = comp.map(([, y]) => y);
@@ -1230,7 +1262,7 @@ function traceOutlineImage(
     paths.push({ d, confidence: Math.min(1, comp.length / 2000) });
   }
 
-  console.log(`[tracer] found ${paths.length} paths from ${finalComponents.length} components (${significant.length - finalComponents.length} filtered out, thickStrokes=${hasThickStrokes})`);
+  console.log(`[tracer] found ${paths.length} paths from ${finalComponents.length} components (${significant.length - finalComponents.length} filtered out, thickStrokes=${hasThickStrokes}, filledRegion=${isFilledRegionMap})`);
   return paths;
 }
 
