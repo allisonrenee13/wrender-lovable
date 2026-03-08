@@ -957,6 +957,66 @@ const UnifiedMapBuilder = ({ onConfirm, initialPhase: initialPhaseProp }: Unifie
         onSelect={handleTemplateSelect}
       />
 
+      {/* Pin name dialog */}
+      <Dialog open={pinDialogOpen} onOpenChange={(open) => {
+        setPinDialogOpen(open);
+        if (!open) { setPendingPin(null); setPinName(""); }
+      }}>
+        <DialogContent className="sm:max-w-[320px]">
+          <DialogHeader>
+            <DialogTitle className="font-serif">Name this pin</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <Input
+              value={pinName}
+              onChange={(e) => setPinName(e.target.value)}
+              placeholder="e.g. The Dark Forest"
+              className="h-9"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && pinName.trim() && pendingPin) {
+                  addPin({
+                    title: pinName.trim(),
+                    x: pendingPin.x,
+                    y: pendingPin.y,
+                    type: "location",
+                    tier: "major",
+                    chapter: 1,
+                    location: "",
+                    note: "",
+                  });
+                  setPinDialogOpen(false);
+                  setPendingPin(null);
+                  setPinName("");
+                }
+              }}
+            />
+            <Button
+              onClick={() => {
+                if (!pinName.trim() || !pendingPin) return;
+                addPin({
+                  title: pinName.trim(),
+                  x: pendingPin.x,
+                  y: pendingPin.y,
+                  type: "location",
+                  tier: "major",
+                  chapter: 1,
+                  location: "",
+                  note: "",
+                });
+                setPinDialogOpen(false);
+                setPendingPin(null);
+                setPinName("");
+              }}
+              disabled={!pinName.trim()}
+              className="w-full bg-primary text-primary-foreground font-semibold"
+            >
+              Add Pin
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 };
