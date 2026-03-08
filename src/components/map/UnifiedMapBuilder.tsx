@@ -743,8 +743,6 @@ function generateOutlinePath(w: number, h: number): TracedPath {
 }
 
 export default UnifiedMapBuilder;
-
-    // 1. Convert to grayscale
     const gray = new Float32Array(w * h);
     for (let i = 0; i < w * h; i++) {
       const idx = i * 4;
