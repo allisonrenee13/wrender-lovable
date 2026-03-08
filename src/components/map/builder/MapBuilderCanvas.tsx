@@ -17,7 +17,6 @@ import {
   FabricImage,
   loadSVGFromString,
 } from "fabric";
-import { EraserBrush } from "@erase2d/fabric";
 import type { StylePreferences, ShapeTool, FeatureStamp } from "./types";
 import { strokeWeightValues, backgroundColors } from "./types";
 
@@ -60,14 +59,10 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
     const sculptingRef = useRef(false);
     const eraserSizeRef = useRef(eraserRadius ?? 24);
 
-    // Keep eraserSizeRef in sync and update brush width live
+    // Keep eraserSizeRef in sync
     useEffect(() => {
       eraserSizeRef.current = eraserRadius ?? 24;
-      const canvas = fabricRef.current;
-      if (activeTool === "eraser" && canvas?.freeDrawingBrush) {
-        canvas.freeDrawingBrush.width = eraserSizeRef.current;
-      }
-    }, [eraserRadius, activeTool]);
+    }, [eraserRadius]);
 
     const canvasWidth = width || 800;
     const canvasHeight = height || 600;
@@ -146,7 +141,49 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
           }
         }
 
-        canvas.on("path:created", () => saveState());
+        // Split pen-drawn paths into line segments for fine-grained erasing
+        canvas.on("path:created", (e: any) => {
+          const path = e.path as Path;
+          if (!path) { saveState(); return; }
+          const pathData = (path as any).path as any[];
+          if (!pathData || pathData.length < 2) { saveState(); return; }
+          
+          // Extract points from the path commands
+          const points: { x: number; y: number }[] = [];
+          pathData.forEach((seg: any[]) => {
+            const cmd = seg[0];
+            if (cmd === "M" || cmd === "L") {
+              points.push({ x: seg[1], y: seg[2] });
+            } else if (cmd === "Q") {
+              points.push({ x: seg[3], y: seg[4] });
+            } else if (cmd === "C") {
+              points.push({ x: seg[5], y: seg[6] });
+            }
+          });
+          
+          if (points.length < 2) { saveState(); return; }
+          
+          // Remove the original path and add as line segments
+          canvas.remove(path);
+          const strokeColor = path.stroke || colors.stroke;
+          const strokeW = path.strokeWidth || sw;
+          for (let i = 0; i < points.length - 1; i++) {
+            const line = new Line(
+              [points[i].x, points[i].y, points[i + 1].x, points[i + 1].y],
+              {
+                stroke: strokeColor as string,
+                strokeWidth: strokeW,
+                strokeLineCap: "round",
+                selectable: false,
+                evented: true,
+                data: { isMapStroke: true },
+              }
+            );
+            canvas.add(line);
+          }
+          canvas.renderAll();
+          saveState();
+        });
         saveState();
       };
 
@@ -227,7 +264,11 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
             opacity: lineProps.opacity,
           });
         } else if (obj instanceof Line) {
-          obj.set({ stroke: lineProps.stroke });
+          if ((obj as any).data?.isMapStroke) {
+            obj.set({ stroke: lineProps.stroke, strokeWidth: lineStyle === "nautical" ? sw * 1.6 : sw });
+          } else {
+            obj.set({ stroke: lineProps.stroke });
+          }
         } else if (obj instanceof Rect || obj instanceof Circle) {
           if (!(obj as any).isRefImage) obj.set({ stroke: lineProps.stroke });
         }
@@ -353,11 +394,49 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
         }
 
         case "eraser": {
-          canvas.isDrawingMode = true;
-          const eraserBrush = new EraserBrush(canvas);
-          eraserBrush.width = eraserSizeRef.current;
-          canvas.freeDrawingBrush = eraserBrush;
+          canvas.isDrawingMode = false;
           canvas.defaultCursor = "crosshair";
+          let isErasing = false;
+
+          canvas.on("mouse:down", () => { isErasing = true; });
+          canvas.on("mouse:up", () => { isErasing = false; saveState(); });
+
+          canvas.on("mouse:move", (e) => {
+            if (!isErasing) return;
+            const pointer = canvas.getScenePoint(e.e);
+            const radius = eraserSizeRef.current;
+            const toRemove = canvas.getObjects().filter(obj => {
+              if (obj.excludeFromExport) return false;
+              if (obj instanceof FabricImage) return false;
+              
+              if (obj instanceof Line && (obj as any).data?.isMapStroke) {
+                // Check midpoint and endpoints
+                const mx = ((obj.x1 ?? 0) + (obj.x2 ?? 0)) / 2;
+                const my = ((obj.y1 ?? 0) + (obj.y2 ?? 0)) / 2;
+                const distMid = Math.sqrt((mx - pointer.x) ** 2 + (my - pointer.y) ** 2);
+                if (distMid < radius) return true;
+                const distP1 = Math.sqrt(((obj.x1 ?? 0) - pointer.x) ** 2 + ((obj.y1 ?? 0) - pointer.y) ** 2);
+                if (distP1 < radius) return true;
+                const distP2 = Math.sqrt(((obj.x2 ?? 0) - pointer.x) ** 2 + ((obj.y2 ?? 0) - pointer.y) ** 2);
+                if (distP2 < radius) return true;
+                return false;
+              }
+              
+              // For other objects (stamps etc), check bounding box center
+              if (obj instanceof Rect || obj instanceof Circle || obj instanceof Path) {
+                const bound = obj.getBoundingRect();
+                const cx = bound.left + bound.width / 2;
+                const cy = bound.top + bound.height / 2;
+                const dist = Math.sqrt((cx - pointer.x) ** 2 + (cy - pointer.y) ** 2);
+                return dist < radius;
+              }
+              return false;
+            });
+            if (toRemove.length > 0) {
+              toRemove.forEach(obj => canvas.remove(obj));
+              canvas.renderAll();
+            }
+          });
           break;
         }
 
@@ -536,8 +615,40 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
           result.objects
             .filter((obj): obj is FabricObject => obj !== null)
             .forEach((obj) => {
-              obj.set({ stroke: colors.stroke, strokeWidth: sw, fill: "transparent", selectable: false, evented: false });
-              canvas.add(obj);
+              if (obj instanceof Path) {
+                // Break SVG paths into line segments for fine-grained erasing
+                const pathData = (obj as any).path as any[];
+                if (pathData && pathData.length >= 2) {
+                  const points: { x: number; y: number }[] = [];
+                  pathData.forEach((seg: any[]) => {
+                    const cmd = seg[0];
+                    if (cmd === "M" || cmd === "L") {
+                      points.push({ x: seg[1], y: seg[2] });
+                    } else if (cmd === "Q") {
+                      points.push({ x: seg[3], y: seg[4] });
+                    } else if (cmd === "C") {
+                      points.push({ x: seg[5], y: seg[6] });
+                    }
+                  });
+                  for (let i = 0; i < points.length - 1; i++) {
+                    const line = new Line(
+                      [points[i].x, points[i].y, points[i + 1].x, points[i + 1].y],
+                      {
+                        stroke: colors.stroke,
+                        strokeWidth: sw,
+                        strokeLineCap: "round",
+                        selectable: false,
+                        evented: true,
+                        data: { isMapStroke: true },
+                      }
+                    );
+                    canvas.add(line);
+                  }
+                }
+              } else {
+                obj.set({ stroke: colors.stroke, strokeWidth: sw, fill: "transparent", selectable: false, evented: false });
+                canvas.add(obj);
+              }
             });
           canvas.renderAll();
           saveState();
