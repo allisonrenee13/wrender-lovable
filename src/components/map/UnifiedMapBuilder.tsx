@@ -21,7 +21,7 @@ import { defaultStylePreferences, lineStyleLabels, backgroundColors } from "./bu
 import { saveTemplate } from "@/lib/templateLibrary";
 
 type Phase = "entry" | "upload" | "traceReview" | "shapeCanvas" | "style" | "renderReady" | "rendering" | "preview";
-type TabId = "trace" | "style" | "done";
+type TabId = "trace" | "edit" | "style" | "add";
 
 interface UnifiedMapBuilderProps {
   onConfirm?: () => void;
@@ -37,21 +37,24 @@ const defaultCanvas: CanvasState = {
 
 function phaseToTab(phase: Phase): TabId {
   if (phase === "entry" || phase === "upload" || phase === "traceReview") return "trace";
-  if (phase === "shapeCanvas" || phase === "style") return "style";
-  return "done";
+  if (phase === "shapeCanvas") return "edit";
+  if (phase === "style") return "style";
+  return "add";
 }
 
 function phaseToStep(phase: Phase): number {
-  if (phase === "entry" || phase === "upload" || phase === "traceReview" || phase === "shapeCanvas") return 1;
-  if (phase === "style") return 2;
-  return 3;
+  if (phase === "entry" || phase === "upload" || phase === "traceReview") return 1;
+  if (phase === "shapeCanvas") return 2;
+  if (phase === "style") return 3;
+  return 4;
 }
 
 /** Which tabs have been reached based on the furthest phase */
 function reachedTabs(phase: Phase): Set<TabId> {
   const s = new Set<TabId>(["trace"]);
-  if (["shapeCanvas", "style", "renderReady", "rendering", "preview"].includes(phase)) s.add("style");
-  if (["renderReady", "rendering", "preview"].includes(phase)) s.add("done");
+  if (["shapeCanvas", "style", "renderReady", "rendering", "preview"].includes(phase)) s.add("edit");
+  if (["style", "renderReady", "rendering", "preview"].includes(phase)) s.add("style");
+  if (["renderReady", "rendering", "preview"].includes(phase)) s.add("add");
   return s;
 }
 
@@ -344,13 +347,17 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
     // Also switch phase when clicking back to a tab
     if (tab === "trace") {
       if (phase !== "entry" && phase !== "upload" && phase !== "traceReview") {
-        setPhase(traceImageDataUrl ? "traceReview" : "shapeCanvas");
+        setPhase(traceImageDataUrl ? "traceReview" : "entry");
+      }
+    } else if (tab === "edit") {
+      if (phase !== "shapeCanvas") {
+        setPhase("shapeCanvas");
       }
     } else if (tab === "style") {
-      if (phase !== "shapeCanvas" && phase !== "style") {
+      if (phase !== "style") {
         setPhase("style");
       }
-    } else if (tab === "done") {
+    } else if (tab === "add") {
       if (phase !== "renderReady" && phase !== "rendering" && phase !== "preview") {
         setPhase(renderedSVG ? "preview" : "renderReady");
       }
@@ -368,8 +375,9 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
 
   const tabs: Array<{ id: TabId; label: string }> = [
     { id: "trace", label: "Trace" },
+    { id: "edit", label: "Edit" },
     { id: "style", label: "Style" },
-    { id: "done", label: "Done" },
+    { id: "add", label: "Add" },
   ];
 
   return (
@@ -533,17 +541,19 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                   <div className="flex-1 flex flex-col">
                     <div className="p-5 space-y-5 flex-1 overflow-y-auto">
                       <div>
-                        <h3 className="text-base font-serif font-semibold text-foreground mb-1">Does this look right?</h3>
+                        <h3 className="text-base font-serif font-semibold text-foreground mb-1">Your trace is ready</h3>
                         <p className="text-xs text-muted-foreground">
-                          The colored lines show what will be traced. Adjust sensitivity if anything looks off.
+                          Not quite right? Try free drawing with a template as your base, or draw from scratch.
+                          We're always working to improve the auto-tracer — tap the feedback button if something looks off.
                         </p>
                       </div>
 
-                      {/* Trace summary */}
-                      <div className="bg-muted/40 rounded-lg p-3 space-y-1.5">
-                        <p className="text-sm text-foreground font-medium">{pathCount} {pathCount === 1 ? "shape" : "shapes"} traced</p>
-                        <p className="text-xs text-muted-foreground">{traceGuidance}</p>
-                      </div>
+                      <a
+                        href="mailto:feedback@wrender.com?subject=Tracer%20feedback"
+                        className="inline-flex items-center text-xs text-primary hover:text-primary/80 underline underline-offset-2 transition-colors"
+                      >
+                        Give feedback
+                      </a>
 
                       {/* Sensitivity slider */}
                       <div className="space-y-2">
@@ -568,10 +578,13 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                     {/* Trace tab footer */}
                     <div className="p-4 border-t border-border space-y-2">
                       <Button
-                        onClick={() => setPhaseAndSave("shapeCanvas")}
+                        onClick={() => {
+                          setPhaseAndSave("shapeCanvas");
+                          setActiveTab("edit");
+                        }}
                         className="w-full bg-primary text-primary-foreground font-semibold"
                       >
-                        Continue to Style →
+                        Continue to Edit →
                       </Button>
                       <div className="flex gap-2">
                         <Button
@@ -622,6 +635,42 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                   </div>
                 )}
 
+                {/* EDIT TAB */}
+                {activeTab === "edit" && (
+                  <div className="flex-1 flex flex-col">
+                    <div className="p-5 space-y-4 flex-1 overflow-y-auto">
+                      <div>
+                        <h3 className="text-base font-serif font-semibold text-foreground mb-1">Edit your outline</h3>
+                        <p className="text-xs text-muted-foreground">
+                          Use Pen ✏️ to draw missing lines. Use Erase ⌫ to remove anything extra. Use Smooth to clean up jagged edges.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Edit tab footer */}
+                    <div className="p-4 border-t border-border flex items-center justify-between">
+                      <button
+                        onClick={() => {
+                          setPhaseAndSave(traceImageDataUrl ? "traceReview" : "entry");
+                          setActiveTab("trace");
+                        }}
+                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        ← Back to Trace
+                      </button>
+                      <Button
+                        onClick={() => {
+                          setPhaseAndSave("style");
+                          setActiveTab("style");
+                        }}
+                        className="bg-primary text-primary-foreground font-semibold px-6"
+                      >
+                        Continue to Style →
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
                 {/* STYLE TAB */}
                 {activeTab === "style" && (
                   <div className="flex-1 flex flex-col">
@@ -639,74 +688,59 @@ const UnifiedMapBuilder = ({ onConfirm }: UnifiedMapBuilderProps) => {
                     <div className="p-4 border-t border-border flex items-center justify-between">
                       <button
                         onClick={() => {
-                          setPhaseAndSave(traceImageDataUrl ? "traceReview" : "shapeCanvas");
-                          setActiveTab("trace");
+                          setPhaseAndSave("shapeCanvas");
+                          setActiveTab("edit");
                         }}
                         className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                       >
-                        ← Back to Trace
+                        ← Back to Edit
                       </button>
                       <Button
                         onClick={() => {
-                          handleRender();
+                          setPhaseAndSave("renderReady");
+                          setActiveTab("add");
                         }}
                         className="bg-primary text-primary-foreground font-semibold px-6"
                       >
-                        Render & Save →
+                        Continue to Add →
                       </Button>
                     </div>
                   </div>
                 )}
 
-                {/* DONE TAB */}
-                {activeTab === "done" && (
+                {/* ADD TAB */}
+                {activeTab === "add" && (
                   <div className="flex-1 flex flex-col">
                     <div className="p-5 space-y-5 flex-1 overflow-y-auto">
                       <div>
-                        <h3 className="text-base font-serif font-semibold text-foreground mb-1">Your map is ready</h3>
+                        <h3 className="text-base font-serif font-semibold text-foreground mb-1">Add to your map</h3>
                         <p className="text-xs text-muted-foreground">
-                          Use it in your project, export it, or keep editing.
+                          Add locations and events to your map. You can always do this later from the Locations page.
                         </p>
                       </div>
 
-                      {/* Thumbnail preview */}
-                      {renderedSVG && (
-                        <div
-                          className="w-full border border-border rounded-lg overflow-hidden"
-                          dangerouslySetInnerHTML={{ __html: renderedSVG }}
-                        />
-                      )}
-
-                      <p className="text-[11px] text-muted-foreground/60 italic">
-                        Your map looks exactly like what you drew — just finished and consistent. Edit the shape anytime and re-render instantly.
-                      </p>
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => {
+                          toast({ title: "Pin placement", description: "Click on the map to place a pin." });
+                        }}
+                      >
+                        Place a Pin
+                      </Button>
                     </div>
 
-                    {/* Done tab footer */}
-                    <div className="p-4 border-t border-border space-y-3">
+                    {/* Add tab footer */}
+                    <div className="p-4 border-t border-border">
                       <Button
-                        onClick={handleUseMap}
+                        onClick={() => {
+                          handleRender();
+                          handleUseMap();
+                        }}
                         className="w-full bg-primary text-primary-foreground font-semibold h-11"
                       >
-                        Use This Map
+                        Render & Save →
                       </Button>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={handleExportSVG} className="flex-1 text-xs">
-                          Export SVG
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={handleExportPNG} className="flex-1 text-xs">
-                          Export PNG
-                        </Button>
-                      </div>
-                      <button
-                        onClick={() => {
-                          setPhaseAndSave("shapeCanvas");
-                          setActiveTab("style");
-                        }}
-                        className="text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2 w-full text-center"
-                      >
-                        Keep Editing
-                      </button>
                     </div>
                   </div>
                 )}
