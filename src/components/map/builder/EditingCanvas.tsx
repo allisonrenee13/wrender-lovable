@@ -257,6 +257,8 @@ const EditingCanvas = ({
                 height={600}
                 brushWidth={activeTool === "pen" ? penWidthMap[brushWeight] : undefined}
                 eraserRadius={activeTool === "eraser" ? eraserSize : undefined}
+                referenceImageUrl={referenceImage}
+                referenceOpacity={canvasState.referenceOpacity}
               />
 
               {/* Empty canvas prompt */}
