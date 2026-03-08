@@ -828,13 +828,34 @@ function traceOutlineImage(
   const ctx = canvas.getContext("2d")!;
   const { data } = ctx.getImageData(0, 0, w, h);
 
-  // 1. Build binary ink map
-  const threshold = 200 - Math.round(sensitivity * 120);
+  // 1. Build binary ink map with multi-tone detection
+  let threshold = Math.round(240 - sensitivity * 80);
+
+  // Sample non-white pixels to detect multi-tone images
+  const nonWhiteBrightness: number[] = [];
+  const sampleStep = Math.max(1, Math.floor((w * h) / 1000));
+  for (let i = 0; i < w * h; i += sampleStep) {
+    const r = data[i * 4], g = data[i * 4 + 1], b = data[i * 4 + 2];
+    if (r <= 240 || g <= 240 || b <= 240) {
+      nonWhiteBrightness.push((r + g + b) / 3);
+    }
+  }
+  if (nonWhiteBrightness.length > 10) {
+    const mean = nonWhiteBrightness.reduce((a, b) => a + b, 0) / nonWhiteBrightness.length;
+    const variance = nonWhiteBrightness.reduce((a, b) => a + (b - mean) ** 2, 0) / nonWhiteBrightness.length;
+    const stddev = Math.sqrt(variance);
+    if (stddev > 30) {
+      threshold = 220; // multi-tone: capture all shaded regions
+    }
+  }
+
   const ink = new Uint8Array(w * h);
   for (let i = 0; i < w * h; i++) {
     const r = data[i * 4], g = data[i * 4 + 1], b = data[i * 4 + 2];
     const brightness = (r + g + b) / 3;
-    ink[i] = brightness < threshold ? 1 : 0;
+    const isBackground = brightness > threshold;
+    const isWhite = r > 240 && g > 240 && b > 240;
+    ink[i] = (!isBackground && !isWhite) ? 1 : 0;
   }
 
   // 2. Zero out 6px border to remove image frame artifacts
@@ -874,7 +895,7 @@ function traceOutlineImage(
   const significant = components
     .filter(c => c.length >= minSize)
     .sort((a, b) => b.length - a.length)
-    .slice(0, 120);
+    .slice(0, 300);
 
   // 5. For each component, find boundary pixels only
   function getBoundary(comp: Array<[number, number]>): Array<[number, number]> {
