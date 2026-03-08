@@ -45,10 +45,12 @@ interface MapBuilderCanvasProps {
   height?: number;
   brushWidth?: number;
   eraserRadius?: number;
+  placingPin?: boolean;
+  onPinPlaced?: (x: number, y: number) => void;
 }
 
 const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
-  ({ stylePrefs, activeTool, activeStamp, onStateChange, width, height, brushWidth, eraserRadius }, ref) => {
+  ({ stylePrefs, activeTool, activeStamp, onStateChange, width, height, brushWidth, eraserRadius, placingPin, onPinPlaced }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const canvasElRef = useRef<HTMLCanvasElement>(null);
     const fabricRef = useRef<Canvas | null>(null);

@@ -27,6 +27,9 @@ interface EditingCanvasProps {
   hideStylePanel?: boolean;
   hideRenderButton?: boolean;
   canvasRef?: React.RefObject<MapCanvasHandle | null>;
+  placingPin?: boolean;
+  onPinPlaced?: (x: number, y: number) => void;
+  overrideActiveTool?: ShapeTool;
 }
 
 const EditingCanvas = ({
@@ -40,6 +43,9 @@ const EditingCanvas = ({
   hideStylePanel,
   hideRenderButton,
   canvasRef: externalCanvasRef,
+  placingPin,
+  onPinPlaced,
+  overrideActiveTool,
 }: EditingCanvasProps) => {
   const [mode, setMode] = useState<ToolMode>("shape");
   const [activeTool, setActiveTool] = useState<ShapeTool>("pen");
@@ -254,13 +260,15 @@ const EditingCanvas = ({
                   }
                 }}
                 stylePrefs={stylePrefs}
-                activeTool={activeTool}
+                activeTool={overrideActiveTool ?? activeTool}
                 activeStamp={null}
                 onStateChange={handleStateChange}
                 width={800}
                 height={600}
                 brushWidth={activeTool === "pen" ? penWidthMap[brushWeight] : undefined}
                 eraserRadius={activeTool === "eraser" ? eraserSize : undefined}
+                placingPin={placingPin}
+                onPinPlaced={onPinPlaced}
               />
 
               {/* Empty canvas prompt */}
