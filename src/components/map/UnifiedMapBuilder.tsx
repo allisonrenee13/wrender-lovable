@@ -331,6 +331,11 @@ const UnifiedMapBuilder = ({ onConfirm, initialPhase: initialPhaseProp }: Unifie
         stylePrefs: stylePrefs as any,
       });
 
+      console.log("[render] canvasSVG length:", canvasSVG?.length);
+      console.log("[render] rawSVG length:", rawSVG?.length);
+      console.log("[render] rawSVG preview:", rawSVG?.slice(0, 300));
+      console.log("[render] processed length:", processed?.length);
+      console.log("[render] processed preview:", processed?.slice(0, 300));
       setPhaseAndSave("preview");
     }, 1500);
   };
