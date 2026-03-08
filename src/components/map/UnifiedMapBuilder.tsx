@@ -725,6 +725,37 @@ function traceSobelMode(gray: Float32Array, w: number, h: number, sensitivity: n
     isEdge[i] = magnitude[i] >= threshold ? 1 : 0;
   }
 
+  // FIX 1a — Zero out 6px border to eliminate image frame artifacts
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (x < 6 || x >= w - 6 || y < 6 || y >= h - 6) {
+        isEdge[y * w + x] = 0;
+      }
+    }
+  }
+
+  // FIX 2 — Two passes of binary erosion (3x3) to merge double-edges on thick strokes
+  for (let pass = 0; pass < 2; pass++) {
+    const eroded = new Uint8Array(w * h);
+    for (let y = 1; y < h - 1; y++) {
+      for (let x = 1; x < w - 1; x++) {
+        const idx = y * w + x;
+        if (!isEdge[idx]) continue;
+        // Keep pixel only if ALL 8 neighbors are also edge
+        let allNeighbors = true;
+        for (let dy = -1; dy <= 1 && allNeighbors; dy++) {
+          for (let dx = -1; dx <= 1 && allNeighbors; dx++) {
+            if (dx === 0 && dy === 0) continue;
+            if (!isEdge[(y + dy) * w + (x + dx)]) allNeighbors = false;
+          }
+        }
+        eroded[idx] = allNeighbors ? 1 : 0;
+      }
+    }
+    // Copy eroded back
+    for (let i = 0; i < w * h; i++) isEdge[i] = eroded[i];
+  }
+
   const visited = new Uint8Array(w * h);
   const components: Array<{ points: Array<{ x: number; y: number }>; totalMag: number }> = [];
 
