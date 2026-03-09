@@ -43,8 +43,8 @@ const UploadTraceFlow = ({ onImageUploaded, onAutoTrace, onManualTrace }: Upload
 
   if (!image) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-10 gap-6">
-        <div className="border-2 border-dashed border-border rounded-xl p-12 flex flex-col items-center gap-4 max-w-md">
+      <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-10 gap-6">
+        <div className="border-2 border-dashed border-border rounded-xl p-8 md:p-12 flex flex-col items-center gap-4 w-full max-w-md min-h-[120px]">
           <svg className="h-12 w-12 text-muted-foreground/30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <rect x="3" y="3" width="18" height="18" rx="2" />
             <path d="M3 16l5-5 4 4 4-6 5 7" />
@@ -72,7 +72,7 @@ const UploadTraceFlow = ({ onImageUploaded, onAutoTrace, onManualTrace }: Upload
   }
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-10 gap-6">
+    <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-10 gap-6">
       {/* Preview */}
       <div className="max-w-[400px] w-full border border-border rounded-lg overflow-hidden">
         <img src={image} alt="Uploaded reference" className="w-full object-contain" style={{ opacity: 0.4 }} />

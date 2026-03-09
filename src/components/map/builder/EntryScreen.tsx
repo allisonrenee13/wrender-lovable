@@ -36,15 +36,15 @@ const cards: Array<{
 ];
 
 const EntryScreen = ({ onSelect }: EntryScreenProps) => (
-  <div className="flex-1 flex flex-col items-center justify-center p-10 gap-10">
-    <div className="flex gap-6 max-w-4xl w-full justify-center">
+  <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-10 gap-6 md:gap-10">
+    <div className="flex flex-col md:flex-row gap-3 md:gap-6 max-w-4xl w-full justify-center">
       {cards.map((card) => {
         const Icon = card.icon;
         return (
           <button
             key={card.path}
             onClick={() => onSelect(card.path)}
-            className="flex-1 max-w-[260px] border border-border rounded-xl p-8 flex flex-col items-center gap-4 
+            className="w-full md:flex-1 md:max-w-[260px] border border-border rounded-xl p-6 md:p-8 flex flex-col items-center gap-3 md:gap-4 
               bg-card hover:border-secondary/60 hover:shadow-md transition-all text-center group"
           >
             <div className="w-14 h-14 rounded-lg bg-muted/50 flex items-center justify-center group-hover:bg-secondary/10 transition-colors">

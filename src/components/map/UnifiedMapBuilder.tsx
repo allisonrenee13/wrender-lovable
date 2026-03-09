@@ -435,13 +435,13 @@ const UnifiedMapBuilder = ({ onConfirm, onRender, initialPhase: initialPhaseProp
 
       {/* Main single-page layout: Center + Right panel */}
       {!isEntryOrUpload && (
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
           {/* CENTER — main canvas / content */}
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* Trace review center: image + SVG overlay */}
             {isTraceReview && (
-              <div className="flex-1 flex items-center justify-center p-6 bg-muted/20 relative">
-                <div className="relative w-full max-w-[600px]">
+              <div className="flex-1 flex items-center justify-center p-3 md:p-6 bg-muted/20 relative max-h-[55vh] md:max-h-none overflow-auto">
+                <div className="relative w-full max-w-[600px] max-h-[35vh] md:max-h-none">
                   {/* Hide/Show original toggle */}
                   <button
                     onClick={() => setShowOriginal((v) => !v)}

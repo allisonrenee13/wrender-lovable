@@ -244,7 +244,7 @@ const EditingCanvas = ({
 
         {/* Canvas area */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 overflow-auto flex items-center justify-center p-4 bg-muted/20 relative">
+          <div className="flex-1 overflow-auto flex items-center justify-center p-2 md:p-4 bg-muted/20 relative max-h-[55vh] md:max-h-none">
             <div className="border border-border rounded shadow-sm overflow-hidden relative w-full" style={{ maxWidth: 800 }}>
               <MapBuilderCanvas
                 ref={(handle) => {
@@ -280,8 +280,8 @@ const EditingCanvas = ({
           {/* Reference opacity slider removed */}
 
           {/* Contextual hint bar */}
-          <div className="px-5 py-2.5 border-t border-border bg-card">
-            <p className="text-[13px] text-foreground leading-snug">{currentHint}</p>
+          <div className="px-3 md:px-5 py-2.5 border-t border-border bg-card">
+            <p className="text-xs md:text-[13px] text-foreground leading-snug">{currentHint}</p>
             <p className="text-[10px] text-muted-foreground mt-0.5">
               {nodeCount} path nodes · {objectCount} objects
             </p>
@@ -294,7 +294,7 @@ const EditingCanvas = ({
 
       {/* Render button */}
       {!hideRenderButton && (
-        <div className="px-5 py-3 border-t border-border bg-card flex justify-end">
+        <div className="px-3 md:px-5 py-3 border-t border-border bg-card flex justify-end">
           <Button
             onClick={onRenderPreview}
             className="bg-primary text-secondary font-semibold px-8 h-10"
