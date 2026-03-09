@@ -673,7 +673,7 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
         let minX = Infinity, minY = Infinity,
             maxX = -Infinity, maxY = -Infinity;
         objects.forEach((obj) => {
-          const b = obj.getBoundingRect(true);
+          const b = obj.getBoundingRect();
           minX = Math.min(minX, b.left);
           minY = Math.min(minY, b.top);
           maxX = Math.max(maxX, b.left + b.width);

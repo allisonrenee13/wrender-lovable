@@ -696,45 +696,14 @@ const MapPage = () => {
                 </div>
               </div>
             </div>
-          ) : viewMode === "saved" && savedSVG ? (
-            /* Saved map view */
-            <div className="flex-1 flex flex-col items-center justify-center p-3 md:p-6 w-full">
-              <div className="text-center py-4">
-                <h2 className="font-serif text-xl font-semibold text-foreground">
-                  {currentProject.title}
-                </h2>
-                <p className="text-xs text-muted-foreground mt-0.5">Your map</p>
-              </div>
-              <div
-                ref={mapContainerRef}
-                className="relative w-full mx-auto border border-border rounded-xl overflow-hidden shadow-md bg-background"
-                style={{ maxWidth: "900px", cursor: isPlacing ? "crosshair" : "default" }}
-                onClick={isPlacing ? handleMapClick : undefined}
-              >
-                <div dangerouslySetInnerHTML={{ __html: savedSVG }} className="w-full" />
-                {showPinLayer && currentProject.pins?.map((pin) => (
-                  <div
-                    key={pin.id}
-                    style={{
-                      position: "absolute",
-                      left: `${pin.x}%`,
-                      top: `${pin.y}%`,
-                      transform: "translate(-50%, -50%)",
-                      zIndex: 10,
-                      pointerEvents: "none",
-                    }}
-                  >
-                    <div className="w-3 h-3 rounded-full bg-destructive border-2 border-background shadow-sm" />
-                    <span className="hidden md:block absolute top-4 left-1/2 -translate-x-1/2 text-[10px] font-medium whitespace-nowrap drop-shadow-sm">
-                      {pin.title}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            /* Edit mode canvas */
-            <div className="flex-1 flex flex-col items-center justify-center p-3 md:p-6 w-full">
+          ) : null}
+
+          {/* Always-mounted canvas — hidden via CSS when in saved view */}
+          {showCanvas && (
+            <div
+              className="flex-1 flex flex-col items-center justify-center p-3 md:p-6 w-full"
+              style={{ display: viewMode === "saved" ? "none" : undefined }}
+            >
               <div
                 ref={mapContainerRef}
                 className="relative w-full mx-auto border border-border rounded-xl overflow-hidden shadow-md"
@@ -778,6 +747,43 @@ const MapPage = () => {
                 <Button className="w-full h-11" onClick={handleSave}>
                   Save to Wrender
                 </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Saved map view — shown on top when saved */}
+          {viewMode === "saved" && savedSVG && (
+            <div className="flex-1 flex flex-col items-center justify-center p-3 md:p-6 w-full">
+              <div className="text-center py-4">
+                <h2 className="font-serif text-xl font-semibold text-foreground">
+                  {currentProject.title}
+                </h2>
+                <p className="text-xs text-muted-foreground mt-0.5">Your map</p>
+              </div>
+              <div
+                className="relative w-full mx-auto border border-border rounded-xl overflow-hidden shadow-md bg-background"
+                style={{ maxWidth: "900px", cursor: isPlacing ? "crosshair" : "default" }}
+                onClick={isPlacing ? handleMapClick : undefined}
+              >
+                <div dangerouslySetInnerHTML={{ __html: savedSVG }} className="w-full" />
+                {showPinLayer && currentProject.pins?.map((pin) => (
+                  <div
+                    key={pin.id}
+                    style={{
+                      position: "absolute",
+                      left: `${pin.x}%`,
+                      top: `${pin.y}%`,
+                      transform: "translate(-50%, -50%)",
+                      zIndex: 10,
+                      pointerEvents: "none",
+                    }}
+                  >
+                    <div className="w-3 h-3 rounded-full bg-destructive border-2 border-background shadow-sm" />
+                    <span className="hidden md:block absolute top-4 left-1/2 -translate-x-1/2 text-[10px] font-medium whitespace-nowrap drop-shadow-sm">
+                      {pin.title}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
           )}
