@@ -139,7 +139,7 @@ const MapPage = () => {
         </h2>
         <div className="flex items-center gap-1.5">
           {showCanvas && (
-            <>
+            </div>
               <Button
                 size="sm"
                 variant={activeTool === "pen" ? "default" : "outline"}
