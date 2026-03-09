@@ -663,39 +663,10 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
       getSVG: () => {
         const canvas = fabricRef.current;
         if (!canvas) return "";
-
-        const objects = canvas.getObjects().filter(
-          (o: any) => !o.excludeFromExport
-        );
-        if (objects.length === 0) return "";
-
-        let minX = Infinity, minY = Infinity,
-            maxX = -Infinity, maxY = -Infinity;
-        objects.forEach((obj: any) => {
-          obj.setCoords();
-          const b = obj.getBoundingRect(true, true);
-          minX = Math.min(minX, b.left);
-          minY = Math.min(minY, b.top);
-          maxX = Math.max(maxX, b.left + b.width);
-          maxY = Math.max(maxY, b.top + b.height);
-        });
-
-        const pad = 20;
-        minX = Math.max(0, minX - pad);
-        minY = Math.max(0, minY - pad);
-        maxX = minX + Math.min(canvas.width!, maxX + pad - minX);
-        maxY = minY + Math.min(canvas.height!, maxY + pad - minY);
-        const w = Math.round(maxX - minX);
-        const h = Math.round(maxY - minY);
-
-        const full = canvas.toSVG();
-
-        return full.replace(
-          /(<svg\s)[^>]*(>)/,
-          `<svg xmlns="http://www.w3.org/2000/svg" ` +
-          `viewBox="${Math.round(minX)} ${Math.round(minY)} ${w} ${h}" ` +
-          `width="${w}" height="${h}">`
-        );
+        const svg = canvas.toSVG();
+        return svg
+          .replace(/width="[\d.]+(?:px)?"/, 'width="100%"')
+          .replace(/height="[\d.]+(?:px)?"/, 'height="auto"');
       },
       getPNG: () => fabricRef.current?.toDataURL({ format: "png", quality: 1, multiplier: 2 }) ?? "",
       loadSVG: async (svgString: string) => {
@@ -808,8 +779,21 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
           });
 
           canvas.discardActiveObject();
-          canvas.renderAll();
-          saveState();
+          canvas.requestRenderAll();
+
+          // Center all objects on canvas
+          const allObjs = canvas.getObjects().filter((o: any) => !o.excludeFromExport);
+          if (allObjs.length > 0) {
+            const { ActiveSelection } = await import("fabric");
+            const sel = new ActiveSelection(allObjs, { canvas });
+            canvas.setActiveObject(sel);
+            (sel as any).center();
+            canvas.discardActiveObject();
+            canvas.requestRenderAll();
+            saveState();
+          } else {
+            saveState();
+          }
         } catch (err) {
           console.error("addTraceAsObject failed:", err);
         }
