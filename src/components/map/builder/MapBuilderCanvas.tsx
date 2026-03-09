@@ -67,6 +67,8 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
     const refImageRef = useRef<FabricImage | null>(null);
     const sculptingRef = useRef(false);
     const eraserSizeRef = useRef(eraserRadius ?? 24);
+    const penWidthRef = useRef(brushWidth ?? 2);
+    const currentToolRef = useRef<ShapeTool>(activeTool);
     const [toolRefreshCounter, setToolRefreshCounter] = useState(0);
 
     // Keep eraserSizeRef in sync
