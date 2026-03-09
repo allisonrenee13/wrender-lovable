@@ -765,35 +765,7 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
           isBusy.current = false;
         }
       },
-      addTraceAsObject: (svgString: string) => {
-        const canvas = fabricRef.current;
-        if (!canvas) return;
-
-        loadSVGFromString(svgString).then((result) => {
-          const objects = result.objects.filter(Boolean) as FabricObject[];
-          if (objects.length === 0) return;
-
-          const group = util.groupSVGElements(objects, result.options);
-          group.set({
-            selectable: true,
-            evented: true,
-            hasControls: true,
-            hasBorders: true,
-            lockUniScaling: false,
-          });
-
-          const scaleX = (canvas.width! * 0.85) / group.width!;
-          const scaleY = (canvas.height! * 0.85) / group.height!;
-          const scale = Math.min(scaleX, scaleY);
-          (group as any).scale(scale);
-          (group as any).center();
-
-          canvas.add(group);
-          canvas.discardActiveObject();
-          canvas.renderAll();
-          saveState();
-        });
-      },
+      
       clear: () => {
         const canvas = fabricRef.current;
         if (!canvas) return;
