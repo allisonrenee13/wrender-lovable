@@ -448,13 +448,15 @@ const MapPage = () => {
     }, 300);
   };
 
-  const handleSave = () => {
-    if (canvasRef.current) {
-      const svg = canvasRef.current.getSVG();
+  const handleSave = async () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    await canvas.centerAllAndCapture((svg) => {
       setSavedSVG(svg);
       setViewMode("saved");
-      toast.success("Map saved successfully");
-    }
+      toast.success("Map saved");
+    });
   };
 
   const openPinDrawer = () => {
