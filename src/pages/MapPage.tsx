@@ -766,19 +766,11 @@ const MapPage = () => {
                 style={{ maxWidth: "900px", cursor: isPlacing ? "crosshair" : "default" }}
                 onClick={isPlacing ? handleMapClick : undefined}
               >
-                {svgUrl && (
-                  <img
-                    src={svgUrl}
-                    alt={currentProject.title}
-                    className="w-full h-auto rounded-xl border border-border shadow-md"
-                    style={{
-                      maxWidth: "900px",
-                      objectFit: "contain",
-                      display: "block",
-                      margin: "0 auto",
-                    }}
-                  />
-                )}
+                <div
+                  className="w-full border border-border rounded-xl overflow-hidden shadow-md mx-auto"
+                  style={{ maxWidth: "900px" }}
+                  dangerouslySetInnerHTML={{ __html: savedSVG }}
+                />
                 {showPinLayer && currentProject.pins?.map((pin) => (
                   <div
                     key={pin.id}
