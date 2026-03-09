@@ -663,10 +663,46 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
       getSVG: () => {
         const canvas = fabricRef.current;
         if (!canvas) return "";
-        const svg = canvas.toSVG();
-        return svg
-          .replace(/width="[\d.]+(?:px)?"/, 'width="100%"')
-          .replace(/height="[\d.]+(?:px)?"/, 'height="auto"');
+
+        const objects = canvas.getObjects().filter(
+          o => (o as any).excludeFromExport !== true
+        );
+        if (objects.length === 0) return "";
+
+        // Force coords to be up to date
+        objects.forEach(o => o.setCoords());
+
+        let minX = Infinity, minY = Infinity,
+            maxX = -Infinity, maxY = -Infinity;
+
+        objects.forEach(obj => {
+          const coords = (obj as any).aCoords;
+          if (!coords) return;
+          [coords.tl, coords.tr, coords.bl, coords.br].forEach((pt: any) => {
+            minX = Math.min(minX, pt.x);
+            minY = Math.min(minY, pt.y);
+            maxX = Math.max(maxX, pt.x);
+            maxY = Math.max(maxY, pt.y);
+          });
+        });
+
+        if (!isFinite(minX)) return canvas.toSVG();
+
+        const pad = 24;
+        minX = Math.max(0, minX - pad);
+        minY = Math.max(0, minY - pad);
+        maxX = Math.min(canvas.width!, maxX + pad);
+        maxY = Math.min(canvas.height!, maxY + pad);
+        const w = Math.round(maxX - minX);
+        const h = Math.round(maxY - minY);
+
+        const full = canvas.toSVG();
+        return full.replace(
+          /(<svg\s)[^>]*(>)/,
+          `<svg xmlns="http://www.w3.org/2000/svg" ` +
+          `viewBox="${Math.round(minX)} ${Math.round(minY)} ` +
+          `${w} ${h}" width="100%" height="auto">`
+        );
       },
       getPNG: () => fabricRef.current?.toDataURL({ format: "png", quality: 1, multiplier: 2 }) ?? "",
       loadSVG: async (svgString: string) => {
