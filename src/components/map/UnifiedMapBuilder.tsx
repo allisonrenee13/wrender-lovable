@@ -504,13 +504,22 @@ const UnifiedMapBuilder = ({ onConfirm, onRender, initialPhase: initialPhaseProp
                   hideRenderButton
                   canvasRef={canvasRef}
                   overrideActiveTool={phase === "add" ? "pan" : undefined}
-                  placingPin={placingPin}
-                  onPinPlaced={(x, y) => {
-                    setPendingPin({ x, y });
-                    setPlacingPin(false);
-                    setPinDialogOpen(true);
-                  }}
                 />
+                {/* Click-capture overlay for pin placement */}
+                {phase === "add" && placingPin && (
+                  <div
+                    className="absolute inset-0 z-20"
+                    style={{ cursor: "crosshair" }}
+                    onClick={(e) => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const x = ((e.clientX - rect.left) / rect.width) * 100;
+                      const y = ((e.clientY - rect.top) / rect.height) * 100;
+                      setPendingPin({ x, y });
+                      setPlacingPin(false);
+                      setPinDialogOpen(true);
+                    }}
+                  />
+                )}
                 {/* Pin overlay */}
                 {phase === "add" && currentProject?.pins.map(pin => (
                   <div key={pin.id} style={{
