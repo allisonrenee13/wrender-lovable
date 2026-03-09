@@ -902,6 +902,21 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
           canvas.freeDrawingBrush.width = width;
         }
       },
+      applyStrokeWeightToAll: (weight: number) => {
+        const canvas = fabricRef.current;
+        if (!canvas) return;
+        canvas.getObjects().forEach(obj => {
+          if ((obj as any).excludeFromExport) return;
+          obj.set({ strokeWidth: weight });
+          if ((obj as any).getObjects) {
+            (obj as any).getObjects().forEach((child: any) => {
+              child.set({ strokeWidth: weight });
+            });
+          }
+        });
+        canvas.renderAll();
+        saveState();
+      },
     }), [doUndo, doRedo, saveState, colors.bg, colors.stroke, sw, canvasWidth, canvasHeight]);
 
     return (
