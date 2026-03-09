@@ -139,7 +139,7 @@ const MapPage = () => {
         </h2>
         <div className="flex items-center gap-1.5">
           {showCanvas && (
-            </div>
+            <>
               <Button
                 size="sm"
                 variant={activeTool === "pen" ? "default" : "outline"}
@@ -246,7 +246,8 @@ const MapPage = () => {
         <div className="flex-1 flex flex-col items-center justify-center bg-muted/20 overflow-auto relative">
           {!showCanvas ? (
             /* Quickstart overlay on dotted background */
-            <div className="absolute inset-0 flex items-center justify-center"
+            <div
+              className="absolute inset-0 flex items-center justify-center"
               style={{
                 backgroundImage: "radial-gradient(circle, hsl(var(--muted-foreground) / 0.12) 1px, transparent 1px)",
                 backgroundSize: "20px 20px",
@@ -330,7 +331,7 @@ const MapPage = () => {
                   Save to Wrender
                 </Button>
               </div>
-            </>
+            </div>
           )}
         </div>
 
@@ -397,13 +398,11 @@ const MapPage = () => {
           </button>
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-5">
-          {/* Add Location CTA */}
           <Button className="w-full" onClick={handleAddLocationFromDrawer}>
             <MapPin className="h-4 w-4" />
             Add Location
           </Button>
 
-          {/* Pin list */}
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Pins</p>
             {!currentProject.pins?.length && (
@@ -429,7 +428,6 @@ const MapPage = () => {
             ))}
           </div>
 
-          {/* Coming soon sections */}
           <div className="space-y-3 pt-2 border-t border-border">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Events</p>
