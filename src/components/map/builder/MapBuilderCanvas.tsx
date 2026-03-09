@@ -407,6 +407,7 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
           break;
         }
 
+        case "pan": {
           canvas.defaultCursor = "grab";
           let isPanning = false;
           let lastPos = { x: 0, y: 0 };
