@@ -664,14 +664,14 @@ const MapPage = () => {
             )}
             <div className="w-6 border-t border-border my-1" />
             <button
-              onClick={() => canvasRef.current?.undo()}
+              onClick={() => { canvasRef.current?.undo(); canvasRef.current?.refreshTool(); }}
               className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
               title="Undo"
             >
               <Undo2 className="h-4 w-4" />
             </button>
             <button
-              onClick={() => canvasRef.current?.redo()}
+              onClick={() => { canvasRef.current?.redo(); canvasRef.current?.refreshTool(); }}
               className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
               title="Redo"
             >

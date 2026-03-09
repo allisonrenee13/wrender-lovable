@@ -40,6 +40,7 @@ export interface MapCanvasHandle {
   setPenWidth: (width: number) => void;
   setEraserSize: (size: number) => void;
   applyStrokeWeightToAll: (weight: number) => void;
+  refreshTool: () => void;
 }
 
 interface MapBuilderCanvasProps {
@@ -66,6 +67,7 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
     const refImageRef = useRef<FabricImage | null>(null);
     const sculptingRef = useRef(false);
     const eraserSizeRef = useRef(eraserRadius ?? 24);
+    const [toolRefreshCounter, setToolRefreshCounter] = useState(0);
 
     // Keep eraserSizeRef in sync
     useEffect(() => {
@@ -102,6 +104,13 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
             obj.evented = true;
           }
         });
+        // Re-apply current drawing mode
+        if (canvas.isDrawingMode) {
+          canvas.isDrawingMode = false;
+          canvas.isDrawingMode = true;
+        }
+        canvas.selection = false;
+        canvas.discardActiveObject();
         canvas.renderAll();
         isBusy.current = false;
         onStateChange?.();
@@ -426,6 +435,12 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
           canvas.isDrawingMode = false;
           canvas.selection = false;
           canvas.discardActiveObject();
+          canvas.getObjects().forEach(obj => {
+            if (!obj.excludeFromExport) {
+              obj.selectable = false;
+              obj.evented = false;
+            }
+          });
           canvas.renderAll();
           canvas.defaultCursor = "crosshair";
           let isErasing = false;
@@ -577,7 +592,7 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
         }
       }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [activeTool, activeStamp, colors.stroke, sw]);
+    }, [activeTool, activeStamp, colors.stroke, sw, toolRefreshCounter]);
 
     // --- Pin placement ---
     useEffect(() => {
@@ -857,6 +872,9 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
       },
       setEraserSize: (size: number) => {
         eraserSizeRef.current = size;
+      },
+      refreshTool: () => {
+        setToolRefreshCounter(c => c + 1);
       },
       applyStrokeWeightToAll: (weight: number) => {
         const canvas = fabricRef.current;
