@@ -379,19 +379,17 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
         return;
       }
 
-      // Deselect objects when switching away from select
-      canvas.discardActiveObject();
-      canvas.renderAll();
-
       switch (activeTool) {
         case "pen": {
-          // Assign brush BEFORE enabling drawing mode
+          canvas.discardActiveObject();
+          canvas.renderAll();
           const brush = new PencilBrush(canvas);
           brush.color = colors.stroke;
           brush.width = brushWidth ?? sw;
           brush.decimate = 4;
           canvas.freeDrawingBrush = brush;
           canvas.isDrawingMode = true;
+          canvas.selection = false;
           break;
         }
 
@@ -399,18 +397,6 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
           canvas.isDrawingMode = false;
           canvas.selection = true;
           canvas.defaultCursor = "default";
-          canvas.getObjects().forEach((obj) => {
-            if (!obj.excludeFromExport) {
-              obj.selectable = true;
-              obj.evented = true;
-              obj.hasControls = true;
-              obj.hasBorders = true;
-            }
-          });
-          canvas.discardActiveObject();
-          canvas.on("object:modified", () => saveState());
-          canvas.on("mouse:up", () => saveState());
-          canvas.renderAll();
           break;
         }
 
@@ -435,6 +421,9 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
 
         case "eraser": {
           canvas.isDrawingMode = false;
+          canvas.selection = false;
+          canvas.discardActiveObject();
+          canvas.renderAll();
           canvas.defaultCursor = "crosshair";
           let isErasing = false;
 
