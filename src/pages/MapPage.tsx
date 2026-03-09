@@ -3,15 +3,262 @@ import { useProject } from "@/context/ProjectContext";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Pencil, Eraser, MapPin, SlidersHorizontal, Eye, EyeOff, Trash2, X, Layout } from "lucide-react";
+import { Pencil, Eraser, MapPin, SlidersHorizontal, Eye, EyeOff, Trash2, X, LayoutTemplate, Scan, Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import MapBuilderCanvas, { type MapCanvasHandle } from "@/components/map/builder/MapBuilderCanvas";
 import TemplatePicker from "@/components/map/builder/TemplatePicker";
 import StylePreferencesPanel from "@/components/map/builder/StylePreferencesPanel";
 import { defaultStylePreferences } from "@/components/map/builder/types";
-import type { ShapeTool, StylePreferences, MapTemplate } from "@/components/map/builder/types";
+import type { ShapeTool, StylePreferences, MapTemplate, TracedPath } from "@/components/map/builder/types";
 
 type CanvasTool = "pen" | "eraser" | null;
+
+// Custom Trace icon - T with wavy top
+const TraceIcon = ({ className }: { className?: string }) => (
+  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className={className}>
+    <line x1="9" y1="5" x2="9" y2="16" />
+    <path d="M3 5 Q5 3 7 5 Q8 6.5 9 5 Q10 3.5 11 5 Q13 7 15 5" />
+  </svg>
+);
+
+// --- Self-contained outline tracer (copied from UnifiedMapBuilder) ---
+function traceOutlineImage(
+  canvas: HTMLCanvasElement,
+  w: number,
+  h: number,
+  sensitivity: number
+): TracedPath[] {
+  const ctx = canvas.getContext("2d")!;
+  const { data } = ctx.getImageData(0, 0, w, h);
+
+  let threshold = Math.round(240 - sensitivity * 80);
+  const nonWhiteBrightness: number[] = [];
+  const sampleStep = Math.max(1, Math.floor((w * h) / 1000));
+  for (let i = 0; i < w * h; i += sampleStep) {
+    const r = data[i * 4], g = data[i * 4 + 1], b = data[i * 4 + 2];
+    if (r <= 240 || g <= 240 || b <= 240) {
+      nonWhiteBrightness.push((r + g + b) / 3);
+    }
+  }
+  if (nonWhiteBrightness.length > 10) {
+    const mean = nonWhiteBrightness.reduce((a, b) => a + b, 0) / nonWhiteBrightness.length;
+    const variance = nonWhiteBrightness.reduce((a, b) => a + (b - mean) ** 2, 0) / nonWhiteBrightness.length;
+    const stddev = Math.sqrt(variance);
+    if (stddev > 30) threshold = 220;
+  }
+
+  const corners = [
+    [0, 0], [w - 1, 0], [0, h - 1], [w - 1, h - 1],
+    [Math.floor(w / 2), 0], [Math.floor(w / 2), h - 1],
+    [0, Math.floor(h / 2)], [w - 1, Math.floor(h / 2)]
+  ];
+  let cornerBrightnessSum = 0, colorVarSum = 0;
+  for (const [cx, cy] of corners) {
+    const ci = (cy * w + cx) * 4;
+    const r = data[ci], g = data[ci + 1], b = data[ci + 2];
+    cornerBrightnessSum += (r + g + b) / 3;
+    colorVarSum += Math.max(r, g, b) - Math.min(r, g, b);
+  }
+  const avgCornerBrightness = cornerBrightnessSum / corners.length;
+  const colorVar = colorVarSum / corners.length;
+  const isColoredBackground = avgCornerBrightness < 220 && colorVar > 30;
+
+  const ink = new Uint8Array(w * h);
+  if (isColoredBackground) {
+    for (let i = 0; i < w * h; i++) {
+      const x = i % w, y = Math.floor(i / w);
+      if (x === 0 || x === w - 1 || y === 0 || y === h - 1) { ink[i] = 0; continue; }
+      let maxDiff = 0;
+      for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+        const ni = ((y + dy) * w + (x + dx)) * 4;
+        const diff = Math.abs(data[i * 4] - data[ni]) + Math.abs(data[i * 4 + 1] - data[ni + 1]) + Math.abs(data[i * 4 + 2] - data[ni + 2]);
+        if (diff > maxDiff) maxDiff = diff;
+      }
+      ink[i] = maxDiff > Math.round(80 - sensitivity * 50) ? 1 : 0;
+    }
+  } else {
+    for (let i = 0; i < w * h; i++) {
+      const r = data[i * 4], g = data[i * 4 + 1], b = data[i * 4 + 2];
+      const brightness = (r + g + b) / 3;
+      const isBackground = brightness > threshold;
+      const isWhite = r > 240 && g > 240 && b > 240;
+      ink[i] = (!isBackground && !isWhite) ? 1 : 0;
+    }
+  }
+
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++)
+      if (x < 6 || x >= w - 6 || y < 6 || y >= h - 6)
+        ink[y * w + x] = 0;
+
+  const visited = new Uint8Array(w * h);
+  const DIRS8: Array<[number, number]> = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
+  const components: Array<Array<[number, number]>> = [];
+
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const idx = y * w + x;
+      if (!ink[idx] || visited[idx]) continue;
+      const comp: Array<[number, number]> = [];
+      const stack: Array<[number, number]> = [[x, y]];
+      visited[idx] = 1;
+      while (stack.length) {
+        const [cx, cy] = stack.pop()!;
+        comp.push([cx, cy]);
+        for (const [dx, dy] of DIRS8) {
+          const nx = cx + dx, ny = cy + dy;
+          if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
+          const ni = ny * w + nx;
+          if (ink[ni] && !visited[ni]) { visited[ni] = 1; stack.push([nx, ny]); }
+        }
+      }
+      components.push(comp);
+    }
+  }
+
+  const minSize = Math.round((1 - sensitivity) * 150) + 8;
+  const significant = components.filter(c => c.length >= minSize).sort((a, b) => b.length - a.length).slice(0, 300);
+
+  const filteredSignificant = significant.filter(comp => {
+    const xs = comp.map(([x]) => x);
+    const ys = comp.map(([, y]) => y);
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+    const minY = Math.min(...ys), maxY = Math.max(...ys);
+    const bboxW = maxX - minX, bboxH = maxY - minY;
+    const bboxArea = bboxW * bboxH;
+    const imageArea = w * h;
+    if (comp.length < imageArea * 0.002) {
+      const fillRatio = comp.length / (bboxArea || 1);
+      if (fillRatio < 0.35) return false;
+    }
+    const aspectRatio = bboxW > 0 && bboxH > 0 ? Math.max(bboxW, bboxH) / Math.min(bboxW, bboxH) : 999;
+    const isSmall = bboxW < w * 0.06 && bboxH < h * 0.08;
+    if (isSmall && aspectRatio < 2.5) return false;
+    if (bboxW < w * 0.02 && bboxH < h * 0.06) return false;
+    const longAxis = Math.max(bboxW, bboxH);
+    const shortAxis = Math.min(bboxW, bboxH);
+    const elongationRatio = longAxis / (shortAxis || 1);
+    const pixelDensityAlongLongAxis = comp.length / (longAxis || 1);
+    if (elongationRatio > 4 && pixelDensityAlongLongAxis < 8) return false;
+    const centroidX = xs.reduce((a, b) => a + b, 0) / xs.length;
+    const centroidY = ys.reduce((a, b) => a + b, 0) / ys.length;
+    const isNearEdge = centroidX < w * 0.15 || centroidX > w * 0.85 || centroidY < h * 0.15 || centroidY > h * 0.85;
+    if (isNearEdge && comp.length < imageArea * 0.005) return false;
+    return true;
+  });
+
+  const finalSignificant = isColoredBackground ? filteredSignificant.slice(0, 8) : filteredSignificant;
+
+  function getBoundary(comp: Array<[number, number]>): Array<[number, number]> {
+    const compSet = new Set(comp.map(([x, y]) => y * w + x));
+    return comp.filter(([x, y]) => {
+      return [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]].some(
+        ([nx, ny]) => nx < 0 || nx >= w || ny < 0 || ny >= h || !compSet.has(ny * w + nx)
+      );
+    });
+  }
+
+  function orderPoints(pts: Array<[number, number]>): Array<[number, number]> {
+    if (pts.length === 0) return [];
+    const remaining = new Set(pts.map((_, i) => i));
+    const result: Array<[number, number]> = [pts[0]];
+    remaining.delete(0);
+    while (remaining.size > 0) {
+      const [lx, ly] = result[result.length - 1];
+      let bestDist = Infinity, bestIdx = -1;
+      for (const i of remaining) {
+        const dx = pts[i][0] - lx, dy = pts[i][1] - ly;
+        const d = dx * dx + dy * dy;
+        if (d < bestDist) { bestDist = d; bestIdx = i; }
+      }
+      if (bestDist > 100) break;
+      result.push(pts[bestIdx]);
+      remaining.delete(bestIdx);
+    }
+    return result;
+  }
+
+  function douglasPeucker(pts: Array<[number, number]>, eps: number): Array<[number, number]> {
+    if (pts.length <= 2) return pts;
+    const [ax, ay] = pts[0], [bx, by] = pts[pts.length - 1];
+    const dx = bx - ax, dy = by - ay, len = Math.sqrt(dx * dx + dy * dy);
+    let maxD = 0, maxI = 0;
+    for (let i = 1; i < pts.length - 1; i++) {
+      const d = len === 0
+        ? Math.sqrt((pts[i][0] - ax) ** 2 + (pts[i][1] - ay) ** 2)
+        : Math.abs((pts[i][1] - ay) * dx - (pts[i][0] - ax) * dy) / len;
+      if (d > maxD) { maxD = d; maxI = i; }
+    }
+    if (maxD > eps) return [
+      ...douglasPeucker(pts.slice(0, maxI + 1), eps).slice(0, -1),
+      ...douglasPeucker(pts.slice(maxI), eps)
+    ];
+    return [pts[0], pts[pts.length - 1]];
+  }
+
+  const paths: TracedPath[] = [];
+  for (const comp of finalSignificant) {
+    const boundary = getBoundary(comp);
+    if (boundary.length < 4) continue;
+    const ordered = orderPoints(boundary);
+    const eps = sensitivity > 0.75 ? 0.4 : 0.7;
+    const simplified = douglasPeucker(ordered, eps);
+    if (simplified.length < 3) continue;
+    let d = `M ${simplified[0][0]} ${simplified[0][1]}`;
+    for (let i = 1; i < simplified.length; i++)
+      d += ` L ${simplified[i][0]} ${simplified[i][1]}`;
+    if (comp.length > 500) d += " Z";
+    paths.push({ d, confidence: Math.min(1, comp.length / 2000) });
+  }
+
+  return paths;
+}
+
+function buildSVGFromPaths(paths: TracedPath[], w: number, h: number): string {
+  // Scale paths to fit 800x600 canvas
+  const canvasW = 800, canvasH = 600, padding = 40;
+
+  // Find bounding box of all paths
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  const allSegments: Array<{ x1: number; y1: number; x2: number; y2: number }> = [];
+
+  for (const path of paths) {
+    const coords = path.d.match(/[\d.]+/g);
+    if (!coords) continue;
+    for (let i = 0; i < coords.length - 1; i += 2) {
+      const x = parseFloat(coords[i]), y = parseFloat(coords[i + 1]);
+      minX = Math.min(minX, x); minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
+    }
+    // Convert path to line segments
+    const parts = path.d.split(/(?=[MLZ])/);
+    let cx = 0, cy = 0;
+    for (const part of parts) {
+      const trimmed = part.trim();
+      if (trimmed.startsWith("M")) {
+        const nums = trimmed.slice(1).trim().split(/\s+/).map(Number);
+        cx = nums[0]; cy = nums[1];
+      } else if (trimmed.startsWith("L")) {
+        const nums = trimmed.slice(1).trim().split(/\s+/).map(Number);
+        allSegments.push({ x1: cx, y1: cy, x2: nums[0], y2: nums[1] });
+        cx = nums[0]; cy = nums[1];
+      }
+    }
+  }
+
+  if (allSegments.length === 0) return "";
+
+  const pathW = maxX - minX || 1, pathH = maxY - minY || 1;
+  const scale = Math.min((canvasW - padding * 2) / pathW, (canvasH - padding * 2) / pathH);
+  const offsetX = padding + (canvasW - padding * 2 - pathW * scale) / 2 - minX * scale;
+  const offsetY = padding + (canvasH - padding * 2 - pathH * scale) / 2 - minY * scale;
+
+  return `<svg viewBox="0 0 ${canvasW} ${canvasH}" xmlns="http://www.w3.org/2000/svg">
+    ${allSegments.map(({ x1, y1, x2, y2 }) =>
+      `<line x1="${x1 * scale + offsetX}" y1="${y1 * scale + offsetY}" x2="${x2 * scale + offsetX}" y2="${y2 * scale + offsetY}" stroke="#1B2A4A" stroke-width="1.5" stroke-linecap="round"/>`
+    ).join("\n")}
+  </svg>`;
+}
 
 const MapPage = () => {
   const { currentProject, addPin, removePin, updatePin } = useProject();
@@ -31,8 +278,15 @@ const MapPage = () => {
   const [pendingPin, setPendingPin] = useState<{ x: number; y: number } | null>(null);
   const [pinName, setPinName] = useState("");
 
+  // Trace modal state
+  const [traceModalOpen, setTraceModalOpen] = useState(false);
+  const [traceImageUrl, setTraceImageUrl] = useState<string | null>(null);
+  const [traceMode, setTraceMode] = useState<"choose" | "uploading" | "preview">("choose");
+  const [tracing, setTracing] = useState(false);
+
   const canvasRef = useRef<MapCanvasHandle>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
+  const traceInputRef = useRef<HTMLInputElement>(null);
 
   const hasMap = savedSVG !== null;
   const showCanvas = hasMap || canvasStarted;
@@ -90,8 +344,87 @@ const MapPage = () => {
     setActiveTool("pen");
   };
 
-  const handleStartTrace = () => {
+  const openTraceModal = () => {
+    setTraceModalOpen(true);
+    setTraceMode("choose");
+    setTraceImageUrl(null);
+    setTracing(false);
+  };
+
+  const handleTraceFileSelect = (file: File) => {
+    if (!file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const url = e.target?.result as string;
+      setTraceImageUrl(url);
+      setTraceMode("preview");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleAutoTrace = () => {
+    if (!traceImageUrl) return;
+    setTracing(true);
+
+    const img = new Image();
+    img.onload = () => {
+      const maxDim = 800;
+      let w = img.naturalWidth, h = img.naturalHeight;
+      if (w > maxDim || h > maxDim) {
+        const ratio = Math.min(maxDim / w, maxDim / h);
+        w = Math.round(w * ratio);
+        h = Math.round(h * ratio);
+      }
+      const c = document.createElement("canvas");
+      c.width = w;
+      c.height = h;
+      const ctx = c.getContext("2d")!;
+      ctx.drawImage(img, 0, 0, w, h);
+
+      setTimeout(() => {
+        const paths = traceOutlineImage(c, w, h, 0.65);
+        setTracing(false);
+        setTraceModalOpen(false);
+
+        if (paths.length === 0) {
+          // Fall back to manual mode
+          toast("Auto-trace couldn't detect a clear outline — reference image loaded for manual tracing");
+          setCanvasStarted(true);
+          setActiveTool("pen");
+          setTimeout(() => {
+            canvasRef.current?.addReferenceImage(traceImageUrl!, 30);
+          }, 300);
+          return;
+        }
+
+        const svgString = buildSVGFromPaths(paths, w, h);
+        if (!svgString) {
+          toast("Auto-trace couldn't detect a clear outline — reference image loaded for manual tracing");
+          setCanvasStarted(true);
+          setActiveTool("pen");
+          setTimeout(() => {
+            canvasRef.current?.addReferenceImage(traceImageUrl!, 30);
+          }, 300);
+          return;
+        }
+
+        setCanvasStarted(true);
+        setTimeout(() => {
+          canvasRef.current?.loadSVG(svgString);
+        }, 300);
+      }, 50);
+    };
+    img.src = traceImageUrl;
+  };
+
+  const handleManualTrace = () => {
+    if (!traceImageUrl) return;
+    setTraceModalOpen(false);
     setCanvasStarted(true);
+    setActiveTool("pen");
+    setTimeout(() => {
+      canvasRef.current?.addReferenceImage(traceImageUrl, 30);
+    }, 300);
   };
 
   const handleTemplateSelect = (template: MapTemplate) => {
@@ -225,7 +558,7 @@ const MapPage = () => {
 
       {/* Main area */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left toolbar — always visible */}
+        {/* Left toolbar — always visible in edit mode */}
         {viewMode === "edit" && (
           <div className="hidden md:flex flex-col w-12 border-r border-border bg-muted/30 items-center py-3 gap-1.5">
             <button
@@ -252,14 +585,14 @@ const MapPage = () => {
               className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
               title="Templates"
             >
-              <Layout className="h-4 w-4" />
+              <LayoutTemplate className="h-4 w-4" />
             </button>
             <button
-              onClick={handleStartTrace}
-              className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-colors text-sm"
+              onClick={openTraceModal}
+              className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
               title="Trace from image"
             >
-              📷
+              <TraceIcon />
             </button>
           </div>
         )}
@@ -275,34 +608,37 @@ const MapPage = () => {
                 backgroundSize: "20px 20px",
               }}
             >
-              <div className="flex flex-col items-center gap-5 text-center max-w-sm px-4">
+              <div className="flex flex-col items-center gap-4 text-center max-w-sm px-4">
                 <div>
-                  <h3 className="font-serif text-xl font-semibold mb-1.5">Your map starts here</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <h3 className="font-serif text-xl font-semibold mb-1">Your map starts here</h3>
+                  <p className="text-xs text-muted-foreground">
                     Trace, template, or draw freehand
                   </p>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 w-full">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 w-full">
                   <button
-                    onClick={handleStartTrace}
-                    className="flex flex-col items-center gap-2.5 border border-border rounded-xl p-4 bg-card/80 backdrop-blur-sm hover:shadow-md hover:border-primary/30 transition-all"
+                    onClick={openTraceModal}
+                    className="flex flex-col items-center gap-2 border border-border rounded-xl p-3 bg-card/80 backdrop-blur-sm hover:shadow-md hover:border-primary/30 transition-all"
                   >
-                    <span className="text-3xl">📷</span>
+                    <Scan className="h-5 w-5 text-muted-foreground" />
                     <span className="text-sm font-medium">Trace</span>
+                    <span className="text-[10px] text-muted-foreground leading-tight">From an image</span>
                   </button>
                   <button
                     onClick={() => setShowTemplatePicker(true)}
-                    className="flex flex-col items-center gap-2.5 border border-border rounded-xl p-4 bg-card/80 backdrop-blur-sm hover:shadow-md hover:border-primary/30 transition-all"
+                    className="flex flex-col items-center gap-2 border border-border rounded-xl p-3 bg-card/80 backdrop-blur-sm hover:shadow-md hover:border-primary/30 transition-all"
                   >
-                    <span className="text-3xl">🗺</span>
+                    <LayoutTemplate className="h-5 w-5 text-muted-foreground" />
                     <span className="text-sm font-medium">Template</span>
+                    <span className="text-[10px] text-muted-foreground leading-tight">Pick a shape</span>
                   </button>
                   <button
                     onClick={handleStartDraw}
-                    className="flex flex-col items-center gap-2.5 border border-border rounded-xl p-4 bg-card/80 backdrop-blur-sm hover:shadow-md hover:border-primary/30 transition-all col-span-2 md:col-span-1"
+                    className="flex flex-col items-center gap-2 border border-border rounded-xl p-3 bg-card/80 backdrop-blur-sm hover:shadow-md hover:border-primary/30 transition-all col-span-2 md:col-span-1"
                   >
-                    <span className="text-3xl">✏️</span>
+                    <Pencil className="h-5 w-5 text-muted-foreground" />
                     <span className="text-sm font-medium">Freehand</span>
+                    <span className="text-[10px] text-muted-foreground leading-tight">Blank canvas</span>
                   </button>
                 </div>
               </div>
@@ -414,6 +750,77 @@ const MapPage = () => {
         onClose={() => setShowTemplatePicker(false)}
         onSelect={handleTemplateSelect}
       />
+
+      {/* Trace Modal */}
+      <Dialog open={traceModalOpen} onOpenChange={(open) => { if (!open) { setTraceModalOpen(false); setTracing(false); } }}>
+        <DialogContent className="sm:max-w-[440px]">
+          <DialogHeader>
+            <DialogTitle className="font-serif">Trace a map</DialogTitle>
+          </DialogHeader>
+
+          {tracing ? (
+            <div className="flex flex-col items-center justify-center py-10 gap-3">
+              <Loader2 className="h-8 w-8 text-primary animate-spin" />
+              <p className="text-sm text-muted-foreground">Tracing edges…</p>
+            </div>
+          ) : traceMode === "choose" ? (
+            <div className="space-y-3">
+              <input
+                ref={traceInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleTraceFileSelect(file);
+                }}
+              />
+              <div
+                onClick={() => traceInputRef.current?.click()}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const file = e.dataTransfer.files?.[0];
+                  if (file) handleTraceFileSelect(file);
+                }}
+                className="w-full border-2 border-dashed border-border rounded-lg p-10 flex flex-col items-center justify-center bg-muted/20 hover:border-primary/40 transition-colors cursor-pointer"
+              >
+                <Upload className="h-7 w-7 text-muted-foreground/40 mb-2" />
+                <p className="text-sm font-medium text-foreground">
+                  Drop an image here or click to upload
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  JPG, PNG, screenshot, or satellite view
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="border border-border rounded-lg overflow-hidden bg-muted/20">
+                <img
+                  src={traceImageUrl!}
+                  alt="Uploaded reference"
+                  className="w-full max-h-[220px] object-contain"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button className="flex-1" onClick={handleAutoTrace}>
+                  Auto-trace
+                </Button>
+                <Button variant="outline" className="flex-1" onClick={handleManualTrace}>
+                  Draw over it manually
+                </Button>
+              </div>
+              <button
+                onClick={() => { setTraceMode("choose"); setTraceImageUrl(null); }}
+                className="text-xs text-muted-foreground hover:text-foreground underline w-full text-center"
+              >
+                Choose a different image
+              </button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Pin naming dialog */}
       <Dialog open={!!pendingPin} onOpenChange={(open) => { if (!open) setPendingPin(null); }}>
