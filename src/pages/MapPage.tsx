@@ -3,7 +3,7 @@ import { useProject } from "@/context/ProjectContext";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Pencil, Eraser, MapPin, SlidersHorizontal, Eye, EyeOff, Trash2, X, LayoutTemplate, Scan, Loader2, Upload, MousePointer2 } from "lucide-react";
+import { Pencil, Eraser, MapPin, Eye, EyeOff, Trash2, X, LayoutTemplate, Scan, Loader2, Upload, MousePointer2 } from "lucide-react";
 import { toast } from "sonner";
 import MapBuilderCanvas, { type MapCanvasHandle } from "@/components/map/builder/MapBuilderCanvas";
 import TemplatePicker from "@/components/map/builder/TemplatePicker";
@@ -266,8 +266,8 @@ const MapPage = () => {
   const [savedSVG, setSavedSVG] = useState<string | null>(null);
   const [canvasStarted, setCanvasStarted] = useState(false);
   const [activeTool, setActiveTool] = useState<CanvasTool>(null);
+  const [drawMode, setDrawMode] = useState(false);
   const [showPinDrawer, setShowPinDrawer] = useState(false);
-  const [showStylePanel, setShowStylePanel] = useState(false);
   const [showPinLayer, setShowPinLayer] = useState(true);
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [stylePrefs, setStylePrefs] = useState<StylePreferences>(defaultStylePreferences);
@@ -457,13 +457,20 @@ const MapPage = () => {
   };
 
   const openPinDrawer = () => {
-    setShowStylePanel(false);
     setShowPinDrawer(true);
   };
 
-  const openStylePanel = () => {
-    setShowPinDrawer(false);
-    setShowStylePanel((v) => !v);
+  const toggleDrawMode = () => {
+    if (drawMode) {
+      // Closing draw mode — switch to pan
+      setDrawMode(false);
+      setActiveTool(null);
+    } else {
+      // Opening draw mode — default to select
+      if (!canvasStarted) setCanvasStarted(true);
+      setDrawMode(true);
+      setActiveTool("select");
+    }
   };
 
   const handleAddLocationFromDrawer = () => {
@@ -493,21 +500,12 @@ const MapPage = () => {
             <>
               <Button
                 size="sm"
-                variant={activeTool === "pen" ? "default" : "outline"}
-                onClick={() => toggleTool("pen")}
+                variant={drawMode ? "default" : "outline"}
+                onClick={toggleDrawMode}
                 className="text-xs h-8"
               >
                 <Pencil className="h-3.5 w-3.5" />
                 <span className="hidden md:inline">Draw</span>
-              </Button>
-              <Button
-                size="sm"
-                variant={activeTool === "eraser" ? "default" : "outline"}
-                onClick={() => toggleTool("eraser")}
-                className="text-xs h-8"
-              >
-                <Eraser className="h-3.5 w-3.5" />
-                <span className="hidden md:inline">Eraser</span>
               </Button>
               <Button
                 size="sm"
@@ -517,14 +515,6 @@ const MapPage = () => {
               >
                 <MapPin className="h-3.5 w-3.5" />
                 <span className="hidden md:inline">Pin</span>
-              </Button>
-              <Button
-                size="sm"
-                variant={showStylePanel ? "default" : "outline"}
-                onClick={openStylePanel}
-                className="text-xs h-8"
-              >
-                <SlidersHorizontal className="h-3.5 w-3.5" />
               </Button>
               <Button
                 size="sm"
@@ -604,11 +594,11 @@ const MapPage = () => {
 
       {/* Main area */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left toolbar — always visible in edit mode */}
-        {viewMode === "edit" && (
+        {/* Left toolbar — visible when drawMode is on */}
+        {drawMode && viewMode === "edit" && (
           <div className="hidden md:flex flex-col w-12 border-r border-border bg-muted/30 items-center py-3 gap-1.5">
             <button
-              onClick={() => { if (!canvasStarted) { setCanvasStarted(true); } setActiveTool("select"); }}
+              onClick={() => setActiveTool("select")}
               className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
                 activeTool === "select" ? "bg-primary text-primary-foreground" : "hover:bg-muted text-muted-foreground hover:text-foreground"
               }`}
@@ -617,7 +607,7 @@ const MapPage = () => {
               <MousePointer2 className="h-4 w-4" />
             </button>
             <button
-              onClick={() => { if (!canvasStarted) handleStartDraw(); else toggleTool("pen"); }}
+              onClick={() => setActiveTool("pen")}
               className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
                 activeTool === "pen" ? "bg-primary text-primary-foreground" : "hover:bg-muted text-muted-foreground hover:text-foreground"
               }`}
@@ -626,7 +616,7 @@ const MapPage = () => {
               <Pencil className="h-4 w-4" />
             </button>
             <button
-              onClick={() => { if (!canvasStarted) { setCanvasStarted(true); setActiveTool("eraser"); } else toggleTool("eraser"); }}
+              onClick={() => setActiveTool("eraser")}
               className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
                 activeTool === "eraser" ? "bg-primary text-primary-foreground" : "hover:bg-muted text-muted-foreground hover:text-foreground"
               }`}
@@ -649,32 +639,21 @@ const MapPage = () => {
             >
               <TraceIcon />
             </button>
+            <div className="w-6 border-t border-border my-1" />
             {traceImageUrl && (
-              <>
-                <button
-                  onClick={() => {
-                    const newOpacity = refOpacity === 0 ? 30 : 0;
-                    setRefOpacity(newOpacity);
-                    canvasRef.current?.setReferenceOpacity(newOpacity);
-                  }}
-                  className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
-                    refOpacity > 0 ? "bg-muted text-foreground" : "text-muted-foreground/40 hover:text-foreground"
-                  }`}
-                  title={refOpacity > 0 ? "Hide reference image" : "Show reference image"}
-                >
-                  {refOpacity > 0 ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                </button>
-                <button
-                  onClick={() => {
-                    setTraceModalOpen(true);
-                    setTraceMode("choose");
-                  }}
-                  className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                  title="Add another trace"
-                >
-                  <Upload className="h-4 w-4" />
-                </button>
-              </>
+              <button
+                onClick={() => {
+                  const newOpacity = refOpacity === 0 ? 30 : 0;
+                  setRefOpacity(newOpacity);
+                  canvasRef.current?.setReferenceOpacity(newOpacity);
+                }}
+                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
+                  refOpacity > 0 ? "bg-muted text-foreground" : "text-muted-foreground/40 hover:text-foreground"
+                }`}
+                title={refOpacity > 0 ? "Hide reference image" : "Show reference image"}
+              >
+                {refOpacity > 0 ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+              </button>
             )}
           </div>
         )}
@@ -812,14 +791,11 @@ const MapPage = () => {
           )}
         </div>
 
-        {/* Right style panel */}
-        {showStylePanel && (
-          <div className="w-72 border-l border-border bg-card flex flex-col overflow-y-auto">
+        {/* Right style panel — visible when drawMode is on */}
+        {drawMode && viewMode === "edit" && (
+          <div className="hidden md:flex w-72 border-l border-border bg-card flex-col overflow-y-auto transition-all">
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Style</p>
-              <button onClick={() => setShowStylePanel(false)} className="text-muted-foreground hover:text-foreground">
-                <X className="h-3.5 w-3.5" />
-              </button>
             </div>
             <div className="p-4">
               <StylePreferencesPanel
