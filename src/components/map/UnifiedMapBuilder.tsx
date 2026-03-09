@@ -1034,43 +1034,37 @@ function traceOutlineImage(
     }
   }
 
-  // Detect filled-region maps (gray/colored landmass fills)
-  const sampleStep2 = Math.max(1, Math.floor(w * h / 2000));
-  let grayPixelCount = 0;
-  for (let i = 0; i < w * h; i += sampleStep2) {
-    const r = data[i * 4], g = data[i * 4 + 1], b = data[i * 4 + 2];
-    const brightness = (r + g + b) / 3;
-    if (brightness > 60 && brightness < 200) grayPixelCount++;
+  // Corner brightness sampling for background detection
+  const corners = [
+    [0, 0], [w - 1, 0], [0, h - 1], [w - 1, h - 1],
+    [Math.floor(w / 2), 0], [Math.floor(w / 2), h - 1],
+    [0, Math.floor(h / 2)], [w - 1, Math.floor(h / 2)]
+  ];
+  let cornerBrightnessSum = 0;
+  let colorVarSum = 0;
+  for (const [cx, cy] of corners) {
+    const ci = (cy * w + cx) * 4;
+    const r = data[ci], g = data[ci + 1], b = data[ci + 2];
+    cornerBrightnessSum += (r + g + b) / 3;
+    colorVarSum += Math.max(r, g, b) - Math.min(r, g, b);
   }
-  const grayRatio = grayPixelCount / (w * h / sampleStep2);
-  const isFilledRegionMap = grayRatio > 0.15;
-
-  // Detect thick black line maps (road maps, geographic maps)
-  let hasThickStrokes = false;
-  const darkPixelCount = Array.from(
-    { length: Math.floor(w * h / sampleStep) },
-    (_, i) => i * sampleStep
-  ).filter(i => {
-    const r = data[i * 4], g = data[i * 4 + 1], b = data[i * 4 + 2];
-    return r < 80 && g < 80 && b < 80;
-  }).length;
-  const darkRatio = darkPixelCount / (w * h / sampleStep);
-  if (darkRatio > 0.05 && darkRatio < 0.4) {
-    hasThickStrokes = true;
-  }
-
-  // For thick-stroke maps, use lower threshold to capture only very dark pixels
-  if (hasThickStrokes && !isFilledRegionMap) {
-    threshold = 100;
-  }
+  const avgCornerBrightness = cornerBrightnessSum / corners.length;
+  const colorVar = colorVarSum / corners.length;
+  const isColoredBackground = avgCornerBrightness < 220 && colorVar > 30;
 
   const ink = new Uint8Array(w * h);
-  if (isFilledRegionMap) {
-    // Filled-region mode: capture all non-white pixels as ink
+  if (isColoredBackground) {
+    // Colored fill: edge detection
     for (let i = 0; i < w * h; i++) {
-      const r = data[i * 4], g = data[i * 4 + 1], b = data[i * 4 + 2];
-      const brightness = (r + g + b) / 3;
-      ink[i] = brightness < 210 ? 1 : 0;
+      const x = i % w, y = Math.floor(i / w);
+      if (x === 0 || x === w - 1 || y === 0 || y === h - 1) { ink[i] = 0; continue; }
+      let maxDiff = 0;
+      for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+        const ni = ((y + dy) * w + (x + dx)) * 4;
+        const diff = Math.abs(data[i * 4] - data[ni]) + Math.abs(data[i * 4 + 1] - data[ni + 1]) + Math.abs(data[i * 4 + 2] - data[ni + 2]);
+        if (diff > maxDiff) maxDiff = diff;
+      }
+      ink[i] = maxDiff > Math.round(80 - sensitivity * 50) ? 1 : 0;
     }
   } else {
     for (let i = 0; i < w * h; i++) {
@@ -1083,10 +1077,9 @@ function traceOutlineImage(
   }
 
   // 2. Zero out border to remove image frame artifacts
-  const borderSize = isFilledRegionMap ? 15 : 6;
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++)
-      if (x < borderSize || x >= w - borderSize || y < borderSize || y >= h - borderSize)
+      if (x < 6 || x >= w - 6 || y < 6 || y >= h - 6)
         ink[y * w + x] = 0;
 
   // 3. Find connected ink components via DFS
@@ -1166,37 +1159,7 @@ function traceOutlineImage(
     return true;
   });
 
-  // 4c. Mode-specific filtering
-  let finalComponents = filteredSignificant;
-  if (isFilledRegionMap) {
-    finalComponents = filteredSignificant.filter(comp => {
-      const xs = comp.map(([x]) => x);
-      const ys = comp.map(([, y]) => y);
-      const bboxW = Math.max(...xs) - Math.min(...xs);
-      const bboxH = Math.max(...ys) - Math.min(...ys);
-      const aspect = Math.max(bboxW, bboxH) / (Math.min(bboxW, bboxH) || 1);
-      // Remove arrows and thin lines
-      if (aspect > 6 && comp.length < w * h * 0.02) return false;
-      return true;
-    }).slice(0, 6);
-  } else if (hasThickStrokes) {
-    finalComponents = filteredSignificant.filter(comp => {
-      const xs = comp.map(([x]) => x);
-      const ys = comp.map(([, y]) => y);
-      const minX = Math.min(...xs), maxX = Math.max(...xs);
-      const minY = Math.min(...ys), maxY = Math.max(...ys);
-      const bboxW = maxX - minX;
-      const bboxH = maxY - minY;
-      // Keep only large-span components
-      if (bboxW <= w * 0.1 && bboxH <= h * 0.1) return false;
-      // Skip elongated components (arrows, straight lines)
-      const aspect = Math.max(bboxW, bboxH) / (Math.min(bboxW, bboxH) || 1);
-      if (aspect > 8) return false;
-      return true;
-    })
-    .sort((a, b) => b.length - a.length)
-    .slice(0, 5);
-  }
+  const finalSignificant = isColoredBackground ? filteredSignificant.slice(0, 8) : filteredSignificant;
 
   // 5. For each component, find boundary pixels only
   function getBoundary(comp: Array<[number, number]>): Array<[number, number]> {
@@ -1248,11 +1211,11 @@ function traceOutlineImage(
   }
 
   const paths: TracedPath[] = [];
-  for (const comp of finalComponents) {
+  for (const comp of finalSignificant) {
     const boundary = getBoundary(comp);
     if (boundary.length < 4) continue;
     const ordered = orderPoints(boundary);
-    const eps = hasThickStrokes ? 2.0 : (sensitivity > 0.75 ? 0.4 : 0.7);
+    const eps = sensitivity > 0.75 ? 0.4 : 0.7;
     const simplified = douglasPeucker(ordered, eps);
     if (simplified.length < 3) continue;
     let d = `M ${simplified[0][0]} ${simplified[0][1]}`;
@@ -1262,7 +1225,7 @@ function traceOutlineImage(
     paths.push({ d, confidence: Math.min(1, comp.length / 2000) });
   }
 
-  console.log(`[tracer] found ${paths.length} paths from ${finalComponents.length} components (${significant.length - finalComponents.length} filtered out, thickStrokes=${hasThickStrokes}, filledRegion=${isFilledRegionMap})`);
+  console.log(`[tracer] found ${paths.length} paths from ${finalSignificant.length} components (${significant.length - finalSignificant.length} filtered out)`);
   return paths;
 }
 
