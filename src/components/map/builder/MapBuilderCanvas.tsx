@@ -398,10 +398,13 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
               obj.evented = true;
               obj.hasControls = true;
               obj.hasBorders = true;
+              obj.lockUniScaling = false;
               obj.lockScalingX = false;
               obj.lockScalingY = false;
+              obj.setCoords();
             }
           });
+          canvas.on("object:modified", () => saveState());
           canvas.on("mouse:up", () => saveState());
           canvas.renderAll();
           break;
