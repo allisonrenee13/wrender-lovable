@@ -563,20 +563,6 @@ const MapPage = () => {
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => {
-                    if (refOpacity > 0) {
-                      setRefOpacity(0);
-                      canvasRef.current?.setReferenceOpacity(0);
-                    } else {
-                      setRefOpacity(30);
-                      canvasRef.current?.setReferenceOpacity(30);
-                    }
-                  }}
-                  className="underline hover:text-amber-900"
-                >
-                  {refOpacity > 0 ? "Hide reference image" : "Show reference image"}
-                </button>
-                <button
-                  onClick={() => {
                     canvasRef.current?.setReferenceOpacity(0);
                     setTraceImageUrl(null);
                     setTraceMethod(null);
@@ -609,6 +595,12 @@ const MapPage = () => {
                   className="underline hover:text-amber-900"
                 >
                   Remove image
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
                 </button>
               </div>
             </>
@@ -664,19 +656,31 @@ const MapPage = () => {
               <TraceIcon />
             </button>
             {traceImageUrl && (
-              <button
-                onClick={() => {
-                  const newOpacity = refOpacity === 0 ? 30 : 0;
-                  setRefOpacity(newOpacity);
-                  canvasRef.current?.setReferenceOpacity(newOpacity);
-                }}
-                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
-                  refOpacity > 0 ? "text-foreground" : "text-muted-foreground/40"
-                }`}
-                title="Toggle reference image"
-              >
-                <Eye className="h-4 w-4" />
-              </button>
+              <>
+                <button
+                  onClick={() => {
+                    const newOpacity = refOpacity === 0 ? 30 : 0;
+                    setRefOpacity(newOpacity);
+                    canvasRef.current?.setReferenceOpacity(newOpacity);
+                  }}
+                  className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
+                    refOpacity > 0 ? "bg-muted text-foreground" : "text-muted-foreground/40 hover:text-foreground"
+                  }`}
+                  title={refOpacity > 0 ? "Hide reference image" : "Show reference image"}
+                >
+                  {refOpacity > 0 ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                </button>
+                <button
+                  onClick={() => {
+                    setTraceModalOpen(true);
+                    setTraceMode("choose");
+                  }}
+                  className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                  title="Add another trace"
+                >
+                  <Upload className="h-4 w-4" />
+                </button>
+              </>
             )}
           </div>
         )}
