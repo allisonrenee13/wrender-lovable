@@ -285,6 +285,8 @@ const MapPage = () => {
   const [tracing, setTracing] = useState(false);
   const [refOpacity, setRefOpacity] = useState(30);
   const [traceMethod, setTraceMethod] = useState<"auto" | "manual" | null>(null);
+  const [penWeight, setPenWeight] = useState(2);
+  const [eraserSize, setEraserSize] = useState(12);
 
   const canvasRef = useRef<MapCanvasHandle>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
