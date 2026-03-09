@@ -771,49 +771,21 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
         try {
           const result = await loadSVGFromString(svgString);
           const objects = result.objects.filter((obj): obj is FabricObject => obj !== null);
-          if (objects.length === 0) {
-            console.log("[addTraceAsObject] no objects found");
-            return;
-          }
-          console.log("[addTraceAsObject] objects:", objects.length);
+          if (objects.length === 0) return;
 
-          // Use groupSVGElements just for bounds calculation
-          const temp = util.groupSVGElements(objects, result.options);
+          // Group for correct positioning, scale to fit canvas
+          const group = util.groupSVGElements(objects, result.options);
           const scale = Math.min(
-            (canvas.width! * 0.8) / (temp.width! * (temp.scaleX || 1)),
-            (canvas.height! * 0.8) / (temp.height! * (temp.scaleY || 1))
+            (canvas.width! * 0.85) / (group.width! * (group.scaleX || 1)),
+            (canvas.height! * 0.85) / (group.height! * (group.scaleY || 1))
           );
-          const cx = canvas.width! / 2;
-          const cy = canvas.height! / 2;
-          const tw = temp.width! * (temp.scaleX || 1) * scale;
-          const th = temp.height! * (temp.scaleY || 1) * scale;
+          (group as any).scale(scale);
+          (group as any).center();
+          canvas.add(group);
+          canvas.renderAll();
 
-          // Add each object individually with correct position
-          objects.forEach(obj => {
-            const ox = (obj.left || 0) - (temp.left || 0);
-            const oy = (obj.top || 0) - (temp.top || 0);
-            obj.set({
-              left: cx - tw / 2 + ox * scale,
-              top: cy - th / 2 + oy * scale,
-              scaleX: (obj.scaleX || 1) * scale,
-              scaleY: (obj.scaleY || 1) * scale,
-              selectable: true,
-              evented: true,
-              hasControls: true,
-              hasBorders: true,
-              lockUniScaling: false,
-              borderColor: "#6366f1",
-              borderScaleFactor: 1,
-              cornerColor: "#6366f1",
-              cornerStrokeColor: "#ffffff",
-              cornerSize: 8,
-              transparentCorners: false,
-              selectionBackgroundColor: "transparent",
-            });
-            obj.setCoords();
-            canvas.add(obj);
-          });
-
+          // Ungroup so each path is individually selectable
+          (group as any).toActiveSelection();
           canvas.discardActiveObject();
           canvas.renderAll();
           saveState();
