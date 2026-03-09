@@ -95,6 +95,37 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
       onStateChange?.();
     }, [onStateChange]);
 
+    const reapplyTool = useCallback((tool: ShapeTool) => {
+      const canvas = fabricRef.current;
+      if (!canvas) return;
+      canvas.isDrawingMode = false;
+      canvas.selection = false;
+      canvas.discardActiveObject();
+      canvas.getObjects().forEach(obj => {
+        if (!obj.excludeFromExport) {
+          obj.selectable = tool === "select";
+          obj.evented = tool === "select";
+        }
+      });
+
+      if (tool === "pen") {
+        canvas.isDrawingMode = true;
+        const brush = new PencilBrush(canvas);
+        brush.width = penWidthRef.current ?? 2;
+        brush.color = colors.stroke;
+        canvas.freeDrawingBrush = brush;
+      } else if (tool === "eraser") {
+        canvas.getObjects().forEach(obj => {
+          if (!obj.excludeFromExport) {
+            obj.selectable = false;
+            obj.evented = false;
+          }
+        });
+        canvas.defaultCursor = "crosshair";
+      }
+      canvas.renderAll();
+    }, [colors.stroke]);
+
     const restoreState = useCallback((snap: string) => {
       const canvas = fabricRef.current;
       if (!canvas) return;
@@ -106,18 +137,11 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
             obj.evented = true;
           }
         });
-        // Re-apply current drawing mode
-        if (canvas.isDrawingMode) {
-          canvas.isDrawingMode = false;
-          canvas.isDrawingMode = true;
-        }
-        canvas.selection = false;
-        canvas.discardActiveObject();
-        canvas.renderAll();
         isBusy.current = false;
+        reapplyTool(currentToolRef.current);
         onStateChange?.();
       });
-    }, [onStateChange]);
+    }, [onStateChange, reapplyTool]);
 
     const doUndo = useCallback(() => {
       if (historyIndex.current <= 0) return;
