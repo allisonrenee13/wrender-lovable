@@ -37,6 +37,7 @@ export interface MapCanvasHandle {
   getNodeCount: () => number;
   getObjectCount: () => number;
   setBrushWidth: (width: number) => void;
+  applyStrokeWeightToAll: (weight: number) => void;
 }
 
 interface MapBuilderCanvasProps {
@@ -900,6 +901,21 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
         if (canvas?.freeDrawingBrush) {
           canvas.freeDrawingBrush.width = width;
         }
+      },
+      applyStrokeWeightToAll: (weight: number) => {
+        const canvas = fabricRef.current;
+        if (!canvas) return;
+        canvas.getObjects().forEach(obj => {
+          if ((obj as any).excludeFromExport) return;
+          obj.set({ strokeWidth: weight });
+          if ((obj as any).getObjects) {
+            (obj as any).getObjects().forEach((child: any) => {
+              child.set({ strokeWidth: weight });
+            });
+          }
+        });
+        canvas.renderAll();
+        saveState();
       },
     }), [doUndo, doRedo, saveState, colors.bg, colors.stroke, sw, canvasWidth, canvasHeight]);
 

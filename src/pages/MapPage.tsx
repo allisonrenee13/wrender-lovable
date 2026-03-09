@@ -808,7 +808,13 @@ const MapPage = () => {
             <div className="p-4">
               <StylePreferencesPanel
                 prefs={stylePrefs}
-                onChange={setStylePrefs}
+                onChange={(newPrefs) => {
+                  setStylePrefs(newPrefs);
+                  if (newPrefs.strokeWeight !== stylePrefs.strokeWeight) {
+                    const w = newPrefs.strokeWeight === "fine" ? 1 : newPrefs.strokeWeight === "bold" ? 3 : 2;
+                    canvasRef.current?.applyStrokeWeightToAll(w);
+                  }
+                }}
                 forceExpanded
               />
             </div>
