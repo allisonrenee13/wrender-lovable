@@ -3,6 +3,7 @@ import type { ShapeTool, FeatureStamp } from "./types";
 export const shapeToolHints: Record<ShapeTool, string> = {
   pen: "Click and drag to draw your world's outline or any shape. Lift to finish a stroke.",
   pan: "Click and drag to move around the canvas.",
+  select: "Click any object to select, move, or resize it.",
   "sculpt-in": "Click and drag over any edge to push it inward and reshape it.",
   "sculpt-out": "Click and drag over any edge to pull it outward and extend it.",
   smooth: "Click and drag over any jagged line to smooth it out.",
