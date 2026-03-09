@@ -664,6 +664,21 @@ const MapPage = () => {
             )}
             <div className="w-6 border-t border-border my-1" />
             <button
+              onClick={() => canvasRef.current?.undo()}
+              className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              title="Undo"
+            >
+              <Undo2 className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => canvasRef.current?.redo()}
+              className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              title="Redo"
+            >
+              <Redo2 className="h-4 w-4" />
+            </button>
+            <div className="w-6 border-t border-border my-1" />
+            <button
               onClick={() => setShowTemplatePicker(true)}
               className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
               title="Templates"
