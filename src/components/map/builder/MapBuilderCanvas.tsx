@@ -379,6 +379,10 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
         return;
       }
 
+      // Deselect objects when switching away from select
+      canvas.discardActiveObject();
+      canvas.renderAll();
+
       switch (activeTool) {
         case "pen": {
           // Assign brush BEFORE enabling drawing mode
@@ -401,12 +405,9 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
               obj.evented = true;
               obj.hasControls = true;
               obj.hasBorders = true;
-              (obj as any).lockUniScaling = false;
-              obj.lockScalingX = false;
-              obj.lockScalingY = false;
-              obj.setCoords();
             }
           });
+          canvas.discardActiveObject();
           canvas.on("object:modified", () => saveState());
           canvas.on("mouse:up", () => saveState());
           canvas.renderAll();
