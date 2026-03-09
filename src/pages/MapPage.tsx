@@ -139,8 +139,8 @@ const MapPage = () => {
       <div className="flex-1 flex items-center justify-center p-3 md:p-6 bg-muted/20">
         <div
           ref={mapContainerRef}
-          className="relative w-full border border-border rounded-xl overflow-hidden shadow-md"
-          style={{ maxWidth: "800px", lineHeight: 0, cursor: isPlacing ? "crosshair" : "default" }}
+          className="relative w-full mx-auto border border-border rounded-xl overflow-hidden shadow-md"
+          style={{ maxWidth: "900px", lineHeight: 0, cursor: isPlacing ? "crosshair" : "default" }}
           onClick={handleMapClick}
         >
           <div
