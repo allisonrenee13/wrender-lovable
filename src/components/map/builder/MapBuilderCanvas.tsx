@@ -37,6 +37,7 @@ export interface MapCanvasHandle {
   getNodeCount: () => number;
   getObjectCount: () => number;
   setBrushWidth: (width: number) => void;
+  centerAllAndCapture: (callback: (svg: string) => void) => Promise<void>;
 }
 
 interface MapBuilderCanvasProps {
