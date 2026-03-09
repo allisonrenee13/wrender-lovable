@@ -37,6 +37,8 @@ export interface MapCanvasHandle {
   getNodeCount: () => number;
   getObjectCount: () => number;
   setBrushWidth: (width: number) => void;
+  setPenWidth: (width: number) => void;
+  setEraserSize: (size: number) => void;
   applyStrokeWeightToAll: (weight: number) => void;
 }
 
