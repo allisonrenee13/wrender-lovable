@@ -205,80 +205,83 @@ const MapPage = () => {
 
       {/* Main area */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left toolbar */}
-        {showCanvas && (
-          <div className="hidden md:flex flex-col w-12 border-r border-border bg-muted/30 items-center py-3 gap-1.5">
-            <button
-              onClick={() => toggleTool("pen")}
-              className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
-                activeTool === "pen" ? "bg-primary text-primary-foreground" : "hover:bg-muted text-muted-foreground hover:text-foreground"
-              }`}
-              title="Pen"
-            >
-              <Pencil className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => toggleTool("eraser")}
-              className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
-                activeTool === "eraser" ? "bg-primary text-primary-foreground" : "hover:bg-muted text-muted-foreground hover:text-foreground"
-              }`}
-              title="Eraser"
-            >
-              <Eraser className="h-4 w-4" />
-            </button>
-            <div className="w-6 border-t border-border my-1" />
-            <button
-              onClick={() => setShowTemplatePicker(true)}
-              className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-              title="Templates"
-            >
-              <Layout className="h-4 w-4" />
-            </button>
-            <button
-              onClick={handleStartTrace}
-              className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-colors text-sm"
-              title="Trace from image"
-            >
-              📷
-            </button>
-          </div>
-        )}
+        {/* Left toolbar — always visible */}
+        <div className="hidden md:flex flex-col w-12 border-r border-border bg-muted/30 items-center py-3 gap-1.5">
+          <button
+            onClick={() => { if (!canvasStarted) handleStartDraw(); else toggleTool("pen"); }}
+            className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
+              activeTool === "pen" ? "bg-primary text-primary-foreground" : "hover:bg-muted text-muted-foreground hover:text-foreground"
+            }`}
+            title="Pen"
+          >
+            <Pencil className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => { if (!canvasStarted) { setCanvasStarted(true); setActiveTool("eraser"); } else toggleTool("eraser"); }}
+            className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
+              activeTool === "eraser" ? "bg-primary text-primary-foreground" : "hover:bg-muted text-muted-foreground hover:text-foreground"
+            }`}
+            title="Eraser"
+          >
+            <Eraser className="h-4 w-4" />
+          </button>
+          <div className="w-6 border-t border-border my-1" />
+          <button
+            onClick={() => setShowTemplatePicker(true)}
+            className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+            title="Templates"
+          >
+            <Layout className="h-4 w-4" />
+          </button>
+          <button
+            onClick={handleStartTrace}
+            className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-colors text-sm"
+            title="Trace from image"
+          >
+            📷
+          </button>
+        </div>
 
         {/* Center canvas */}
-        <div className="flex-1 flex flex-col items-center justify-center p-3 md:p-6 bg-muted/20 overflow-auto">
+        <div className="flex-1 flex flex-col items-center justify-center bg-muted/20 overflow-auto relative">
           {!showCanvas ? (
-            <div className="flex flex-col items-center justify-center gap-6 text-center max-w-md">
-              <div>
-                <h3 className="font-serif text-lg font-semibold mb-1">Create your map</h3>
-                <p className="text-xs text-muted-foreground">
-                  Choose how you'd like to start building your world.
-                </p>
-              </div>
-              <div className="grid grid-cols-3 gap-3 w-full">
-                <button
-                  onClick={handleStartTrace}
-                  className="flex flex-col items-center gap-2 border border-border rounded-lg p-4 bg-card hover:border-primary/30 hover:shadow-sm transition-all"
-                >
-                  <span className="text-2xl">📷</span>
-                  <span className="text-sm font-medium">Trace a map</span>
-                  <span className="text-[10px] text-muted-foreground">Upload &amp; trace</span>
-                </button>
-                <button
-                  onClick={() => setShowTemplatePicker(true)}
-                  className="flex flex-col items-center gap-2 border border-border rounded-lg p-4 bg-card hover:border-primary/30 hover:shadow-sm transition-all"
-                >
-                  <span className="text-2xl">🗺</span>
-                  <span className="text-sm font-medium">Use a template</span>
-                  <span className="text-[10px] text-muted-foreground">Pick a shape</span>
-                </button>
-                <button
-                  onClick={handleStartDraw}
-                  className="flex flex-col items-center gap-2 border border-border rounded-lg p-4 bg-card hover:border-primary/30 hover:shadow-sm transition-all"
-                >
-                  <span className="text-2xl">✏️</span>
-                  <span className="text-sm font-medium">Draw freehand</span>
-                  <span className="text-[10px] text-muted-foreground">Blank canvas</span>
-                </button>
+            /* Quickstart overlay on dotted background */
+            <div className="absolute inset-0 flex items-center justify-center"
+              style={{
+                backgroundImage: "radial-gradient(circle, hsl(var(--muted-foreground) / 0.12) 1px, transparent 1px)",
+                backgroundSize: "20px 20px",
+              }}
+            >
+              <div className="flex flex-col items-center gap-5 text-center max-w-sm px-4">
+                <div>
+                  <h3 className="font-serif text-xl font-semibold mb-1.5">Your map starts here</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Trace, template, or draw freehand
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 w-full">
+                  <button
+                    onClick={handleStartTrace}
+                    className="flex flex-col items-center gap-2.5 border border-border rounded-xl p-4 bg-card/80 backdrop-blur-sm hover:shadow-md hover:border-primary/30 transition-all"
+                  >
+                    <span className="text-3xl">📷</span>
+                    <span className="text-sm font-medium">Trace</span>
+                  </button>
+                  <button
+                    onClick={() => setShowTemplatePicker(true)}
+                    className="flex flex-col items-center gap-2.5 border border-border rounded-xl p-4 bg-card/80 backdrop-blur-sm hover:shadow-md hover:border-primary/30 transition-all"
+                  >
+                    <span className="text-3xl">🗺</span>
+                    <span className="text-sm font-medium">Template</span>
+                  </button>
+                  <button
+                    onClick={handleStartDraw}
+                    className="flex flex-col items-center gap-2.5 border border-border rounded-xl p-4 bg-card/80 backdrop-blur-sm hover:shadow-md hover:border-primary/30 transition-all col-span-2 md:col-span-1"
+                  >
+                    <span className="text-3xl">✏️</span>
+                    <span className="text-sm font-medium">Freehand</span>
+                  </button>
+                </div>
               </div>
             </div>
           ) : (
