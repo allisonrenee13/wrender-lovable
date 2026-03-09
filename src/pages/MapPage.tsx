@@ -282,7 +282,7 @@ const MapPage = () => {
   const [traceModalOpen, setTraceModalOpen] = useState(false);
   const [traceImageUrl, setTraceImageUrl] = useState<string | null>(null);
   const [traceMode, setTraceMode] = useState<"choose" | "uploading" | "preview">("choose");
-  const [tracing, setTracing] = useState(false);
+  const [refOpacity, setRefOpacity] = useState(30);
 
   const canvasRef = useRef<MapCanvasHandle>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -545,6 +545,33 @@ const MapPage = () => {
         </div>
       )}
 
+      {/* Reference image banner */}
+      {traceImageUrl && viewMode === "edit" && (
+        <div className="flex items-center justify-between px-4 py-2 bg-amber-50 border-b border-amber-200 text-xs text-amber-800">
+          <span>Reference image loaded — draw over it with the pen tool</span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                setTraceModalOpen(true);
+                setTraceMode("preview");
+              }}
+              className="underline hover:text-amber-900"
+            >
+              Try auto-trace instead
+            </button>
+            <button
+              onClick={() => {
+                canvasRef.current?.setReferenceOpacity(0);
+                setTraceImageUrl(null);
+              }}
+              className="underline hover:text-amber-900"
+            >
+              Remove image
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Main area */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left toolbar — always visible in edit mode */}
@@ -583,6 +610,21 @@ const MapPage = () => {
             >
               <TraceIcon />
             </button>
+            {traceImageUrl && (
+              <button
+                onClick={() => {
+                  const newOpacity = refOpacity === 0 ? 30 : 0;
+                  setRefOpacity(newOpacity);
+                  canvasRef.current?.setReferenceOpacity(newOpacity);
+                }}
+                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
+                  refOpacity > 0 ? "text-foreground" : "text-muted-foreground/40"
+                }`}
+                title="Toggle reference image"
+              >
+                <Eye className="h-4 w-4" />
+              </button>
+            )}
           </div>
         )}
 
