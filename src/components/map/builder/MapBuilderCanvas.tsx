@@ -15,7 +15,6 @@ import {
   Circle,
   Line,
   FabricImage,
-  Group,
   loadSVGFromString,
 } from "fabric";
 import type { StylePreferences, ShapeTool, FeatureStamp } from "./types";
