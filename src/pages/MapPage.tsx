@@ -290,15 +290,6 @@ const MapPage = () => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const traceInputRef = useRef<HTMLInputElement>(null);
 
-  const svgUrl = useMemo(() => {
-    if (!savedSVG) return null;
-    const blob = new Blob([savedSVG], { type: "image/svg+xml" });
-    return URL.createObjectURL(blob);
-  }, [savedSVG]);
-
-  useEffect(() => {
-    return () => { if (svgUrl) URL.revokeObjectURL(svgUrl); };
-  }, [svgUrl]);
 
   const hasMap = savedSVG !== null;
   const showCanvas = hasMap || canvasStarted;
