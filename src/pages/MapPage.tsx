@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useProject } from "@/context/ProjectContext";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -290,15 +290,6 @@ const MapPage = () => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const traceInputRef = useRef<HTMLInputElement>(null);
 
-  const svgUrl = useMemo(() => {
-    if (!savedSVG) return null;
-    const blob = new Blob([savedSVG], { type: "image/svg+xml" });
-    return URL.createObjectURL(blob);
-  }, [savedSVG]);
-
-  useEffect(() => {
-    return () => { if (svgUrl) URL.revokeObjectURL(svgUrl); };
-  }, [svgUrl]);
 
   const hasMap = savedSVG !== null;
   const showCanvas = hasMap || canvasStarted;
@@ -775,19 +766,11 @@ const MapPage = () => {
                 style={{ maxWidth: "900px", cursor: isPlacing ? "crosshair" : "default" }}
                 onClick={isPlacing ? handleMapClick : undefined}
               >
-                {svgUrl && (
-                  <img
-                    src={svgUrl}
-                    alt={currentProject.title}
-                    className="w-full h-auto rounded-xl border border-border shadow-md"
-                    style={{
-                      maxWidth: "900px",
-                      objectFit: "contain",
-                      display: "block",
-                      margin: "0 auto",
-                    }}
-                  />
-                )}
+                <div
+                  className="w-full border border-border rounded-xl overflow-hidden shadow-md mx-auto"
+                  style={{ maxWidth: "900px" }}
+                  dangerouslySetInnerHTML={{ __html: savedSVG }}
+                />
                 {showPinLayer && currentProject.pins?.map((pin) => (
                   <div
                     key={pin.id}
