@@ -516,14 +516,6 @@ const MapPage = () => {
                 <MapPin className="h-3.5 w-3.5" />
                 <span className="hidden md:inline">Pin</span>
               </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setShowPinLayer((v) => !v)}
-                className="text-xs h-8"
-              >
-                {showPinLayer ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
-              </Button>
             </>
           )}
         </div>
