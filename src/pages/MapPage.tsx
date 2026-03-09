@@ -473,21 +473,10 @@ const MapPage = () => {
           <h2 className="font-serif font-semibold text-sm md:text-base">
             {currentProject.title}
           </h2>
-          {hasMap && (
-            <div className="flex items-center bg-muted rounded-lg p-0.5 text-xs">
-              <button
-                onClick={() => setViewMode("edit")}
-                className={`px-3 py-1 rounded-md transition-all ${viewMode === "edit" ? "bg-background shadow-sm font-medium" : "text-muted-foreground"}`}
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => setViewMode("saved")}
-                className={`px-3 py-1 rounded-md transition-all ${viewMode === "saved" ? "bg-background shadow-sm font-medium" : "text-muted-foreground"}`}
-              >
-                Saved
-              </button>
-            </div>
+          {hasMap && viewMode === "saved" && (
+            <Button variant="outline" size="sm" onClick={() => setViewMode("edit")}>
+              Edit
+            </Button>
           )}
         </div>
         <div className="flex items-center gap-1.5">
@@ -646,6 +635,12 @@ const MapPage = () => {
           ) : viewMode === "saved" && savedSVG ? (
             /* Saved map view */
             <div className="flex-1 flex flex-col items-center justify-center p-3 md:p-6 w-full">
+              <div className="text-center py-4">
+                <h2 className="font-serif text-xl font-semibold text-foreground">
+                  {currentProject.title}
+                </h2>
+                <p className="text-xs text-muted-foreground mt-0.5">Your map</p>
+              </div>
               <div
                 ref={mapContainerRef}
                 className="relative w-full mx-auto border border-border rounded-xl overflow-hidden shadow-md bg-background"
