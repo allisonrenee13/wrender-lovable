@@ -421,6 +421,9 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
 
         case "eraser": {
           canvas.isDrawingMode = false;
+          canvas.selection = false;
+          canvas.discardActiveObject();
+          canvas.renderAll();
           canvas.defaultCursor = "crosshair";
           let isErasing = false;
 
