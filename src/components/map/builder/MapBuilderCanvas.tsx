@@ -708,50 +708,6 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
           `${w} ${h}" width="100%" height="auto">`
         );
       },
-      centerAllAndCapture: async (callback: (svg: string) => void) => {
-        const canvas = fabricRef.current;
-        if (!canvas) return;
-
-        const objects = canvas.getObjects().filter(
-          o => !(o as any).excludeFromExport
-        );
-        if (objects.length === 0) return;
-
-        // Save original positions
-        const originals = objects.map(o => ({
-          obj: o,
-          left: o.left,
-          top: o.top,
-        }));
-
-        // Create temp active selection to get group bounds
-        const { ActiveSelection } = await import("fabric");
-        const sel = new ActiveSelection(objects, { canvas });
-        canvas.setActiveObject(sel);
-
-        // Move selection to center of canvas
-        (sel as any).center();
-        sel.setCoords();
-        canvas.discardActiveObject();
-        canvas.renderAll();
-
-        // Small delay for render to settle
-        await new Promise(r => setTimeout(r, 50));
-
-        // Export SVG
-        const svg = canvas.toSVG()
-          .replace(/width="[\d.]+(?:px)?"/, 'width="100%"')
-          .replace(/height="[\d.]+(?:px)?"/, 'height="auto"');
-
-        callback(svg);
-
-        // Restore original positions
-        originals.forEach(({ obj, left, top }) => {
-          obj.set({ left, top });
-          obj.setCoords();
-        });
-        canvas.renderAll();
-      },
       getPNG: () => fabricRef.current?.toDataURL({ format: "png", quality: 1, multiplier: 2 }) ?? "",
       loadSVG: async (svgString: string) => {
         const canvas = fabricRef.current;
