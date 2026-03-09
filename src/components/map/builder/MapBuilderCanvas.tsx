@@ -663,7 +663,37 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
       getSVG: () => {
         const canvas = fabricRef.current;
         if (!canvas) return "";
-        return canvas.toSVG();
+
+        // Get bounding box of all non-excluded objects
+        const objects = canvas.getObjects().filter(
+          (o) => !o.excludeFromExport
+        );
+        if (objects.length === 0) return canvas.toSVG();
+
+        let minX = Infinity, minY = Infinity,
+            maxX = -Infinity, maxY = -Infinity;
+        objects.forEach((obj) => {
+          const b = obj.getBoundingRect();
+          minX = Math.min(minX, b.left);
+          minY = Math.min(minY, b.top);
+          maxX = Math.max(maxX, b.left + b.width);
+          maxY = Math.max(maxY, b.top + b.height);
+        });
+
+        const pad = 20;
+        minX = Math.max(0, minX - pad);
+        minY = Math.max(0, minY - pad);
+        maxX = Math.min(canvas.width!, maxX + pad);
+        maxY = Math.min(canvas.height!, maxY + pad);
+
+        const w = maxX - minX;
+        const h = maxY - minY;
+
+        // Use fabric's toSVG with viewBox override
+        const svg = canvas.toSVG({
+          viewBox: { x: minX, y: minY, width: w, height: h },
+        } as any);
+        return svg;
       },
       getPNG: () => fabricRef.current?.toDataURL({ format: "png", quality: 1, multiplier: 2 }) ?? "",
       loadSVG: async (svgString: string) => {
