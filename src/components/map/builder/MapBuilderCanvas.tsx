@@ -765,33 +765,34 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
           isBusy.current = false;
         }
       },
-      addTraceAsObject: async (svgString: string) => {
+      addTraceAsObject: (svgString: string) => {
         const canvas = fabricRef.current;
         if (!canvas) return;
-        try {
-          const result = await loadSVGFromString(svgString);
-          const objects = result.objects.filter((obj): obj is FabricObject => obj !== null);
+
+        loadSVGFromString(svgString).then((result) => {
+          const objects = result.objects.filter(Boolean) as FabricObject[];
           if (objects.length === 0) return;
 
-          // Group for correct positioning, scale to fit canvas
           const group = util.groupSVGElements(objects, result.options);
-          const scale = Math.min(
-            (canvas.width! * 0.85) / (group.width! * (group.scaleX || 1)),
-            (canvas.height! * 0.85) / (group.height! * (group.scaleY || 1))
-          );
+          group.set({
+            selectable: true,
+            evented: true,
+            hasControls: true,
+            hasBorders: true,
+            lockUniScaling: false,
+          });
+
+          const scaleX = (canvas.width! * 0.85) / group.width!;
+          const scaleY = (canvas.height! * 0.85) / group.height!;
+          const scale = Math.min(scaleX, scaleY);
           (group as any).scale(scale);
           (group as any).center();
-          canvas.add(group);
-          canvas.renderAll();
 
-          // Ungroup so each path is individually selectable
-          (group as any).toActiveSelection();
+          canvas.add(group);
           canvas.discardActiveObject();
           canvas.renderAll();
           saveState();
-        } catch (err) {
-          console.error("addTraceAsObject failed:", err);
-        }
+        });
       },
       clear: () => {
         const canvas = fabricRef.current;
