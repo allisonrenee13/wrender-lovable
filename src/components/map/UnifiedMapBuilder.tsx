@@ -435,13 +435,13 @@ const UnifiedMapBuilder = ({ onConfirm, onRender, initialPhase: initialPhaseProp
 
       {/* Main single-page layout: Center + Right panel */}
       {!isEntryOrUpload && (
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
           {/* CENTER — main canvas / content */}
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* Trace review center: image + SVG overlay */}
             {isTraceReview && (
-              <div className="flex-1 flex items-center justify-center p-6 bg-muted/20 relative">
-                <div className="relative w-full max-w-[600px]">
+              <div className="flex-1 flex items-center justify-center p-3 md:p-6 bg-muted/20 relative max-h-[55vh] md:max-h-none overflow-auto">
+                <div className="relative w-full max-w-[600px] max-h-[35vh] md:max-h-none">
                   {/* Hide/Show original toggle */}
                   <button
                     onClick={() => setShowOriginal((v) => !v)}
@@ -583,7 +583,7 @@ const UnifiedMapBuilder = ({ onConfirm, onRender, initialPhase: initialPhaseProp
 
           {/* RIGHT PANEL — tabbed */}
           {showRightPanel && (
-            <div className="w-[320px] border-l border-border flex flex-col bg-card shrink-0">
+            <div className="w-full md:w-[320px] border-t md:border-t-0 md:border-l border-border flex flex-col bg-card shrink-0 max-h-[45vh] md:max-h-none">
               {/* Edit banner when re-entering from view mode */}
               {(initialPhaseProp === "shapeCanvas" || initialSVG) && (
                 <div className="px-4 py-2 bg-accent/50 border-b border-border text-xs text-accent-foreground text-center">
@@ -600,7 +600,7 @@ const UnifiedMapBuilder = ({ onConfirm, onRender, initialPhase: initialPhaseProp
                       key={tab.id}
                       onClick={() => handleTabClick(tab.id)}
                       disabled={!isReached}
-                      className={`flex-1 py-3 text-sm font-medium transition-all relative ${
+                      className={`flex-1 py-3 text-xs md:text-sm font-medium transition-all relative ${
                         isActive
                           ? "text-foreground"
                           : isReached
@@ -622,7 +622,7 @@ const UnifiedMapBuilder = ({ onConfirm, onRender, initialPhase: initialPhaseProp
                 {/* TRACE TAB */}
                 {activeTab === "trace" && (
                   <div className="flex-1 flex flex-col">
-                    <div className="p-5 space-y-5 flex-1 overflow-y-auto">
+                    <div className="p-3 md:p-5 space-y-5 flex-1 overflow-y-auto">
                       {/* 1. Heading */}
                       <h3 className="text-base font-serif font-semibold text-foreground">
                         {retraceStatus === "running"
@@ -856,7 +856,7 @@ const UnifiedMapBuilder = ({ onConfirm, onRender, initialPhase: initialPhaseProp
                 {/* EDIT TAB */}
                 {activeTab === "edit" && (
                   <div className="flex-1 flex flex-col">
-                    <div className="p-5 space-y-4 flex-1 overflow-y-auto">
+                    <div className="p-3 md:p-5 space-y-4 flex-1 overflow-y-auto">
                       <div>
                         <h3 className="text-base font-serif font-semibold text-foreground mb-1">Edit your outline</h3>
                         <p className="text-xs text-muted-foreground">
@@ -897,7 +897,7 @@ const UnifiedMapBuilder = ({ onConfirm, onRender, initialPhase: initialPhaseProp
                 {/* ADD TAB */}
                 {activeTab === "add" && (
                   <div className="flex-1 flex flex-col">
-                    <div className="p-5 space-y-5 flex-1 overflow-y-auto">
+                    <div className="p-3 md:p-5 space-y-5 flex-1 overflow-y-auto">
                       <div>
                         <h3 className="text-base font-serif font-semibold text-foreground mb-1">Add to your map</h3>
                         <p className="text-xs text-muted-foreground">

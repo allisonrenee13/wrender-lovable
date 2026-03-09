@@ -103,22 +103,22 @@ const MapPage = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between px-6 py-3 border-b border-border">
-        <h2 className="font-serif font-semibold text-base">
+      <div className="flex items-center justify-between px-3 md:px-6 py-3 border-b border-border">
+        <h2 className="font-serif font-semibold text-sm md:text-base">
           {currentProject.title}
           <span className="ml-2 text-xs text-muted-foreground font-sans font-normal">
             v{versions.length + 1}
           </span>
         </h2>
-        <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" onClick={() => setAddingPin(true)}>
-            + Add location
+        <div className="flex items-center gap-1.5 md:gap-2">
+          <Button size="sm" variant="outline" onClick={() => setAddingPin(true)} className="text-xs h-8 md:h-9">
+            +<span className="hidden md:inline"> Add</span> location
           </Button>
-          <Button size="sm" variant="outline" onClick={() => setDrawerOpen(true)}>
+          <Button size="sm" variant="outline" onClick={() => setDrawerOpen(true)} className="text-xs h-8 md:h-9">
             Manage
           </Button>
-          <Button size="sm" variant="outline" onClick={() => setEditingSVG(savedSVG)}>
-            Edit map
+          <Button size="sm" variant="outline" onClick={() => setEditingSVG(savedSVG)} className="text-xs h-8 md:h-9">
+            Edit<span className="hidden md:inline"> map</span>
           </Button>
         </div>
       </div>
@@ -137,10 +137,10 @@ const MapPage = () => {
         </div>
       )}
 
-      <div className="flex-1 flex items-center justify-center p-6 bg-muted/20">
+      <div className="flex-1 flex items-center justify-center p-3 md:p-6 bg-muted/20">
         <div
           ref={mapContainerRef}
-          className="relative w-full max-w-[600px] border border-border rounded-lg overflow-hidden shadow-md"
+          className="relative w-full md:max-w-[600px] border border-border rounded-lg overflow-hidden shadow-md"
           style={{ cursor: isPlacing ? "crosshair" : "default" }}
           onClick={handleMapClick}
         >
@@ -161,7 +161,7 @@ const MapPage = () => {
               }}
             >
               <div className="w-3 h-3 rounded-full bg-destructive border-2 border-background shadow-sm" />
-              <span className="absolute top-4 left-1/2 -translate-x-1/2 text-[10px] font-medium whitespace-nowrap drop-shadow-sm">
+              <span className="hidden md:block absolute top-4 left-1/2 -translate-x-1/2 text-[10px] font-medium whitespace-nowrap drop-shadow-sm">
                 {pin.title}
               </span>
             </div>
@@ -197,14 +197,14 @@ const MapPage = () => {
       )}
 
       {/* Manage Pins Drawer */}
-      <div className={`fixed inset-y-0 right-0 z-50 w-[360px] bg-card border-l border-border shadow-xl flex flex-col transform transition-transform duration-300 ${drawerOpen ? "translate-x-0" : "translate-x-full"}`}>
-        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+      <div className={`fixed inset-y-0 right-0 z-50 w-full md:w-[360px] bg-card border-l border-border shadow-xl flex flex-col transform transition-transform duration-300 ${drawerOpen ? "translate-x-0" : "translate-x-full"}`}>
+        <div className="flex items-center justify-between px-3 md:px-5 py-4 border-b border-border">
           <h3 className="font-serif font-semibold text-base">Manage Pins</h3>
           <button onClick={() => setDrawerOpen(false)} className="text-muted-foreground hover:text-foreground">
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto p-5 space-y-6">
+        <div className="flex-1 overflow-y-auto p-3 md:p-5 space-y-6">
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Locations</h4>
             {!currentProject.pins?.length && (
