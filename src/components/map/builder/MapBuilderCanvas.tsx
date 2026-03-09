@@ -332,7 +332,7 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
         }
       });
       canvas.getObjects().forEach((obj) => {
-        if (!obj.excludeFromExport && !(obj instanceof FabricImage)) {
+        if (!obj.excludeFromExport && (obj as any).data?.isMapStroke) {
           obj.selectable = false;
           obj.evented = false;
         }
@@ -388,6 +388,7 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
         }
 
         case "select": {
+          canvas.isDrawingMode = false;
           canvas.selection = true;
           canvas.defaultCursor = "default";
           canvas.getObjects().forEach((obj) => {
@@ -396,10 +397,8 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
               obj.evented = true;
               obj.hasControls = true;
               obj.hasBorders = true;
-              obj.cornerStyle = "circle";
-              obj.cornerColor = "#C9A84C";
-              obj.cornerSize = 10;
-              obj.transparentCorners = false;
+              obj.lockScalingX = false;
+              obj.lockScalingY = false;
             }
           });
           canvas.on("mouse:up", () => saveState());
@@ -733,28 +732,46 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
           const result = await loadSVGFromString(svgString);
           const objects = result.objects.filter((obj): obj is FabricObject => obj !== null);
           if (objects.length === 0) return;
-          const group = new Group(objects, {
-            selectable: true,
-            evented: true,
-            hasControls: true,
-            hasBorders: true,
-            cornerStyle: "circle" as any,
-            cornerColor: "#C9A84C",
-            cornerSize: 10,
-            transparentCorners: false,
+
+          // Find bounding box of all objects together
+          let minX = Infinity, minY = Infinity,
+              maxX = -Infinity, maxY = -Infinity;
+          objects.forEach(obj => {
+            const b = obj.getBoundingRect();
+            minX = Math.min(minX, b.left);
+            minY = Math.min(minY, b.top);
+            maxX = Math.max(maxX, b.left + b.width);
+            maxY = Math.max(maxY, b.top + b.height);
           });
-          // Scale to fit canvas with padding
+          const groupW = maxX - minX || 1;
+          const groupH = maxY - minY || 1;
           const scale = Math.min(
-            (canvas.width! * 0.8) / (group.width || 1),
-            (canvas.height! * 0.8) / (group.height || 1)
+            (canvas.width! * 0.8) / groupW,
+            (canvas.height! * 0.8) / groupH
           );
-          group.scale(scale);
-          group.set({
-            left: (canvas.width! - (group.width || 0) * scale) / 2,
-            top: (canvas.height! - (group.height || 0) * scale) / 2,
+          const offsetX = (canvas.width! - groupW * scale) / 2 - minX * scale;
+          const offsetY = (canvas.height! - groupH * scale) / 2 - minY * scale;
+
+          objects.forEach(obj => {
+            obj.set({
+              selectable: true,
+              evented: true,
+              hasControls: true,
+              hasBorders: true,
+              lockScalingX: false,
+              lockScalingY: false,
+              cornerStyle: "circle" as any,
+              cornerColor: "#C9A84C",
+              cornerSize: 10,
+              transparentCorners: false,
+              scaleX: (obj.scaleX || 1) * scale,
+              scaleY: (obj.scaleY || 1) * scale,
+              left: (obj.left || 0) * scale + offsetX,
+              top: (obj.top || 0) * scale + offsetY,
+            });
+            canvas.add(obj);
           });
-          canvas.add(group);
-          canvas.setActiveObject(group);
+
           canvas.renderAll();
           saveState();
         } catch (err) {
@@ -803,6 +820,8 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
             selectable: true,
             evented: true,
             hasControls: true,
+            lockScalingX: false,
+            lockScalingY: false,
             scaleX: scale,
             scaleY: scale,
             left: (canvas.width || 800) - maxW - 20,
