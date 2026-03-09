@@ -780,7 +780,8 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
             canvas.add(obj);
           });
 
-          tempGroup.removeAll();
+          console.log("[addTraceAsObject] adding objects:", items.length);
+          canvas.remove(tempGroup);
           canvas.discardActiveObject();
           canvas.renderAll();
           saveState();
