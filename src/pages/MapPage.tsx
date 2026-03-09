@@ -3,7 +3,7 @@ import { useProject } from "@/context/ProjectContext";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Pencil, Eraser, MapPin, SlidersHorizontal, Eye, EyeOff, Trash2, X, LayoutTemplate, Scan, Loader2, Upload, MousePointer2 } from "lucide-react";
+import { Pencil, Eraser, MapPin, Eye, EyeOff, Trash2, X, LayoutTemplate, Scan, Loader2, Upload, MousePointer2 } from "lucide-react";
 import { toast } from "sonner";
 import MapBuilderCanvas, { type MapCanvasHandle } from "@/components/map/builder/MapBuilderCanvas";
 import TemplatePicker from "@/components/map/builder/TemplatePicker";
