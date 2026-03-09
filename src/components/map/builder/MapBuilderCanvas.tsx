@@ -592,7 +592,7 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
         }
       }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [activeTool, activeStamp, colors.stroke, sw]);
+    }, [activeTool, activeStamp, colors.stroke, sw, toolRefreshCounter]);
 
     // --- Pin placement ---
     useEffect(() => {
