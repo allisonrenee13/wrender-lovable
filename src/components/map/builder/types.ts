@@ -4,6 +4,7 @@ export type ToolMode = "shape" | "annotate";
 export type ShapeTool =
   | "pan"
   | "pen"
+  | "select"
   | "sculpt-in"
   | "sculpt-out"
   | "smooth"
