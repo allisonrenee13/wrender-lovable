@@ -601,12 +601,6 @@ const MapPage = () => {
           )}
         </div>
       )}
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      )}
 
       {/* Main area */}
       <div className="flex-1 flex overflow-hidden">
