@@ -663,7 +663,38 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
       getSVG: () => {
         const canvas = fabricRef.current;
         if (!canvas) return "";
-        return canvas.toSVG();
+
+        const objects = canvas.getObjects().filter(
+          (o: any) => !o.excludeFromExport
+        );
+        if (objects.length === 0) return "";
+
+        let minX = Infinity, minY = Infinity,
+            maxX = -Infinity, maxY = -Infinity;
+        objects.forEach((obj: any) => {
+          obj.setCoords();
+          const b = obj.getBoundingRect(true, true);
+          minX = Math.min(minX, b.left);
+          minY = Math.min(minY, b.top);
+          maxX = Math.max(maxX, b.left + b.width);
+          maxY = Math.max(maxY, b.top + b.height);
+        });
+
+        const pad = 20;
+        minX = Math.max(0, minX - pad);
+        minY = Math.max(0, minY - pad);
+        maxX = Math.min(canvas.width!, maxX + pad);
+        maxY = Math.min(canvas.height!, maxY + pad);
+        const w = maxX - minX;
+        const h = maxY - minY;
+
+        const full = canvas.toSVG();
+        return full.replace(
+          /<svg[^>]*>/,
+          `<svg xmlns="http://www.w3.org/2000/svg" ` +
+          `viewBox="${minX} ${minY} ${w} ${h}" ` +
+          `width="${w}" height="${h}">`
+        );
       },
       getPNG: () => fabricRef.current?.toDataURL({ format: "png", quality: 1, multiplier: 2 }) ?? "",
       loadSVG: async (svgString: string) => {
