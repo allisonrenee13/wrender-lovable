@@ -285,7 +285,7 @@ const MapPage = () => {
               </div>
             </div>
           ) : (
-            <>
+            <div className="flex-1 flex flex-col items-center justify-center p-3 md:p-6 w-full">
               <div
                 ref={mapContainerRef}
                 className="relative w-full mx-auto border border-border rounded-xl overflow-hidden shadow-md"
