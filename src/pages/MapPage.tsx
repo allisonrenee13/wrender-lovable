@@ -898,8 +898,8 @@ const MapPage = () => {
 
           {/* Saved map view — shown on top when saved */}
           {viewMode === "saved" && savedSVG && (
-            <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-6 w-full overflow-hidden">
-              <div className="text-center py-4">
+            <div className="flex-1 flex flex-col items-center p-2 md:p-4 w-full overflow-hidden">
+              <div className="text-center py-2">
                 {editingTitle ? (
                   <input
                     autoFocus
@@ -929,7 +929,7 @@ const MapPage = () => {
                 className="relative w-full mx-auto border border-border rounded-xl overflow-hidden shadow-md"
                 style={{
                   maxWidth: "900px",
-                  maxHeight: "calc(100vh - 180px)",
+                  maxHeight: "calc(100vh - 140px)",
                   cursor: isPlacing ? "crosshair" : "default",
                   backgroundColor: ({ white: "#FFFFFF", cream: "#F5F0E8", "aged-paper": "#E8DCC8", dark: "#1a1a2e" } as Record<string, string>)[stylePrefs.background] || "#FFFFFF",
                 }}
@@ -938,11 +938,10 @@ const MapPage = () => {
               >
                 <div
                   dangerouslySetInnerHTML={{ __html: savedSVG }}
-                  className="w-full h-full"
+                  className="[&>svg]:max-h-[calc(100vh-140px)] [&>svg]:w-full"
                   style={{
                     display: "block",
-                    maxHeight: "calc(100vh - 180px)",
-                    overflow: "hidden",
+                    width: "100%",
                   }}
                 />
                 {showPinLayer && currentProject.pins?.map((pin) => (
