@@ -898,7 +898,7 @@ const MapPage = () => {
 
           {/* Saved map view — shown on top when saved */}
           {viewMode === "saved" && savedSVG && (
-            <div className="flex-1 flex flex-col items-center justify-center p-3 md:p-6 w-full">
+            <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-6 w-full overflow-hidden">
               <div className="text-center py-4">
                 {editingTitle ? (
                   <input
@@ -927,13 +927,22 @@ const MapPage = () => {
               </div>
               <div
                 className="relative w-full mx-auto border border-border rounded-xl overflow-hidden shadow-md bg-background"
-                style={{ maxWidth: "900px", cursor: isPlacing ? "crosshair" : "default" }}
+                style={{
+                  maxWidth: "900px",
+                  maxHeight: "calc(100vh - 180px)",
+                  cursor: isPlacing ? "crosshair" : "default",
+                }}
                 onClick={isPlacing ? handleMapClick : undefined}
+                ref={mapContainerRef}
               >
                 <div
-                  className="w-full border border-border rounded-xl overflow-hidden shadow-md mx-auto"
-                  style={{ maxWidth: "900px" }}
                   dangerouslySetInnerHTML={{ __html: savedSVG }}
+                  className="w-full h-full"
+                  style={{
+                    display: "block",
+                    maxHeight: "calc(100vh - 180px)",
+                    overflow: "hidden",
+                  }}
                 />
                 {showPinLayer && currentProject.pins?.map((pin) => (
                   <div
