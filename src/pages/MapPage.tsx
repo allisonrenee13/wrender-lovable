@@ -474,9 +474,6 @@ const MapPage = () => {
     }
   };
 
-  const openPinDrawer = () => {
-    setShowPinDrawer(true);
-  };
 
   const toggleDrawMode = () => {
     if (drawMode) {
@@ -528,7 +525,7 @@ const MapPage = () => {
               <Button
                 size="sm"
                 variant={showPinDrawer ? "default" : "outline"}
-                onClick={openPinDrawer}
+                onClick={() => setShowPinDrawer((v) => !v)}
                 className="text-xs h-8"
               >
                 <MapPin className="h-3.5 w-3.5" />
@@ -864,9 +861,61 @@ const MapPage = () => {
           )}
         </div>
 
-        {/* Right style panel — visible when drawMode is on */}
-        {drawMode && viewMode === "edit" && (
-          <div className="hidden md:flex w-72 border-l border-border bg-card flex-col overflow-y-auto transition-all">
+        {/* Right panel — Pin panel or Style panel */}
+        {showPinDrawer && viewMode === "edit" && (
+          <div className="hidden md:flex w-72 border-l border-border bg-card flex-col overflow-y-auto">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Locations</p>
+              <button onClick={() => setShowPinDrawer(false)} className="text-muted-foreground hover:text-foreground">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-5">
+              <Button className="w-full" onClick={handleAddLocationFromDrawer}>
+                <MapPin className="h-4 w-4" />
+                Add Location
+              </Button>
+
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Pins</p>
+                {!currentProject.pins?.length && (
+                  <p className="text-xs text-muted-foreground">No locations yet.</p>
+                )}
+                {currentProject.pins?.map((pin) => (
+                  <div key={pin.id} className="flex items-center gap-3 py-2 group">
+                    <div className="w-2.5 h-2.5 rounded-full bg-destructive flex-shrink-0" />
+                    <span className="flex-1 text-sm truncate">{pin.title}</span>
+                    <button
+                      onClick={() => { setShowPinDrawer(false); setMovingPinId(pin.id); setPlacingPin(true); }}
+                      className="text-xs text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity px-1"
+                    >
+                      Move
+                    </button>
+                    <button
+                      onClick={() => removePin(pin.id)}
+                      className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="space-y-3 pt-2 border-t border-border">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Events</p>
+                  <p className="text-xs text-muted-foreground italic">Coming soon</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Characters</p>
+                  <p className="text-xs text-muted-foreground italic">Coming soon</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        {!showPinDrawer && drawMode && viewMode === "edit" && (
+          <div className="hidden md:flex w-72 border-l border-border bg-card flex-col overflow-y-auto">
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Style</p>
             </div>
@@ -987,62 +1036,6 @@ const MapPage = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Pin drawer backdrop */}
-      {showPinDrawer && (
-        <div className="fixed inset-0 z-40 bg-black/20" onClick={() => setShowPinDrawer(false)} />
-      )}
-
-      {/* Pin drawer */}
-      <div className={`fixed inset-y-0 right-0 z-50 w-full md:w-[340px] bg-card border-l border-border shadow-xl flex flex-col transform transition-transform duration-300 ${showPinDrawer ? "translate-x-0" : "translate-x-full"}`}>
-        <div className="flex items-center justify-between px-4 py-4 border-b border-border">
-          <h3 className="font-serif font-semibold text-base">Locations</h3>
-          <button onClick={() => setShowPinDrawer(false)} className="text-muted-foreground hover:text-foreground">
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-        <div className="flex-1 overflow-y-auto p-4 space-y-5">
-          <Button className="w-full" onClick={handleAddLocationFromDrawer}>
-            <MapPin className="h-4 w-4" />
-            Add Location
-          </Button>
-
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Pins</p>
-            {!currentProject.pins?.length && (
-              <p className="text-xs text-muted-foreground">No locations yet.</p>
-            )}
-            {currentProject.pins?.map((pin) => (
-              <div key={pin.id} className="flex items-center gap-3 py-2 group">
-                <div className="w-2.5 h-2.5 rounded-full bg-destructive flex-shrink-0" />
-                <span className="flex-1 text-sm truncate">{pin.title}</span>
-                <button
-                  onClick={() => { setShowPinDrawer(false); setMovingPinId(pin.id); setPlacingPin(true); }}
-                  className="text-xs text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity px-1"
-                >
-                  Move
-                </button>
-                <button
-                  onClick={() => removePin(pin.id)}
-                  className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            ))}
-          </div>
-
-          <div className="space-y-3 pt-2 border-t border-border">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Events</p>
-              <p className="text-xs text-muted-foreground italic">Coming soon</p>
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Characters</p>
-              <p className="text-xs text-muted-foreground italic">Coming soon</p>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
