@@ -752,53 +752,46 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
         if (!canvas) return;
         isBusy.current = true;
         try {
+          canvas.clear();
           const result = await loadSVGFromString(svgString);
-          canvas.getObjects().filter((o) => !o.excludeFromExport).forEach((o) => canvas.remove(o));
-          result.objects
-            .filter((obj): obj is FabricObject => obj !== null)
-            .forEach((obj) => {
-              if (obj instanceof Path) {
-                // Break SVG paths into line segments for fine-grained erasing
-                const pathData = (obj as any).path as any[];
-                if (pathData && pathData.length >= 2) {
-                  const points: { x: number; y: number }[] = [];
-                  pathData.forEach((seg: any[]) => {
-                    const cmd = seg[0];
-                    if (cmd === "M" || cmd === "L") {
-                      points.push({ x: seg[1], y: seg[2] });
-                    } else if (cmd === "Q") {
-                      points.push({ x: seg[3], y: seg[4] });
-                    } else if (cmd === "C") {
-                      points.push({ x: seg[5], y: seg[6] });
-                    }
-                  });
-                  for (let i = 0; i < points.length - 1; i++) {
-                    const line = new Line(
-                      [points[i].x, points[i].y, points[i + 1].x, points[i + 1].y],
-                      {
-                        stroke: colors.stroke,
-                        strokeWidth: sw,
-                        strokeLineCap: "round",
-                        selectable: false,
-                        evented: true,
-                        data: { isMapStroke: true },
-                      }
-                    );
-                    canvas.add(line);
-                  }
-                }
-              } else if (obj instanceof Line) {
-                // SVG <line> elements — tag as map strokes for eraser
-                obj.set({ stroke: colors.stroke, strokeWidth: sw, strokeLineCap: "round", selectable: false, evented: true, data: { isMapStroke: true } });
-                canvas.add(obj);
-              } else {
-                obj.set({ stroke: colors.stroke, strokeWidth: sw, fill: "transparent", selectable: false, evented: false });
-                canvas.add(obj);
-              }
-            });
-          console.log("[loadSVG segments] total objects after load:", canvas.getObjects().length);
+          const objects = result.objects.filter((obj): obj is FabricObject => obj !== null);
+          if (objects.length === 0) {
+            console.warn("[loadSVG] No objects parsed from SVG");
+            return;
+          }
+
+          const group = new Group(objects, {
+            selectable: true,
+            evented: true,
+            hasControls: true,
+            hasBorders: true,
+            lockUniScaling: false,
+            cornerStyle: "circle" as any,
+            cornerColor: "#C9A84C",
+            cornerSize: 10,
+            transparentCorners: false,
+            fill: "transparent",
+            subTargetCheck: false,
+          });
+
+          const gw = group.width || 100;
+          const gh = group.height || 100;
+          const scale = Math.min(
+            (canvas.width! * 0.85) / gw,
+            (canvas.height! * 0.85) / gh
+          );
+          group.scale(scale);
+          group.set({
+            left: (canvas.width! - gw * scale) / 2,
+            top: (canvas.height! - gh * scale) / 2,
+          });
+
+          canvas.add(group);
+          canvas.discardActiveObject();
           canvas.renderAll();
-          // Reset history so undo never goes below the loaded state
+          console.log("[loadSVG] Added group with", objects.length, "objects, scale:", scale.toFixed(2));
+
+          // Save as undo floor
           setTimeout(() => {
             history.current = [];
             historyIndex.current = -1;
