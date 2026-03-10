@@ -262,7 +262,7 @@ function buildSVGFromPaths(paths: TracedPath[], w: number, h: number): string {
 }
 
 const MapPage = () => {
-  const { currentProject, allProjects, setCurrentProjectId, addPin, removePin, updatePin } = useProject();
+  const { currentProject, addPin, removePin, updatePin } = useProject();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [savedSVG, setSavedSVG] = useState<string | null>(null);
@@ -548,34 +548,23 @@ const MapPage = () => {
       {/* Top bar */}
       <div className="flex items-center justify-between px-3 md:px-6 py-3 border-b border-border">
         <div className="flex items-center gap-3">
-          <select
-            value={currentProject.id}
-            onChange={(e) => {
-              const id = e.target.value;
-              if (id !== currentProject.id) setCurrentProjectId(id);
-            }}
-            className="font-serif font-semibold text-sm md:text-base bg-transparent border-none outline-none cursor-pointer hover:text-muted-foreground transition-colors"
-          >
-            {allProjects.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.title}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="flex items-center gap-1.5">
-          {viewMode === "saved" && hasMap && (
+          <h2 className="font-serif font-semibold text-sm md:text-base">
+            {currentProject.title}
+          </h2>
+          {hasMap && viewMode === "saved" && (
             <Button variant="outline" size="sm" onClick={() => setViewMode("edit")}>
               Edit
             </Button>
           )}
+          {viewMode === "edit" && canvasStarted && (
+            <Button size="sm" onClick={handleSave}>
+              Save Map
+            </Button>
+          )}
+        </div>
+        <div className="flex items-center gap-1.5">
           {showCanvas && viewMode === "edit" && (
             <>
-              {canvasStarted && (
-                <Button size="sm" onClick={handleSave}>
-                  Save Map
-                </Button>
-              )}
               <Button
                 size="sm"
                 variant={activeMode === "draw" ? "default" : "outline"}
