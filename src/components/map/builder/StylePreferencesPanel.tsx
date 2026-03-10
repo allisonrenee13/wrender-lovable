@@ -107,25 +107,6 @@ const StylePreferencesPanel = ({ prefs, onChange, forceExpanded, hideLineStyle }
           </div>
         </div>
 
-        {/* Label Style — 3 buttons full width */}
-        <div className="space-y-1.5">
-          <label className="text-xs font-medium text-foreground/80">Place labels</label>
-          <div className="flex w-full bg-muted rounded-full p-0.5">
-            {labelStyles.map((ls) => (
-              <button
-                key={ls}
-                onClick={() => update("labelStyle", ls)}
-                className={`flex-1 py-1.5 rounded-full text-xs font-medium transition-all capitalize ${
-                  prefs.labelStyle === ls
-                    ? "bg-card text-foreground shadow-sm"
-                    : "text-muted-foreground"
-                }`}
-              >
-                {ls === "sans-serif" ? "Sans" : ls === "hidden" ? "Hidden" : "Serif"}
-              </button>
-            ))}
-          </div>
-        </div>
 
         {/* Footer */}
         <div className="flex items-center justify-between pt-1">
