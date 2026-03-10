@@ -272,6 +272,8 @@ const MapPage = () => {
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [stylePrefs, setStylePrefs] = useState<StylePreferences>(defaultStylePreferences);
   const [viewMode, setViewMode] = useState<"edit" | "saved">("edit");
+  const [mapTitle, setMapTitle] = useState("");
+  const [editingTitle, setEditingTitle] = useState(false);
 
   const [placingPin, setPlacingPin] = useState(false);
   const [movingPinId, setMovingPinId] = useState<string | null>(null);
@@ -823,10 +825,30 @@ const MapPage = () => {
           {viewMode === "saved" && savedSVG && (
             <div className="flex-1 flex flex-col items-center justify-center p-3 md:p-6 w-full">
               <div className="text-center py-4">
-                <h2 className="font-serif text-xl font-semibold text-foreground">
-                  {currentProject.title}
-                </h2>
-                <p className="text-xs text-muted-foreground mt-0.5">Your map</p>
+                {editingTitle ? (
+                  <input
+                    autoFocus
+                    value={mapTitle}
+                    onChange={(e) => setMapTitle(e.target.value)}
+                    onBlur={() => setEditingTitle(false)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") setEditingTitle(false);
+                    }}
+                    placeholder="Name your map..."
+                    className="font-serif text-xl font-semibold text-center bg-transparent border-b border-border outline-none w-full max-w-xs mx-auto"
+                  />
+                ) : (
+                  <h2
+                    onClick={() => setEditingTitle(true)}
+                    className="font-serif text-xl font-semibold text-foreground cursor-text hover:text-muted-foreground transition-colors"
+                  >
+                    {mapTitle || (
+                      <span className="text-muted-foreground/50 font-normal italic text-base">
+                        Click to name your map...
+                      </span>
+                    )}
+                  </h2>
+                )}
               </div>
               <div
                 className="relative w-full mx-auto border border-border rounded-xl overflow-hidden shadow-md bg-background"
