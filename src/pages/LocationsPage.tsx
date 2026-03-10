@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
-import BakeModal from "@/components/map/BakeModal";
+
 
 const locationTypes = ["Hotel", "House", "Landmark", "Club", "Green Space", "Waterfront", "Road", "Other"];
 
