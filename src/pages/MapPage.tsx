@@ -666,9 +666,10 @@ const MapPage = () => {
 
       {/* Main area */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left toolbar — always rendered for layout stability, buttons only in draw mode */}
+        {/* Left toolbar — only in edit mode */}
+        {viewMode === "edit" && (
         <div className="hidden md:flex flex-col w-12 border-r border-border bg-muted/30 items-center py-3 gap-1.5">
-          {activeMode === "draw" && viewMode === "edit" && (
+          {activeMode === "draw" && (
             <>
             <button
               onClick={() => setActiveTool("select")}
@@ -784,6 +785,7 @@ const MapPage = () => {
             </>
           )}
         </div>
+        )}
 
         {/* Center canvas */}
         <div className="flex-1 flex flex-col items-center justify-center bg-muted/20 overflow-auto relative">
