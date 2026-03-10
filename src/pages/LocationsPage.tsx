@@ -134,19 +134,6 @@ const LocationsPage = () => {
                     </div>
                   </div>
                 </button>
-                {loc.status === "pinned" && (
-                  <div className="px-4 pb-3">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-[11px] h-7 text-primary border-primary/30 hover:bg-primary/5"
-                      onClick={() => setShowBakeModal(true)}
-                    >
-                      <PenTool className="h-3 w-3 mr-1" />
-                      Bake into Map
-                    </Button>
-                  </div>
-                )}
               </div>
             );
           })}
