@@ -347,7 +347,7 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
         canvas.freeDrawingBrush.color = lineProps.stroke;
         // Don't override brush width here — it's controlled by the weight selector via brushWidth prop
       }
-      canvas.renderAll();
+      canvas.requestRenderAll();
     }, [colors.bg, colors.stroke, sw, stylePrefs.lineStyle, stylePrefs.background]);
 
     // --- Path rebuild helper for sculpt and smooth ---
