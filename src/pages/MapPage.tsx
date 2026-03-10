@@ -272,6 +272,8 @@ const MapPage = () => {
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [stylePrefs, setStylePrefs] = useState<StylePreferences>(defaultStylePreferences);
   const [viewMode, setViewMode] = useState<"edit" | "saved">("edit");
+  const [mapTitle, setMapTitle] = useState("");
+  const [editingTitle, setEditingTitle] = useState(false);
 
   const [placingPin, setPlacingPin] = useState(false);
   const [movingPinId, setMovingPinId] = useState<string | null>(null);
