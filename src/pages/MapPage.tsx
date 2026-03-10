@@ -893,11 +893,6 @@ const MapPage = () => {
               </div>
 
               {/* Save button */}
-              <div className="mt-4 w-full" style={{ maxWidth: "900px" }}>
-                <Button className="w-full h-11" onClick={handleSave}>
-                  Save Map
-                </Button>
-              </div>
             </div>
           )}
 
