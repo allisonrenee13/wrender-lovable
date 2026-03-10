@@ -551,7 +551,7 @@ const MapPage = () => {
             {movingPinId ? "Click on the map to move the pin" : "Click on the map to place location…"}
           </span>
           <button
-            onClick={() => { setPlacingPin(false); setMovingPinId(null); }}
+            onClick={() => { setPlacingPin(false); setMovingPinId(null); canvasRef.current?.setCanvasInteractive(true); setActiveTool("select"); }}
             className="ml-3 text-xs text-muted-foreground hover:text-foreground underline"
           >
             Cancel
