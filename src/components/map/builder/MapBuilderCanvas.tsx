@@ -959,6 +959,19 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
       refreshTool: () => {
         setToolRefreshCounter(c => c + 1);
       },
+      setCanvasInteractive: (interactive: boolean) => {
+        const canvas = fabricRef.current;
+        if (!canvas) return;
+        canvas.isDrawingMode = false;
+        canvas.selection = false;
+        canvas.getObjects().forEach(obj => {
+          obj.selectable = interactive;
+          obj.evented = interactive;
+        });
+        canvas.defaultCursor = interactive ? "default" : "crosshair";
+        canvas.hoverCursor = interactive ? "move" : "crosshair";
+        canvas.renderAll();
+      },
       applyStrokeWeightToAll: (weight: number) => {
         const canvas = fabricRef.current;
         if (!canvas) return;
