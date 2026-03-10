@@ -9,7 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import VersionStrip from "./VersionStrip";
 import VersionPanel from "./VersionPanel";
-import BakeModal from "./BakeModal";
+
 
 interface MapViewModeProps {
   onEditMap: () => void;
