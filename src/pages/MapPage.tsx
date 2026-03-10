@@ -318,16 +318,14 @@ const MapPage = () => {
       updatePin(movingPinId, { x, y });
       setMovingPinId(null);
       setPlacingPin(false);
-      canvasRef.current?.setCanvasInteractive(true);
-      setActiveTool("select");
+      canvasRef.current?.setCanvasInteractive(false);
+      setShowPinDrawer(true);
       return;
     }
 
     setPendingPin({ x, y });
     setPlacingPin(false);
     setPinName("");
-    canvasRef.current?.setCanvasInteractive(true);
-    setActiveTool("select");
   };
 
   const handleConfirmPin = () => {
@@ -344,6 +342,8 @@ const MapPage = () => {
     });
     setPendingPin(null);
     setPinName("");
+    setShowPinDrawer(true);
+    canvasRef.current?.setCanvasInteractive(false);
   };
 
   const toggleTool = (tool: CanvasTool) => {
@@ -487,7 +487,10 @@ const MapPage = () => {
       setDrawMode(false);
       setActiveTool(null);
     } else {
-      // Opening draw mode — default to select
+      // Opening draw mode — close pin mode
+      setShowPinDrawer(false);
+      setPlacingPin(false);
+      setMovingPinId(null);
       if (!canvasStarted) setCanvasStarted(true);
       setDrawMode(true);
       setActiveTool("select");
@@ -533,7 +536,19 @@ const MapPage = () => {
               <Button
                 size="sm"
                 variant={showPinDrawer ? "default" : "outline"}
-                onClick={() => setShowPinDrawer((v) => !v)}
+                onClick={() => {
+                  if (showPinDrawer) {
+                    setShowPinDrawer(false);
+                    setPlacingPin(false);
+                    setMovingPinId(null);
+                    canvasRef.current?.setCanvasInteractive(true);
+                    setActiveTool("select");
+                  } else {
+                    setShowPinDrawer(true);
+                    canvasRef.current?.setCanvasInteractive(false);
+                    setActiveTool(null);
+                  }
+                }}
                 className="text-xs h-8"
               >
                 <MapPin className="h-3.5 w-3.5" />
@@ -909,7 +924,7 @@ const MapPage = () => {
           <div className="hidden md:flex w-72 border-l border-border bg-card flex-col overflow-y-auto">
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Locations</p>
-              <button onClick={() => setShowPinDrawer(false)} className="text-muted-foreground hover:text-foreground">
+              <button onClick={() => { setShowPinDrawer(false); setPlacingPin(false); setMovingPinId(null); canvasRef.current?.setCanvasInteractive(true); setActiveTool("select"); }} className="text-muted-foreground hover:text-foreground">
                 <X className="h-4 w-4" />
               </button>
             </div>
