@@ -929,7 +929,7 @@ const MapPage = () => {
                     <div className="w-2.5 h-2.5 rounded-full bg-destructive flex-shrink-0" />
                     <span className="flex-1 text-sm truncate">{pin.title}</span>
                     <button
-                      onClick={() => { setShowPinDrawer(false); setMovingPinId(pin.id); setPlacingPin(true); }}
+                      onClick={() => { setShowPinDrawer(false); setMovingPinId(pin.id); setPlacingPin(true); setActiveTool(null); canvasRef.current?.setCanvasInteractive(false); }}
                       className="text-xs text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity px-1"
                     >
                       Move
