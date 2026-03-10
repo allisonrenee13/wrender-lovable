@@ -268,7 +268,7 @@ const MapPage = () => {
   const [savedSVG, setSavedSVG] = useState<string | null>(null);
   const [canvasStarted, setCanvasStarted] = useState(false);
   const [activeTool, setActiveTool] = useState<CanvasTool>(null);
-  const [drawMode, setDrawMode] = useState(false);
+  const [activeMode, setActiveMode] = useState<"draw" | "pin" | null>(null);
   const [showPinDrawer, setShowPinDrawer] = useState(false);
   const [showPinLayer, setShowPinLayer] = useState(true);
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
