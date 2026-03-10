@@ -71,7 +71,13 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
     const eraserSizeRef = useRef(eraserRadius ?? 24);
     const penWidthRef = useRef(brushWidth ?? 2);
     const currentToolRef = useRef<ShapeTool>(activeTool);
+    const stylePrefsRef = useRef<StylePreferences>(stylePrefs);
     const [toolRefreshCounter, setToolRefreshCounter] = useState(0);
+
+    // Keep stylePrefsRef in sync
+    useEffect(() => {
+      stylePrefsRef.current = stylePrefs;
+    }, [stylePrefs]);
 
     // Keep eraserSizeRef in sync
     useEffect(() => {
@@ -82,6 +88,13 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
     const canvasHeight = height || 600;
     const colors = backgroundColors[stylePrefs.background];
     const sw = strokeWeightValues[stylePrefs.strokeWeight];
+
+    const canvasBgColors: Record<string, string> = {
+      white: "#FFFFFF",
+      cream: "#F5F0E8",
+      "aged-paper": "#E8DCC8",
+      dark: "#1a1a2e",
+    };
 
     // --- History ---
     const saveState = useCallback(() => {
@@ -167,9 +180,9 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
         const actualWidth = Math.min(Math.max(containerWidth, 400), canvasWidth);
         const actualHeight = Math.round(actualWidth * (canvasHeight / canvasWidth));
 
-        const canvas = new Canvas(canvasElRef.current!, {
+      const canvas = new Canvas(canvasElRef.current!, {
           isDrawingMode: false,
-          backgroundColor: colors.bg,
+          backgroundColor: canvasBgColors[stylePrefs.background] || "#FFFFFF",
           width: actualWidth,
           height: actualHeight,
           selection: false,
@@ -298,7 +311,7 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
     useEffect(() => {
       const canvas = fabricRef.current;
       if (!canvas) return;
-      canvas.backgroundColor = colors.bg;
+      canvas.backgroundColor = canvasBgColors[stylePrefs.background] || "#FFFFFF";
       const lineStyle = stylePrefs.lineStyle;
       const getLineProps = () => {
         switch (lineStyle) {
@@ -752,11 +765,16 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
         const h = Math.round(maxY - minY);
 
         const full = canvas.toSVG();
-        return full.replace(
+        const bgHex = canvasBgColors[stylePrefsRef.current.background] || "#FFFFFF";
+        const svgWithTag = full.replace(
           /(<svg\s)[^>]*(>)/,
           `<svg xmlns="http://www.w3.org/2000/svg" ` +
           `viewBox="${Math.round(minX)} ${Math.round(minY)} ` +
           `${w} ${h}" width="100%" height="100%">`
+        );
+        return svgWithTag.replace(
+          /(<svg[^>]*>)/,
+          `$1<rect width="100%" height="100%" fill="${bgHex}"/>`
         );
       },
       getPNG: () => fabricRef.current?.toDataURL({ format: "png", quality: 1, multiplier: 2 }) ?? "",
@@ -823,7 +841,7 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
         if (!canvas) return;
         const dots = canvas.getObjects().filter((o) => o.excludeFromExport);
         canvas.clear();
-        canvas.backgroundColor = colors.bg;
+        canvas.backgroundColor = canvasBgColors[stylePrefs.background] || "#FFFFFF";
         dots.forEach((d) => canvas.add(d));
         canvas.renderAll();
         saveState();

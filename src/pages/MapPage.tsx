@@ -926,11 +926,12 @@ const MapPage = () => {
                 )}
               </div>
               <div
-                className="relative w-full mx-auto border border-border rounded-xl overflow-hidden shadow-md bg-background"
+                className="relative w-full mx-auto border border-border rounded-xl overflow-hidden shadow-md"
                 style={{
                   maxWidth: "900px",
                   maxHeight: "calc(100vh - 180px)",
                   cursor: isPlacing ? "crosshair" : "default",
+                  backgroundColor: ({ white: "#FFFFFF", cream: "#F5F0E8", "aged-paper": "#E8DCC8", dark: "#1a1a2e" } as Record<string, string>)[stylePrefs.background] || "#FFFFFF",
                 }}
                 onClick={isPlacing ? handleMapClick : undefined}
                 ref={mapContainerRef}
