@@ -957,11 +957,11 @@ const MapPage = () => {
         </div>
 
         {/* Right panel — Pin panel or Style panel */}
-        {showPinDrawer && viewMode === "edit" && (
+        {activeMode === "pin" && viewMode === "edit" && (
           <div className="hidden md:flex w-72 border-l border-border bg-card flex-col overflow-y-auto">
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Locations</p>
-              <button onClick={() => { setShowPinDrawer(false); setPlacingPin(false); setMovingPinId(null); canvasRef.current?.setCanvasInteractive(true); setActiveTool("select"); }} className="text-muted-foreground hover:text-foreground">
+              <button onClick={() => { setActiveMode(null); setShowPinDrawer(false); setPlacingPin(false); setMovingPinId(null); canvasRef.current?.setCanvasInteractive(false); }} className="text-muted-foreground hover:text-foreground">
                 <X className="h-4 w-4" />
               </button>
             </div>
