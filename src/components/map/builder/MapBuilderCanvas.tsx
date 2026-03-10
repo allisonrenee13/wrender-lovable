@@ -311,7 +311,7 @@ const MapBuilderCanvas = forwardRef<MapCanvasHandle, MapBuilderCanvasProps>(
     useEffect(() => {
       const canvas = fabricRef.current;
       if (!canvas) return;
-      canvas.backgroundColor = colors.bg;
+      canvas.backgroundColor = canvasBgColors[stylePrefs.background] || "#FFFFFF";
       const lineStyle = stylePrefs.lineStyle;
       const getLineProps = () => {
         switch (lineStyle) {
