@@ -263,6 +263,7 @@ function buildSVGFromPaths(paths: TracedPath[], w: number, h: number): string {
 
 const MapPage = () => {
   const { currentProject, addPin, removePin, updatePin } = useProject();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [savedSVG, setSavedSVG] = useState<string | null>(null);
   const [canvasStarted, setCanvasStarted] = useState(false);
@@ -294,6 +295,39 @@ const MapPage = () => {
   const canvasRef = useRef<MapCanvasHandle>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const traceInputRef = useRef<HTMLInputElement>(null);
+
+  // Handle URL params for pin action from Locations page
+  useEffect(() => {
+    const action = searchParams.get("action");
+    const locationId = searchParams.get("locationId");
+    if (action !== "pin" || !locationId || !currentProject) return;
+
+    // Clear the params so this doesn't re-trigger
+    setSearchParams({}, { replace: true });
+
+    const location = currentProject.locations.find((l) => l.id === locationId);
+    if (!location) return;
+
+    // Check if this location already has a pin on the map
+    const existingPin = currentProject.pins.find((p) => p.title === location.name);
+
+    // Open pin drawer and disable canvas
+    setShowPinDrawer(true);
+    setActiveTool(null);
+    setTimeout(() => {
+      canvasRef.current?.setCanvasInteractive(false);
+    }, 100);
+
+    if (existingPin) {
+      // Enter move mode for existing pin
+      setShowPinDrawer(false);
+      setMovingPinId(existingPin.id);
+      setPlacingPin(true);
+    } else {
+      // Enter place mode for new pin
+      setPlacingPin(true);
+    }
+  }, [searchParams, currentProject, setSearchParams]);
 
 
   const hasMap = savedSVG !== null;
