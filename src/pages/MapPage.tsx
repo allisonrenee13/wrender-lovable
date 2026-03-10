@@ -318,12 +318,15 @@ const MapPage = () => {
       updatePin(movingPinId, { x, y });
       setMovingPinId(null);
       setPlacingPin(false);
+      canvasRef.current?.setCanvasInteractive(true);
+      setActiveTool("select");
       return;
     }
 
     setPendingPin({ x, y });
     setPlacingPin(false);
     setPinName("");
+    canvasRef.current?.setCanvasInteractive(true);
     setActiveTool("select");
   };
 
