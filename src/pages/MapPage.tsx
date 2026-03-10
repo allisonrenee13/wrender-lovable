@@ -662,7 +662,7 @@ const MapPage = () => {
       {/* Main area */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left toolbar — visible when drawMode is on */}
-        {drawMode && viewMode === "edit" && (
+        {activeMode === "draw" && viewMode === "edit" && (
           <div className="hidden md:flex flex-col w-12 border-r border-border bg-muted/30 items-center py-3 gap-1.5">
             <button
               onClick={() => setActiveTool("select")}
