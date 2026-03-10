@@ -324,6 +324,7 @@ const MapPage = () => {
     setPendingPin({ x, y });
     setPlacingPin(false);
     setPinName("");
+    setActiveTool("select");
   };
 
   const handleConfirmPin = () => {
