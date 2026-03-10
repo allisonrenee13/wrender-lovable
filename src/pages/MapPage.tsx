@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { useProject } from "@/context/ProjectContext";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Pencil, Eraser, MapPin, Eye, EyeOff, Trash2, X, LayoutTemplate, Scan, Loader2, Upload, MousePointer2, Undo2, Redo2, ChevronDown } from "lucide-react";
+import { Pencil, Eraser, MapPin, Eye, EyeOff, Trash2, X, LayoutTemplate, Scan, Loader2, Upload, MousePointer2, Undo2, Redo2 } from "lucide-react";
 import { toast } from "sonner";
 import MapBuilderCanvas, { type MapCanvasHandle } from "@/components/map/builder/MapBuilderCanvas";
 import TemplatePicker from "@/components/map/builder/TemplatePicker";
@@ -264,7 +264,6 @@ function buildSVGFromPaths(paths: TracedPath[], w: number, h: number): string {
 const MapPage = () => {
   const { currentProject, addPin, removePin, updatePin } = useProject();
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
 
   const [savedSVG, setSavedSVG] = useState<string | null>(null);
   const [canvasStarted, setCanvasStarted] = useState(false);
@@ -549,15 +548,9 @@ const MapPage = () => {
       {/* Top bar */}
       <div className="flex items-center justify-between px-3 md:px-6 py-3 border-b border-border">
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate("/")}
-            className="flex items-center gap-1 hover:text-muted-foreground transition-colors"
-          >
-            <span className="font-serif font-semibold text-sm md:text-base">
-              {currentProject?.title}
-            </span>
-            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground mt-0.5" />
-          </button>
+          <h2 className="font-serif font-semibold text-sm md:text-base">
+            {currentProject.title}
+          </h2>
           {hasMap && viewMode === "saved" && (
             <Button variant="outline" size="sm" onClick={() => setViewMode("edit")}>
               Edit
