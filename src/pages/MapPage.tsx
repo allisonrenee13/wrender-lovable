@@ -264,6 +264,7 @@ function buildSVGFromPaths(paths: TracedPath[], w: number, h: number): string {
 const MapPage = () => {
   const { currentProject, addPin, removePin, updatePin } = useProject();
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   const [savedSVG, setSavedSVG] = useState<string | null>(null);
   const [canvasStarted, setCanvasStarted] = useState(false);
