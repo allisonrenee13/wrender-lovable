@@ -548,9 +548,15 @@ const MapPage = () => {
       {/* Top bar */}
       <div className="flex items-center justify-between px-3 md:px-6 py-3 border-b border-border">
         <div className="flex items-center gap-3">
-          <h2 className="font-serif font-semibold text-sm md:text-base">
-            {currentProject.title}
-          </h2>
+          <button
+            onClick={() => navigate("/")}
+            className="flex items-center gap-1 hover:text-muted-foreground transition-colors"
+          >
+            <span className="font-serif font-semibold text-sm md:text-base">
+              {currentProject?.title}
+            </span>
+            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground mt-0.5" />
+          </button>
           {hasMap && viewMode === "saved" && (
             <Button variant="outline" size="sm" onClick={() => setViewMode("edit")}>
               Edit
