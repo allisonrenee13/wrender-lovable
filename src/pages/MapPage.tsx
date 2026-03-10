@@ -318,12 +318,15 @@ const MapPage = () => {
       updatePin(movingPinId, { x, y });
       setMovingPinId(null);
       setPlacingPin(false);
+      canvasRef.current?.setCanvasInteractive(true);
+      setActiveTool("select");
       return;
     }
 
     setPendingPin({ x, y });
     setPlacingPin(false);
     setPinName("");
+    canvasRef.current?.setCanvasInteractive(true);
     setActiveTool("select");
   };
 
@@ -495,6 +498,7 @@ const MapPage = () => {
     setShowPinDrawer(false);
     setPlacingPin(true);
     setActiveTool(null);
+    canvasRef.current?.setCanvasInteractive(false);
   };
 
   const fabricTool: ShapeTool = activeTool === "pen" ? "pen" : activeTool === "eraser" ? "eraser" : activeTool === "select" ? "select" : "pan";
@@ -547,7 +551,7 @@ const MapPage = () => {
             {movingPinId ? "Click on the map to move the pin" : "Click on the map to place location…"}
           </span>
           <button
-            onClick={() => { setPlacingPin(false); setMovingPinId(null); }}
+            onClick={() => { setPlacingPin(false); setMovingPinId(null); canvasRef.current?.setCanvasInteractive(true); setActiveTool("select"); }}
             className="ml-3 text-xs text-muted-foreground hover:text-foreground underline"
           >
             Cancel
@@ -780,8 +784,23 @@ const MapPage = () => {
                 ref={mapContainerRef}
                 className="relative w-full mx-auto border border-border rounded-xl overflow-hidden shadow-md"
                 style={{ maxWidth: "900px", cursor: isPlacing ? "crosshair" : "default" }}
-                onClick={isPlacing ? handleMapClick : undefined}
               >
+                {/* Click overlay for pin placement — sits above canvas */}
+                {isPlacing && (
+                  <div
+                    onClick={handleMapClick}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      zIndex: 20,
+                      cursor: "crosshair",
+                      pointerEvents: "all",
+                    }}
+                  />
+                )}
                 <MapBuilderCanvas
                   ref={canvasRef}
                   stylePrefs={stylePrefs}
@@ -910,7 +929,7 @@ const MapPage = () => {
                     <div className="w-2.5 h-2.5 rounded-full bg-destructive flex-shrink-0" />
                     <span className="flex-1 text-sm truncate">{pin.title}</span>
                     <button
-                      onClick={() => { setShowPinDrawer(false); setMovingPinId(pin.id); setPlacingPin(true); }}
+                      onClick={() => { setShowPinDrawer(false); setMovingPinId(pin.id); setPlacingPin(true); setActiveTool(null); canvasRef.current?.setCanvasInteractive(false); }}
                       className="text-xs text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity px-1"
                     >
                       Move
