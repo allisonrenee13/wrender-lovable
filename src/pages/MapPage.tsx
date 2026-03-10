@@ -556,6 +556,11 @@ const MapPage = () => {
               Edit
             </Button>
           )}
+          {viewMode === "edit" && canvasStarted && (
+            <Button size="sm" onClick={handleSave}>
+              Save Map
+            </Button>
+          )}
         </div>
         <div className="flex items-center gap-1.5">
           {showCanvas && viewMode === "edit" && (
