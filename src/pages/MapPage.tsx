@@ -474,9 +474,6 @@ const MapPage = () => {
     }
   };
 
-  const openPinDrawer = () => {
-    setShowPinDrawer(true);
-  };
 
   const toggleDrawMode = () => {
     if (drawMode) {
