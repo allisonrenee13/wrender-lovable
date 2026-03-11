@@ -229,6 +229,23 @@ export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"create" | "place" | "track">("create");
+  const [email, setEmail] = useState("");
+  const [submitState, setSubmitState] = useState<"idle" | "loading" | "success" | "error">("idle");
+
+  async function submitWaitlist(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email || submitState === "loading") return;
+    setSubmitState("loading");
+    try {
+      const res = await fetch("https://app.loops.so/api/newsletter-form/[FORM_ID]", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (res.ok) { setSubmitState("success"); setEmail(""); }
+      else setSubmitState("error");
+    } catch { setSubmitState("error"); }
+  }
 
   useEffect(() => {
     const el = document.getElementById("landing-scroll");
