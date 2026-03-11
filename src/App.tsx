@@ -11,6 +11,7 @@ import TimelinePage from "./pages/TimelinePage";
 import LocationsPage from "./pages/LocationsPage";
 import CharactersPage from "./pages/CharactersPage";
 import LandingPage from "./pages/LandingPage";
+import WaitlistPage from "./pages/WaitlistPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ const App = () => (
           <Routes>
             {/* Pre-login landing */}
             <Route path="/welcome" element={<LandingPage />} />
+            <Route path="/waitlist" element={<WaitlistPage />} />
 
             {/* App shell */}
             <Route
