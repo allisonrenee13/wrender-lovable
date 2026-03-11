@@ -328,6 +328,9 @@ export default function LandingPage() {
         <p className="text-muted-foreground text-base md:text-lg max-w-[560px] mb-2 leading-relaxed">
           Your visual writing companion.
         </p>
+        <div className="mt-6">
+          <EmailCapture onSubmit={submitWaitlist} email={email} setEmail={setEmail} state={submitState} />
+        </div>
       </section>
 
       {/* ══ Large App Visual ══ */}
