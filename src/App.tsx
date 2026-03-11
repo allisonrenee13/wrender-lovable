@@ -26,6 +26,7 @@ const App = () => (
           <Routes>
             {/* Pre-login landing */}
             <Route path="/welcome" element={<LandingPage />} />
+            <Route path="/waitlist" element={<WaitlistPage />} />
 
             {/* App shell */}
             <Route
