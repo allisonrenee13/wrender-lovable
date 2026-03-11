@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { SeeneryLogo } from "@/components/SeeneryLogo";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, Check, Menu, X } from "lucide-react";
+import heroCapeCodeMap from "@/assets/hero-cape-cod-map.webp";
 
 /* ───── Mini map sketches for demo cards ───── */
 const CapeCodSketch = () => (
@@ -329,34 +330,10 @@ export default function WaitlistPage() {
               <span className="ml-3 text-[10px] text-muted-foreground">wrender &mdash; The Community</span>
             </div>
             <div className="h-72 md:h-[28rem] bg-[hsl(40,20%,97%)] flex items-center justify-center relative overflow-hidden">
-              <svg viewBox="0 0 600 400" className="w-full h-full" fill="none">
-                <circle cx="300" cy="200" r="150" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                <circle cx="300" cy="200" r="105" stroke="currentColor" strokeWidth="0.5" strokeDasharray="6 4" fill="none" opacity="0.4" />
-                <circle cx="300" cy="200" r="58" stroke="currentColor" strokeWidth="0.5" strokeDasharray="4 3" fill="none" opacity="0.3" />
-                <line x1="300" y1="50" x2="300" y2="350" stroke="currentColor" strokeWidth="0.35" opacity="0.15" />
-                <line x1="150" y1="200" x2="450" y2="200" stroke="currentColor" strokeWidth="0.35" opacity="0.15" />
-                <line x1="195" y1="95" x2="405" y2="305" stroke="currentColor" strokeWidth="0.25" opacity="0.1" />
-                <line x1="405" y1="95" x2="195" y2="305" stroke="currentColor" strokeWidth="0.25" opacity="0.1" />
-                <rect x="283" y="183" width="34" height="34" stroke="currentColor" strokeWidth="0.7" fill="none" rx="1.5" opacity="0.5" />
-                {[
-                  { x: 260, y: 150 }, { x: 285, y: 150 }, { x: 315, y: 150 }, { x: 340, y: 150 },
-                  { x: 260, y: 235 }, { x: 285, y: 235 }, { x: 315, y: 235 }, { x: 340, y: 235 },
-                ].map((pos, i) => (
-                  <rect key={`dw-${i}`} x={pos.x} y={pos.y} width="14" height="10" stroke="currentColor" strokeWidth="0.5" fill="none" rx="0.5" opacity="0.35" />
-                ))}
-                <circle cx="300" cy="200" r="5" className="fill-secondary" />
-                <text x="300" y="225" textAnchor="middle" fill="currentColor" fontSize="8" fontFamily="Playfair Display, serif" opacity="0.5">Hall of Records</text>
-                <circle cx="300" cy="135" r="4" className="fill-primary" />
-                <text x="300" y="128" textAnchor="middle" fill="currentColor" fontSize="7" opacity="0.4">Auditorium</text>
-                <circle cx="370" cy="190" r="4" className="fill-primary" />
-                <text x="385" y="187" fill="currentColor" fontSize="7" opacity="0.4">The Annex</text>
-                <circle cx="240" cy="190" r="4" className="fill-primary" />
-                <text x="218" y="187" textAnchor="end" fill="currentColor" fontSize="7" opacity="0.4">Nurturing</text>
-                <text x="300" y="375" textAnchor="middle" fill="currentColor" fontSize="10" fontFamily="Playfair Display, serif" opacity="0.25" fontStyle="italic">The Community</text>
-              </svg>
+              <img src={heroCapeCodeMap} alt="Cape Cod map rendered in Wrender" className="w-full h-full object-contain" />
             </div>
           </div>
-          <p className="text-center text-xs italic font-serif text-muted-foreground/50 mt-4">The Community. From Lois Lowry's The Giver. Rendered in Wrender.</p>
+          <p className="text-center text-xs italic font-serif text-muted-foreground/50 mt-4">Cape Cod. Rendered in Wrender.</p>
         </div>
       </section>
 
