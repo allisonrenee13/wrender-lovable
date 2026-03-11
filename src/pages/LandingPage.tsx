@@ -572,6 +572,9 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* Plausible analytics — uncomment and add domain when ready */}
+      {/* <script defer data-domain="yourdomain.com" src="https://plausible.io/js/script.js" /> */}
     </div>
   );
 }
