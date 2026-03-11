@@ -153,6 +153,40 @@ function BookCard({ title, genre, setting, quote, sketch }: {
   );
 }
 
+/* ───── Email Capture ───── */
+function EmailCapture({ onSubmit, email, setEmail, state }: {
+  onSubmit: (e: React.FormEvent) => void;
+  email: string;
+  setEmail: (v: string) => void;
+  state: "idle" | "loading" | "success" | "error";
+}) {
+  if (state === "success") {
+    return (
+      <p className="text-sm text-secondary font-medium">
+        You're on the list! We'll email you when Wrender launches.
+      </p>
+    );
+  }
+  return (
+    <form onSubmit={onSubmit} className="flex flex-col sm:flex-row items-center gap-2 w-full max-w-md">
+      <input
+        type="email"
+        required
+        placeholder="@email.com"
+        value={email}
+        onChange={e => setEmail(e.target.value)}
+        className="flex-1 h-11 px-4 rounded-full border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-secondary transition-colors"
+      />
+      <Button type="submit" disabled={state === "loading"} className="bg-primary text-primary-foreground text-sm rounded-full px-6 h-11">
+        {state === "loading" ? "Joining..." : "Join the waitlist"}
+      </Button>
+      {state === "error" && (
+        <p className="text-xs text-destructive">Something went wrong. Try again.</p>
+      )}
+    </form>
+  );
+}
+
 /* ───── Pricing Card ───── */
 function PricingCard({ name, price, period, features, cta, popular }: {
   name: string; price: string; period?: string; features: string[]; cta: string; popular?: boolean;
@@ -176,12 +210,15 @@ function PricingCard({ name, price, period, features, cta, popular }: {
           </li>
         ))}
       </ul>
-      <Button
-        variant={popular ? "default" : "outline"}
-        className={`w-full ${popular ? "bg-primary text-secondary font-medium" : ""}`}
-      >
+      <button
+        onClick={() => document.getElementById("landing-scroll")?.scrollTo({ top: 0, behavior: "smooth" })}
+        className={`w-full h-10 rounded-md text-sm font-medium transition-colors ${
+          popular
+            ? "bg-primary text-secondary"
+            : "border border-border bg-transparent text-foreground hover:bg-muted"
+        }`}>
         {cta}
-      </Button>
+      </button>
     </div>
   );
 }
@@ -192,6 +229,23 @@ export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"create" | "place" | "track">("create");
+  const [email, setEmail] = useState("");
+  const [submitState, setSubmitState] = useState<"idle" | "loading" | "success" | "error">("idle");
+
+  async function submitWaitlist(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email || submitState === "loading") return;
+    setSubmitState("loading");
+    try {
+      const res = await fetch("https://app.loops.so/api/newsletter-form/[FORM_ID]", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (res.ok) { setSubmitState("success"); setEmail(""); }
+      else setSubmitState("error");
+    } catch { setSubmitState("error"); }
+  }
 
   useEffect(() => {
     const el = document.getElementById("landing-scroll");
@@ -249,7 +303,7 @@ export default function LandingPage() {
         </div>
         <div className="hidden sm:flex items-center gap-4">
           <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Sign in</a>
-          <Button className="bg-primary text-primary-foreground text-sm rounded-full px-5 h-9">Start free</Button>
+          <Button onClick={() => document.getElementById("landing-scroll")?.scrollTo({ top: 0, behavior: "smooth" })} className="bg-primary text-primary-foreground text-sm rounded-full px-5 h-9">Get early access</Button>
         </div>
         <button className="sm:hidden p-1" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
           {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -262,7 +316,7 @@ export default function LandingPage() {
           <button onClick={() => scrollTo("features")} className="text-sm text-muted-foreground text-left">Features</button>
           <button onClick={() => scrollTo("pricing")} className="text-sm text-muted-foreground text-left">Pricing</button>
           <a href="#" className="text-sm text-muted-foreground">Sign in</a>
-          <Button className="bg-primary text-primary-foreground text-sm rounded-full w-full h-9">Start free</Button>
+          <Button onClick={() => { setMobileMenuOpen(false); document.getElementById("landing-scroll")?.scrollTo({ top: 0, behavior: "smooth" }); }} className="bg-primary text-primary-foreground text-sm rounded-full w-full h-9">Get early access</Button>
         </div>
       )}
 
@@ -274,6 +328,9 @@ export default function LandingPage() {
         <p className="text-muted-foreground text-base md:text-lg max-w-[560px] mb-2 leading-relaxed">
           Your visual writing companion.
         </p>
+        <div className="mt-6">
+          <EmailCapture onSubmit={submitWaitlist} email={email} setEmail={setEmail} state={submitState} />
+        </div>
       </section>
 
       {/* ══ Large App Visual ══ */}
@@ -484,18 +541,23 @@ export default function LandingPage() {
           
         </div>
         <div className="max-w-2xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
-          <PricingCard name="Free" price="$0" features={["1 project","3 maps","Location and event pins","Character profiles","Watermarked export"]} cta="Start free" />
-          <PricingCard name="Premium" price="$7/month" period="$5/month billed annually" popular features={["10 projects","10 maps per project","Location and event pins","Location designs","Clean export, no watermark","AI manuscript scanner (coming soon)","Character movement mapping (coming soon)"]} cta="Start free trial" />
+          <PricingCard name="Free" price="$0" features={["1 project","3 maps","Location and event pins","Character profiles","Watermarked export"]} cta="Join the waitlist — it's free" />
+          <PricingCard name="Premium" price="$7/month" period="$5/month billed annually" popular features={["10 projects","10 maps per project","Location and event pins","Location designs","Clean export, no watermark","AI manuscript scanner (coming soon)","Character movement mapping (coming soon)"]} cta="Join the waitlist" />
         </div>
         
       </section>
 
       {/* ══ Section 11: Final CTA ══ */}
       <section className="py-24 px-6 text-center bg-[hsl(40,20%,97%)]">
-        <h2 className="font-serif text-3xl md:text-5xl font-semibold text-foreground mb-4">Ready to Wrender?</h2>
-        <p className="text-muted-foreground mb-8 max-w-xl mx-auto">Depict your story's location as a clean line drawing, see what is in your head, plan where everything happens, and write with clarity.</p>
-        <Button className="bg-primary text-secondary font-medium rounded-full px-10 h-12 text-base mb-3">Start visualising your world</Button>
-        
+        <h2 className="font-serif text-3xl md:text-5xl font-semibold text-foreground mb-4">
+          Be first to Wrender your world.
+        </h2>
+        <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
+          Depict your story's location as a clean line drawing, see what is in your head, plan where everything happens, and write with clarity.
+        </p>
+        <div className="flex justify-center">
+          <EmailCapture onSubmit={submitWaitlist} email={email} setEmail={setEmail} state={submitState} />
+        </div>
       </section>
 
       {/* ══ Section 12: Footer ══ */}
@@ -510,6 +572,9 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* Plausible analytics — uncomment and add domain when ready */}
+      {/* <script defer data-domain="yourdomain.com" src="https://plausible.io/js/script.js" /> */}
     </div>
   );
 }
