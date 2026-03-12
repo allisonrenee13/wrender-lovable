@@ -58,19 +58,14 @@ export function SeeneryLogo({ variant = "sidebar", className = "", animate = fal
   const size = variant === "full" ? 48 : variant === "sidebar" ? 28 : 32;
 
   const mark = (
-    <svg
+    <img
+      src="/wrender-logo-icon.png"
+      alt="Wrender logo"
       width={size}
       height={size}
-      viewBox="0 0 28 28"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
       className="flex-shrink-0"
-      style={{ color: "#1a1a1a" }}
-    >
-      <rect x="2" y="2" width="24" height="24" rx="2.5" stroke="currentColor" strokeWidth="1.5" fill="none" />
-      <path d="M5 18 Q9 13 14 16 Q19 19 23 14" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="14" cy="16" r="1.5" fill="currentColor" />
-    </svg>
+      style={{ display: "block" }}
+    />
   );
 
   if (variant === "icon") {
