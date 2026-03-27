@@ -154,8 +154,10 @@ export function traceOutlineImage(
   const { data } = ctx.getImageData(0, 0, w, h);
 
   // === Color map detection ===
-  const colorLabels = detectColorMap(data, w, h);
-  const isColorMap = colorLabels !== null;
+  // Color map detection disabled — original edge-detection produces better results.
+  // const colorLabels = detectColorMap(data, w, h);
+  const colorLabels = null;
+  const isColorMap = false;
 
   let ink: Uint8Array;
 
@@ -330,7 +332,7 @@ export function traceOutlineImage(
         const d = dx * dx + dy * dy;
         if (d < bestDist) { bestDist = d; bestIdx = i; }
       }
-      if (bestDist > 400) break; // larger gap tolerance for complex boundaries
+      if (bestDist > 100) break;
       result.push(pts[bestIdx]);
       remaining.delete(bestIdx);
     }
@@ -357,8 +359,7 @@ export function traceOutlineImage(
 
   const paths: TracedPath[] = [];
   for (const comp of finalSignificant) {
-    // For color maps, the component IS already boundary pixels (dilated), skip getBoundary
-    const boundary = isColorMap ? comp : getBoundary(comp);
+    const boundary = getBoundary(comp);
     if (boundary.length < 4) continue;
     const ordered = orderPoints(boundary);
     const eps = sensitivity > 0.75 ? 0.4 : 0.7;
