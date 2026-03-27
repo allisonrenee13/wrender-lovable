@@ -110,7 +110,8 @@ function detectColorMap(
  * A pixel is ink if any of its 4-neighbors belongs to a different cluster.
  */
 function colorBoundaryInk(labels: Int32Array, w: number, h: number): Uint8Array {
-  const ink = new Uint8Array(w * h);
+  // Step 1: find raw 1px boundaries
+  const raw = new Uint8Array(w * h);
   for (let y = 1; y < h - 1; y++) {
     for (let x = 1; x < w - 1; x++) {
       const idx = y * w + x;
@@ -121,7 +122,21 @@ function colorBoundaryInk(labels: Int32Array, w: number, h: number): Uint8Array 
         labels[idx - w] !== c ||
         labels[idx + w] !== c
       ) {
-        ink[idx] = 1;
+        raw[idx] = 1;
+      }
+    }
+  }
+
+  // Step 2: dilate by 2px to connect nearby boundary fragments
+  const ink = new Uint8Array(w * h);
+  const radius = 2;
+  for (let y = radius; y < h - radius; y++) {
+    for (let x = radius; x < w - radius; x++) {
+      if (!raw[y * w + x]) continue;
+      for (let dy = -radius; dy <= radius; dy++) {
+        for (let dx = -radius; dx <= radius; dx++) {
+          ink[(y + dy) * w + (x + dx)] = 1;
+        }
       }
     }
   }
@@ -259,10 +274,10 @@ export function traceOutlineImage(
     const bboxArea = bboxW * bboxH;
     const imageArea = w * h;
 
-    // For color maps, relax text filters since we want small road features
+    // For color maps, keep large features only (coastlines, major roads)
     if (isColorMap) {
-      // Only filter very tiny noise
-      if (comp.length < imageArea * 0.0005) return false;
+      // After dilation, real features are large; filter small noise aggressively
+      if (comp.length < imageArea * 0.003) return false;
       return true;
     }
 
@@ -315,7 +330,7 @@ export function traceOutlineImage(
         const d = dx * dx + dy * dy;
         if (d < bestDist) { bestDist = d; bestIdx = i; }
       }
-      if (bestDist > 100) break;
+      if (bestDist > 400) break; // larger gap tolerance for complex boundaries
       result.push(pts[bestIdx]);
       remaining.delete(bestIdx);
     }
@@ -342,7 +357,8 @@ export function traceOutlineImage(
 
   const paths: TracedPath[] = [];
   for (const comp of finalSignificant) {
-    const boundary = getBoundary(comp);
+    // For color maps, the component IS already boundary pixels (dilated), skip getBoundary
+    const boundary = isColorMap ? comp : getBoundary(comp);
     if (boundary.length < 4) continue;
     const ordered = orderPoints(boundary);
     const eps = sensitivity > 0.75 ? 0.4 : 0.7;
